@@ -14,10 +14,11 @@
 
 import pandas as pd
 import networkx as nx
+import random
 
 
-class SubsumptionGraph:
-    r"""Class for building a graph with directed edges representing subsumption relationships.
+class HypernymGraph:
+    r"""Class for building a graph with directed edges representing hyponym-hypernym relationships.
     
     The input data file should be a `.tsv` file containing the `SubEntity` and `SuperEntity` columns.
     """
@@ -27,19 +28,25 @@ class SubsumptionGraph:
             raise ValueError("Input data file should be a .tsv file.")
         self.edges = pd.read_csv(data_file, delimiter="\t")
         self.edges = [(child, parent) for child, parent in self.edges.values.tolist()]  # transform to tuples
-        self._graph = nx.Graph(self.edges)  # the nx.Graph is a private attribute
+        self.graph = nx.DiGraph(self.edges)  # directed graph
         self.entities = list(self.graph.nodes)
         self.ent2idx = {self.entities[i]: i for i in range(len(self.entities))}
         self.idx2ent = {v: k for k, v in self.ent2idx.items()}
-        self.idx_graph = nx.Graph([(self.ent2idx[c], self.idx2ent[p]) for c, p in self.edges])
+        self.idx_graph = nx.Graph([(self.ent2idx[c], self.ent2idx[p]) for c, p in self.edges])
         print(self)
         
     def __str__(self):
         return f"Subsumption Graph containing {len(self.entities)} nodes and {len(self.edges)} edges."
 
-    def get_neighbors(self, entity_name: str):
-        """Get a set of neighbor entities for a given entity.
+    def get_hypernyms(self, entity_name: str):
+        """Get a set of super-entities (hypernyms) for a given entity.
         """
-        return set(self._graph.neighbors(entity_name))
+        return set(self.graph.successors(entity_name))
+    
+    def sample_negative_hypernyms(self, entity_name: str, n_samples: int):
+        """Sample negative hypernyms (i.e., not linked by a directed edge) for a given entity.
+        """
+        negative_hypernym_pool = list(set(self.entities) - self.get_hypernyms(entity_name))
+        return random.sample(negative_hypernym_pool, k=n_samples)
         
     
