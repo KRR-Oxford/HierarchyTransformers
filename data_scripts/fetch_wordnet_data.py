@@ -18,7 +18,6 @@
 import re
 import pandas as pd
 from nltk.corpus import wordnet as wn
-from tqdm import tqdm
 
 # download wordnet if not available
 try:
