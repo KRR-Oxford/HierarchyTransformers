@@ -19,29 +19,38 @@ from geoopt.tensor import ManifoldParameter
 
 
 class PoincareBase(torch.nn.Module):
-    def __init__(self, vocab_size: int, embed_dim: int, init_weights: float=1e-3):
+    """Class for the Poincare embedding model using hyperbolic distances as loss heuristics.
+    """
+    def __init__(self, vocab_size: int, embed_dim: int, init_weights: float = 1e-3):
         super().__init__()
-        
+
         self.manifold = PoincareBall()
-        # init embedding weights to somewhere near the origin 
+        # init embedding weights to somewhere near the origin
         self.embedding = torch.nn.Embedding(vocab_size, embed_dim, sparse=False, max_norm=1.0)
         self.embedding.weight.data.uniform_(-init_weights, init_weights)
         self.embedding.weight = ManifoldParameter(self.embedding.weight, manifold=self.manifold)
-        self.dist = self.manifold.dist  # d(u, v) = arcosh(1 + 2 \frac{\|u - v \|^2}{(1 - \| u \|^2)(1 - \| v \|^2)})
-                                        # or the one defined with mobius addition
+        self.dist = self.manifold.dist  # d(u, v) = arcosh(1 + 2 \frac{\|u - v \|^2}{(1 - \| u \|^2)(1 - \| v \|^2)}) or the one defined with mobius addition
+
+    def unpack_embeddings(self, inputs: torch.Tensor):
+        """Split input tensor into subject and objects
+
+        NOTE: the first object is the related one and the rest are negative samples.
+        """
+        input_embeds = self.embedding(inputs)  # (batch_size, num_entities, hidden_dim), dim 1 includes (child, parent, negative_parents*)
+        objects = input_embeds.narrow(dim=1, start=1, length=input_embeds.size(1) - 1)  # use .narrow to keep dim
+        subject = input_embeds.narrow(dim=1, start=0, length=1).expand_as(objects)
+        return subject, objects
 
     def forward(self, inputs: torch.Tensor):
-        input_embeds = self.embedding(inputs)  # (batch_size, num_entities, hidden_dim)
-                                    # dim 1 includes (child, parent, negative_parents*)
-        objects = input_embeds.narrow(dim=1, start=1, length=input_embeds.size(1) - 1)  # use .narrow to keep dim
-                                                                                        # the first object is always the related one 
-        subject = input_embeds.narrow(dim=1, start=0, length=1).expand_as(objects)
-
+        subject, objects = self.unpack_embeddings(inputs)
         return self.dist(subject, objects)
-    
-    def dist_loss(self, preds: torch.Tensor):
+
+    def dist_loss(self, pred_dists: torch.Tensor):
         """Computing log-softmax loss over poincare distances between the subject entity and the object entities.
         """
-        # preds has shape (batch_size, num_distances); 
+        # pred_dists has shape (batch_size, num_distances);
         # the first one is always the distance with the related entity
-        return - torch.sum(- preds[:, 0] - torch.log(torch.sum(torch.exp(- preds), dim=1))) / preds.shape[0]
+        # sum(logsoftmax(pred_dists)) / batch_size
+        return (
+            -torch.sum(-pred_dists[:, 0] - torch.log(torch.sum(torch.exp(-pred_dists), dim=1))) / pred_dists.shape[0]
+        )
