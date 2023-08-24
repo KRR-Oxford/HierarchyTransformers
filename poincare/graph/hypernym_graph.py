@@ -43,10 +43,14 @@ class HypernymGraph:
         """
         return set(self.graph.successors(entity_name))
     
-    def sample_negative_hypernyms(self, entity_name: str, n_samples: int):
-        """Sample negative hypernyms (i.e., not linked by a directed edge) for a given entity.
+    def sample_negative_hypernyms(self, entity_name: str, n_samples: int, weighted: bool = True):
+        """Sample negative hypernyms (i.e., not linked by a directed edge) with replacement for a given entity.
         """
         negative_hypernym_pool = list(set(self.entities) - self.get_hypernyms(entity_name))
-        return random.sample(negative_hypernym_pool, k=n_samples)
+        if weighted:
+            weights = [self.graph.degree(n) for n in negative_hypernym_pool]
+            return random.choices(negative_hypernym_pool, weights=weights, k=n_samples)
+        else:
+            return random.choices(negative_hypernym_pool, k=n_samples)
         
     

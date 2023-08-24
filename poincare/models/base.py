@@ -1,0 +1,47 @@
+# Copyright 2023 Yuan He. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+import torch
+from geoopt.manifolds import PoincareBall
+from geoopt.tensor import ManifoldParameter
+
+
+class PoincareBase(torch.nn.Module):
+    def __init__(self, vocab_size: int, embed_dim: int, init_weights: float=1e-3):
+        super().__init__()
+        
+        self.manifold = PoincareBall()
+        # init embedding weights to somewhere near the origin 
+        self.embedding = torch.nn.Embedding(vocab_size, embed_dim, sparse=False, max_norm=1.0)
+        self.embedding.weight.data.uniform_(-init_weights, init_weights)
+        self.embedding.weight = ManifoldParameter(self.embedding.weight, manifold=self.manifold)
+        self.dist = self.manifold.dist  # d(u, v) = arcosh(1 + 2 \frac{\|u - v \|^2}{(1 - \| u \|^2)(1 - \| v \|^2)})
+                                        # or the one defined with mobius addition
+
+    def forward(self, inputs: torch.Tensor):
+        input_embeds = self.embedding(inputs)  # (batch_size, num_entities, hidden_dim)
+                                    # dim 1 includes (child, parent, negative_parents*)
+        objects = input_embeds.narrow(dim=1, start=1, length=input_embeds.size(1) - 1)  # use .narrow to keep dim
+                                                                                        # the first object is always the related one 
+        subject = input_embeds.narrow(dim=1, start=0, length=1).expand_as(objects)
+
+        return self.dist(subject, objects)
+    
+    def dist_loss(self, preds: torch.Tensor):
+        """Computing log-softmax loss over poincare distances between the subject entity and the object entities.
+        """
+        # preds has shape (batch_size, num_distances); 
+        # the first one is always the distance with the related entity
+        return - torch.sum(- preds[:, 0] - torch.log(torch.sum(torch.exp(- preds), dim=1))) / preds.shape[0]
