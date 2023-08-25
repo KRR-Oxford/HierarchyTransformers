@@ -51,6 +51,9 @@ class PoincareBase(torch.nn.Module):
         # pred_dists has shape (batch_size, num_distances);
         # the first one is always the distance with the related entity
         # sum(logsoftmax(pred_dists)) / batch_size
+        # NOTE: this is equivalent to:
+        # loss_func = torch.nn.CrossEntropyLoss()
+        # loss_func(pred.neg(), torch.zeros(batch_size, dtype=torch.long).to(0))
         return (
             -torch.sum(-pred_dists[:, 0] - torch.log(torch.sum(torch.exp(-pred_dists), dim=1))) / pred_dists.shape[0]
         )
