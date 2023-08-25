@@ -20,6 +20,15 @@ from ..graph import HypernymGraph
 
 
 class ReconstructionEvaluator:
+    r"""Class for evaluating the quality of Poincare embeddings through several intrinsic reconstruction settings.
+    
+    Reconstruction settings proposed by [Nickel et al. 2017](https://arxiv.org/abs/1705.08039)
+        1. Hypernym Query (Mean Ranks, mAP of the correct hypernyms)
+        
+    Reconstruction settings proposed by us:
+        1. Centripetal Path: the hyerpernym path is towards the center of the Poincare ball (indicated by monotonically decreasing norms)
+
+    """
     def __init__(self, graph: HypernymGraph, embeddings: Union[torch.Tensor, PoincareKeyedVectors]):
         self.graph = graph
 
