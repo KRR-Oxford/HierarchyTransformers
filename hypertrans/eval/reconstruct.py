@@ -12,44 +12,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union
+from typing import Union, Optional
 from gensim.models.poincare import PoincareKeyedVectors
 import numpy as np
 import torch
+from tqdm import tqdm
 from ..graph import HypernymGraph
 
 
 class ReconstructionEvaluator:
     r"""Class for evaluating the quality of Poincare embeddings through several intrinsic reconstruction settings.
-    
+
     Reconstruction settings proposed by [Nickel et al. 2017](https://arxiv.org/abs/1705.08039)
         1. Hypernym Query (Mean Ranks, mAP of the correct hypernyms)
-        
+
     Reconstruction settings proposed by us:
         1. Centripetal Path: the hyerpernym path is towards the center of the Poincare ball (indicated by monotonically decreasing norms)
 
     """
+
     def __init__(self, graph: HypernymGraph, embeddings: Union[torch.Tensor, PoincareKeyedVectors]):
         self.graph = graph
 
         if isinstance(embeddings, torch.Tensor):
             embeddings = embeddings.detach().cpu().numpy()
-            self.embedding_dict = PoincareKeyedVectors(
-                vector_size=embeddings.shape[1], vector_count=embeddings.shape[0]
-            )
+            self.embedding_dict = PoincareKeyedVectors(vector_size=embeddings.shape[1], vector_count=0)
             # assuming the embeddings are stored in the same order as the graph entities
-            for ent in self.graph.entities:
-                self.embedding_dict[ent] = embeddings[self.graph.ent2idx[ent]]
+            self.embedding_dict.add_vectors(self.graph.entities, embeddings)
+            # for ent in tqdm(self.graph.entities, desc="Transform torch embeddings into dict", unit="entity"):
+            #     self.embedding_dict[ent] = embeddings[self.graph.ent2idx[ent]]
         elif isinstance(embeddings, PoincareKeyedVectors):
             self.embedding_dict = embeddings
         else:
             raise ValueError(f"Unknown input embeddings type: {type(embeddings)}.")
 
-    def evaluate_hypernym_mean_rank_and_AP(self):
+    def evaluate_hypernym_mean_rank_and_AP(self, max_eval_nums: Optional[int] = None):
         """Evaluate the hypernym Mean Rank and Mean Average Precision scores for all entities."""
         all_ranks = []
         all_aps = []
-        for ent in self.graph.entities:
+        # set smaller evaluation values for debugging very large graphs
+        eval_entities = (
+            self.graph.entities
+            if not max_eval_nums
+            else list(np.random.choice(self.graph.entities, replace=False, size=max_eval_nums))
+        )
+        for ent in tqdm(eval_entities, desc="Reconstruction evaluation (retrieval-based)", unit="entity"):
             results = self.get_hypernym_average_precision(ent, return_ranks=True)
             if results:
                 ap, ranks = results
