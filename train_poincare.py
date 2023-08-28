@@ -33,7 +33,7 @@ def main(data, embed_dim, num_negative_samples, batch_size, num_epochs, num_warm
     trainer.run()
     torch.save(
         trainer.model,
-        f"experiments/poincare.{data}.dim={embed_dim}.neg={num_negative_samples}.batch={batch_size}.epoch={num_epochs}.warmup{num_warmup_epochs}.pt",
+        f"experiments/poincare.{data}.dim={embed_dim}.neg={num_negative_samples}.batch={batch_size}.epoch={num_epochs}.warmup={num_warmup_epochs}.pt",
     )
 
 main()
