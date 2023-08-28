@@ -39,7 +39,7 @@ class PoincareTrainer:
         self.learning_rate = learning_rate
 
         self.device = torch.device(f"cuda:{gpu_device}" if torch.cuda.is_available() else "cpu")
-        self.model = PoincareBallModel(len(self.graph.entities), embed_dim=embed_dim).to(self.device)
+        self.model = PoincareBallModel(self.graph.idx2ent, embed_dim=embed_dim).to(self.device)
 
         self.optimizer = RiemannianAdam(self.model.parameters(), lr=self.learning_rate)
         self.current_epoch = 0
@@ -101,3 +101,7 @@ class PoincareTrainer:
     def run(self):
         for _ in range(self.n_epochs):
             self.training_epoch(self.dist_loss)
+
+
+    def save(self, output_dir: str):
+        pass

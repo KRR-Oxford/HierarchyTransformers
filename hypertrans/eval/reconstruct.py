@@ -17,6 +17,7 @@ from gensim.models.poincare import PoincareKeyedVectors
 import numpy as np
 import torch
 from tqdm import tqdm
+from ..poincare import PoincareBallModel
 from ..graph import HypernymGraph
 
 
@@ -31,14 +32,17 @@ class ReconstructionEvaluator:
 
     """
 
-    def __init__(self, graph: HypernymGraph, embeddings: Union[torch.Tensor, PoincareKeyedVectors]):
+    def __init__(self, graph: HypernymGraph, embeddings: Union[PoincareBallModel, PoincareKeyedVectors]):
         self.graph = graph
 
-        if isinstance(embeddings, torch.Tensor):
-            embeddings = embeddings.detach().cpu().numpy()
+        if isinstance(embeddings, PoincareBallModel):
+            torch_model = embeddings
+            embeddings = torch_model.state_dict()["embed.weight"].detach().cpu().numpy()
             self.embedding_dict = PoincareKeyedVectors(vector_size=embeddings.shape[1], vector_count=0)
-            # assuming the embeddings are stored in the same order as the graph entities
-            self.embedding_dict.add_vectors(self.graph.entities, embeddings)
+            keys = []
+            for i in range(len(torch_model.idx2ent)):
+                keys.append(torch_model.idx2ent[i])
+            self.embedding_dict.add_vectors(keys, embeddings)
             # for ent in tqdm(self.graph.entities, desc="Transform torch embeddings into dict", unit="entity"):
             #     self.embedding_dict[ent] = embeddings[self.graph.ent2idx[ent]]
         elif isinstance(embeddings, PoincareKeyedVectors):

@@ -17,6 +17,7 @@ import torch
 torch.set_default_dtype(torch.float64)
 from geoopt.manifolds import PoincareBall
 from geoopt.tensor import ManifoldParameter
+from ..graph import HypernymGraph
 
 
 class PoincareBallModel(torch.nn.Module):
@@ -24,15 +25,18 @@ class PoincareBallModel(torch.nn.Module):
 
     def __init__(
         self,
-        vocab_size: int,  # the number of embeddings
+        graph: HypernymGraph, # graph.idx2ent
         embed_dim: int,  # Poincare ball dimension
         init_weights: float = 1e-3,  # initial embedding weights
     ):
         super().__init__()
 
         self.manifold = PoincareBall()
+        # do not save the graph directly as pickling is expensive
+        self.idx2ent = graph.idx2ent
+        self.ent2idx = graph.ent2idx
         # init embedding weights to somewhere near the origin
-        self.embed = torch.nn.Embedding(vocab_size, embed_dim, sparse=False, max_norm=1.0)
+        self.embed = torch.nn.Embedding(len(self.idx2ent), embed_dim, sparse=False, max_norm=1.0)
         self.embed.weight.data.uniform_(-init_weights, init_weights)
         self.embed.weight = ManifoldParameter(self.embed.weight, manifold=self.manifold)
         # d(u, v) = arcosh(1 + 2 \frac{\|u - v \|^2}{(1 - \| u \|^2)(1 - \| v \|^2)}) or the one defined with mobius addition

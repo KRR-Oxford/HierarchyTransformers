@@ -30,6 +30,7 @@ class HypernymGraph:
     def __init__(self, data_file: str):
         if not data_file.endswith(".tsv"):
             raise ValueError("Input data file should be a .tsv file.")
+        self.data_file = data_file
         self.edges = pd.read_csv(data_file, delimiter="\t")
         self.edges = [(child, parent) for child, parent in self.edges.values.tolist()]  # transform to tuples
         self.graph = nx.DiGraph(self.edges)  # directed graph
