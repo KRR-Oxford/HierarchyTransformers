@@ -84,7 +84,7 @@ class PoincareTrainer:
         return loss
 
     def training_epoch(self, loss_func, save_at_epoch=True):
-        epoch_bar = tqdm(range(self.n_epoch_steps), desc=f"Epoch {self.current_epoch + 1}", leave=False, unit="batch")
+        epoch_bar = tqdm(range(self.n_epoch_steps), desc=f"Epoch {self.current_epoch + 1}", leave=True, unit="batch")
         # change to uniform negative sampling after warm starting (or burn-in)
         if self.current_epoch >= self.warmup_epochs:
             self.dataloader = self.get_dataloader(weighted_negative_sampling=False)
