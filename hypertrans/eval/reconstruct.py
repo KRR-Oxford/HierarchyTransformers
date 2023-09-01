@@ -15,7 +15,6 @@
 from typing import Union, Optional
 from gensim.models.poincare import PoincareKeyedVectors
 import numpy as np
-import torch
 from tqdm import tqdm
 from ..poincare import PoincareBallModel
 from ..graph import HypernymGraph
