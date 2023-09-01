@@ -25,7 +25,8 @@ class ReconstructionEvaluator:
     r"""Class for evaluating the quality of Poincare embeddings through several intrinsic reconstruction settings.
 
     Reconstruction settings proposed by [Nickel et al. 2017](https://arxiv.org/abs/1705.08039)
-        1. Hypernym Query (Mean Ranks, mAP of the correct hypernyms)
+        1. Hypernym Query (Mean Ranks, mAP of the correct hypernyms); 
+        NOTE: these scores do not really reflect the quality because child nodes can be closer than the parent nodes
 
     Reconstruction settings proposed by us:
         1. Centripetal Path: the hyerpernym path is towards the center of the Poincare ball (indicated by monotonically decreasing norms)
@@ -71,17 +72,20 @@ class ReconstructionEvaluator:
     def get_hypernym_ranks(self, entity_name: str):
         """Get the rank(s) of the correct hypernyms for the given entity."""
         hypernyms = self.graph.get_hypernyms(entity_name)
+        hypernym_idxs = [self.embedding_dict.get_index(h) for h in hypernyms]
         rank_dict = dict()
 
         if not hypernyms:
             return rank_dict
-        distances_to_hypernyms = self.embedding_dict.distances(entity_name, other_nodes=hypernyms)
-        rest = set(self.graph.entities) - hypernyms
-        distances_to_rest = self.embedding_dict.distances(entity_name, other_nodes=rest)
 
-        # compute how many negative hypernyms with distances less than each positive one
-        for h, dh in zip(hypernyms, distances_to_hypernyms):
-            rank_dict[h] = (np.array(distances_to_rest) < dh).sum() + 1
+        # NOTE: compute distances only once saving more than half of the time
+        all_distances = self.embedding_dict.distances(entity_name)
+        positive_relation_distances = all_distances[hypernym_idxs]
+        negative_relation_distances = np.ma.array(all_distances, mask=False)
+        negative_relation_distances.mask[hypernym_idxs] = True
+        ranks = (negative_relation_distances[None, :] < positive_relation_distances[:, None]).sum(axis=1) + 1
+        for h, r in zip(hypernyms, ranks):
+            rank_dict[h] = r
         return rank_dict
 
     def get_hypernym_average_precision(self, entity_name: str, return_ranks: bool = True):
