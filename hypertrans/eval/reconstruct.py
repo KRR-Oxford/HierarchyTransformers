@@ -69,7 +69,9 @@ class ReconstructionEvaluator:
         return {"mean_rank": np.mean(all_ranks), "MAP": np.mean(all_aps)}
 
     def get_hypernym_ranks(self, entity_name: str):
-        """Get the rank(s) of the correct hypernyms for the given entity."""
+        """Get the rank(s) of the correct hypernyms for the given entity 
+        based on Poincare distances (shorter distance => higher rank). 
+        """
         hypernyms = self.graph.get_hypernyms(entity_name)
         hypernym_idxs = [self.embedding_dict.get_index(h) for h in hypernyms]
         rank_dict = dict()
@@ -88,7 +90,8 @@ class ReconstructionEvaluator:
         return rank_dict
 
     def get_hypernym_average_precision(self, entity_name: str, return_ranks: bool = True):
-        """Get the average precision (AP) of the correct hypernyms for the given entity.
+        """Get the average precision (AP) of the correct hypernyms for the given entity 
+        based on Poincare distances (shorter distance => higher rank).
 
         Optional to return the individual hypernym ranks before calculating AP.
         """
