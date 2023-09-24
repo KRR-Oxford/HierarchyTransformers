@@ -1,8 +1,8 @@
 import torch
 
 torch.set_default_dtype(torch.float64)
-from hypertrans.graph import HypernymGraph
-from hypertrans import PoincareTrainer
+from hyperonto.graph import HypernymGraph
+from hyperonto import PoincareTrainer
 import click
 
 data_choices = {

@@ -1,4 +1,4 @@
-from hypertrans.graph import HypernymGraph
+from hyperonto.graph import HypernymGraph
 from gensim.models.poincare import PoincareModel
 import logging
 
