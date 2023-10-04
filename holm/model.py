@@ -1,48 +1,38 @@
-# Copyright 2023 Yuan He. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import torch
 
 torch.set_default_dtype(torch.float64)
+from sentence_transformers import SentenceTransformer
 from geoopt.manifolds import PoincareBall
 from geoopt.tensor import ManifoldParameter
-from .graph import SubsumptionGraph
+from deeponto.onto import Taxonomy
+from typing import Optional
 
 
-class PoincareOntologyEmbedding(torch.nn.Module):
-    """Class for the Poincare embedding model using hyperbolic distances as loss heuristics."""
+class HOLM(torch.nn.Module):
+    """Hyperbolic Ontology Embedding from Language Models."""
 
     def __init__(
         self,
-        graph: SubsumptionGraph,
+        taxonomy: Taxonomy,
         embed_dim: int,  # Poincare ball dimension
-        static_embed: bool,  # initialise static embedding weights or not
+        init_from_sbert: Optional[str] = "all-MiniLM-L6-v2",
     ):
         super().__init__()
 
         # do not save the graph directly as pickling is expensive
-        self.idx2ent = graph.idx2ent
-        self.ent2idx = graph.ent2idx
+        self.taxonomy = taxonomy
+        self.idx2ent = {idx: ent for idx, ent in enumerate(self.taxonomy.nodes)}
+        self.ent2idx = {v: k for k, v in self.idx2ent.items()}
         self.embed_dim = embed_dim
-        self.static_embed = static_embed
+        self.static_embed = not init_from_sbert
+        self.sbert = SentenceTransformer(init_from_sbert) if init_from_sbert else None
 
         self.manifold = PoincareBall()
         # d(u, v) = arcosh(1 + 2 \frac{\|u - v \|^2}{(1 - \| u \|^2)(1 - \| v \|^2)}) or the one defined with mobius addition
         self.dist = self.manifold.dist
 
         if self.static_embed:
-            self.embed = self.init_static_graph_embedding(len(graph), self.embed_dim, 1e-3)
+            self.embed = self.init_static_graph_embedding(len(self.idx2ent), self.embed_dim, 1e-3)
 
     def init_static_graph_embedding(self, static_entity_size: int, embed_dim: int, init_weights: float):
         # init embedding weights to somewhere near the origin
@@ -51,18 +41,21 @@ class PoincareOntologyEmbedding(torch.nn.Module):
         static_embedding.weight = ManifoldParameter(static_embedding.weight, manifold=self.manifold)
         return static_embedding
 
-    def unpack_embeddings(self, inputs: torch.Tensor):
-        """Split input tensor into subject and objects
+    def forward(self, subject, *objects):
+        pass
 
-        NOTE: the first object is the related one and the rest are negative samples.
-        """
-        input_embeds = self.embed(
-            inputs
-        )  # (batch_size, num_entities, hidden_dim), dim 1 includes (child, parent, negative_parents*)
-        objects = input_embeds.narrow(dim=1, start=1, length=input_embeds.size(1) - 1)  # use .narrow to keep dim
-        subject = input_embeds.narrow(dim=1, start=0, length=1).expand_as(objects)
-        return subject, objects
+    # def unpack_embeddings(self, inputs: torch.Tensor):
+    #     """Split input tensor into subject and objects
 
-    def forward(self, inputs: torch.Tensor):
-        subject, objects = self.unpack_embeddings(inputs)
-        return self.dist(subject, objects)
+    #     NOTE: the first object is the related one and the rest are negative samples.
+    #     """
+    #     input_embeds = self.embed(
+    #         inputs
+    #     )  # (batch_size, num_entities, hidden_dim), dim 1 includes (child, parent, negative_parents*)
+    #     objects = input_embeds.narrow(dim=1, start=1, length=input_embeds.size(1) - 1)  # use .narrow to keep dim
+    #     subject = input_embeds.narrow(dim=1, start=0, length=1).expand_as(objects)
+    #     return subject, objects
+
+    # def forward(self, inputs: torch.Tensor):
+    #     subject, objects = self.unpack_embeddings(inputs)
+    #     return self.dist(subject, objects)
