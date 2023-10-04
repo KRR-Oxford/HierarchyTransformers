@@ -14,25 +14,27 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Optional, Tuple, List, Dict
 import pandas as pd
 import networkx as nx
 import numpy as np
 import torch
 
 
-class HypernymGraph:
+class SubsumptionGraph:
     r"""Class for building a graph with directed edges representing hyponym-hypernym relationships.
 
     The input data file should be a `.tsv` file containing the `SubEntity` and `SuperEntity` columns.
     """
 
-    def __init__(self, data_file: str):
-        if not data_file.endswith(".tsv"):
-            raise ValueError("Input data file should be a .tsv file.")
-        self.data_file = data_file
-        self.edges = pd.read_csv(data_file, delimiter="\t")
-        self.edges = [(child, parent) for child, parent in self.edges.values.tolist()]  # transform to tuples
+    def __init__(self):
+        # if not data_file.endswith(".tsv"):
+        #     raise ValueError("Input data file should be a .tsv file.")
+        # self.data_file = data_file
+        # self.edges = pd.read_csv(data_file, delimiter="\t")
+        # self.edges = [(child, parent) for child, parent in self.edges.values.tolist()]  # transform to tuples
+        self.init_edges()
+
         self.graph = nx.DiGraph(self.edges)  # directed graph
         self.entities = list(self.graph.nodes)
         self.ent2idx = {self.entities[i]: i for i in range(len(self.entities))}
@@ -50,6 +52,9 @@ class HypernymGraph:
 
     def __len__(self):
         return len(self.entities)
+
+    def init_edges(self, *args, **kwargs):
+        raise NotImplementedError
 
     def get_hypernyms(self, entity_name: str):
         """Get a set of super-entities (hypernyms) for a given entity."""
@@ -89,7 +94,7 @@ class HypernymGraph:
 class HypernymDataset(torch.utils.data.Dataset):
     def __init__(
         self,
-        hypernym_graph: HypernymGraph,
+        hypernym_graph: SubsumptionGraph,
         n_negative_samples: int = 10,
         weighted_negative_sampling: bool = False,
         negative_buffer_size: int = 1000000,

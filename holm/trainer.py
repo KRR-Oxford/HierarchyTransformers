@@ -16,14 +16,14 @@ import torch
 from tqdm import tqdm
 from transformers import get_linear_schedule_with_warmup
 from geoopt.optim import RiemannianAdam, RiemannianSGD
-from .graph import HypernymGraph, HypernymDataset
-from .poincare.model import PoincareBallModel
+from .graph import SubsumptionGraph, HypernymDataset
+from .model import PoincareOntologyEmbedding
 
 
 class PoincareTrainer:
     def __init__(
         self,
-        graph: HypernymGraph,
+        graph: SubsumptionGraph,
         embed_dim: int = 50,
         n_negative_samples: int = 10,
         batch_size: int = 50,
@@ -39,7 +39,7 @@ class PoincareTrainer:
         self.learning_rate = learning_rate
 
         self.device = torch.device(f"cuda:{gpu_device}" if torch.cuda.is_available() else "cpu")
-        self.model = PoincareBallModel(self.graph, embed_dim=embed_dim).to(self.device)
+        self.model = PoincareOntologyEmbedding(self.graph, embed_dim=embed_dim).to(self.device)
 
         self.optimizer = RiemannianAdam(self.model.parameters(), lr=self.learning_rate)
         self.current_epoch = 0

@@ -17,30 +17,39 @@ import torch
 torch.set_default_dtype(torch.float64)
 from geoopt.manifolds import PoincareBall
 from geoopt.tensor import ManifoldParameter
-from ..graph import HypernymGraph
+from .graph import SubsumptionGraph
 
 
-class PoincareBallModel(torch.nn.Module):
+class PoincareOntologyEmbedding(torch.nn.Module):
     """Class for the Poincare embedding model using hyperbolic distances as loss heuristics."""
 
     def __init__(
         self,
-        graph: HypernymGraph, # graph.idx2ent
+        graph: SubsumptionGraph,
         embed_dim: int,  # Poincare ball dimension
-        init_weights: float = 1e-3,  # initial embedding weights
+        static_embed: bool,  # initialise static embedding weights or not
     ):
         super().__init__()
 
-        self.manifold = PoincareBall()
         # do not save the graph directly as pickling is expensive
         self.idx2ent = graph.idx2ent
         self.ent2idx = graph.ent2idx
-        # init embedding weights to somewhere near the origin
-        self.embed = torch.nn.Embedding(len(self.idx2ent), embed_dim, sparse=False, max_norm=1.0)
-        self.embed.weight.data.uniform_(-init_weights, init_weights)
-        self.embed.weight = ManifoldParameter(self.embed.weight, manifold=self.manifold)
+        self.embed_dim = embed_dim
+        self.static_embed = static_embed
+
+        self.manifold = PoincareBall()
         # d(u, v) = arcosh(1 + 2 \frac{\|u - v \|^2}{(1 - \| u \|^2)(1 - \| v \|^2)}) or the one defined with mobius addition
         self.dist = self.manifold.dist
+
+        if self.static_embed:
+            self.embed = self.init_static_graph_embedding(len(graph), self.embed_dim, 1e-3)
+
+    def init_static_graph_embedding(self, static_entity_size: int, embed_dim: int, init_weights: float):
+        # init embedding weights to somewhere near the origin
+        static_embedding = torch.nn.Embedding(static_entity_size, embed_dim, sparse=False, max_norm=1.0)
+        static_embedding.weight.data.uniform_(-init_weights, init_weights)
+        static_embedding.weight = ManifoldParameter(static_embedding.weight, manifold=self.manifold)
+        return static_embedding
 
     def unpack_embeddings(self, inputs: torch.Tensor):
         """Split input tensor into subject and objects

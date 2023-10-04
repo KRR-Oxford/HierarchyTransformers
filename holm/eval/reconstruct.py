@@ -16,8 +16,8 @@ from typing import Union, Optional
 from gensim.models.poincare import PoincareKeyedVectors
 import numpy as np
 from tqdm import tqdm
-from ..poincare import PoincareBallModel
-from ..graph import HypernymGraph
+from ..model import PoincareOntologyEmbedding
+from ..graph import SubsumptionGraph
 
 
 class ReconstructionEvaluator:
@@ -32,10 +32,10 @@ class ReconstructionEvaluator:
 
     """
 
-    def __init__(self, graph: HypernymGraph, embeddings: Union[PoincareBallModel, PoincareKeyedVectors]):
+    def __init__(self, graph: SubsumptionGraph, embeddings: Union[PoincareOntologyEmbedding, PoincareKeyedVectors]):
         self.graph = graph
 
-        if isinstance(embeddings, PoincareBallModel):
+        if isinstance(embeddings, PoincareOntologyEmbedding):
             torch_model = embeddings
             embeddings = torch_model.state_dict()["embed.weight"].detach().cpu().numpy()
             self.embedding_dict = PoincareKeyedVectors(vector_size=embeddings.shape[1], vector_count=0)
