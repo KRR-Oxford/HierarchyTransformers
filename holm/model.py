@@ -8,6 +8,7 @@ from geoopt.manifolds import PoincareBall
 from geoopt.tensor import ManifoldParameter
 from deeponto.onto import Taxonomy
 from typing import Optional
+import numpy as np
 
 
 class HyperOntoEmbedfromLM(torch.nn.Module):
@@ -83,7 +84,7 @@ class ClusteringLoss(torch.nn.Module):
     """Clustering loss to make entities that form a subsumption relationship 
     to be closer to each other, and adding penalty to too close entities.
     """
-    def __init__(self, manifold: PoincareBall, min_dist: float = 10e-2):
+    def __init__(self, manifold: PoincareBall, min_dist: float = 0.1):
         super().__init__()
         self.manifold = manifold
         self.min_dist = min_dist
@@ -110,6 +111,33 @@ class CentripetalLoss(torch.nn.Module):
         # we would like to push away the subject (child) and pull in the object (parent) towards the center of origin
         return torch.clamp(object_norm - subject_norm, min=0.0) ** 2
 
+class EntailmentConeLoss(torch.nn.Module):
+    def __init__(self, min_norm=0.1, loss_margin=0.1):
+        # non-root entities are prevented from being inside the ball of inner radius
+        self.min_norm = min_norm  # min_norm the same as min_dist to prevent undefined aperture
+        self.inner_radius = 2 * min_norm / (1 + np.sqrt(1 + 4 * (min_norm**2)))
+        self.loss_margin = loss_margin
+
+    def half_cone_aperture(self, cone_tip: torch.Tensor):
+        """Angle between the axis [0, x] (line through 0 and x) and the boundary of the cone at x,
+        where x is the cone tip.
+        """
+        # cone tip means the point x is the tip of the hyperbolic cone
+        norm_tip = cone_tip.norm(dim=-1).clamp(min=self.min_norm)  # to prevent undefined aperture
+        return torch.arcsin(self.min_norm * (1 - (norm_tip**2)) / norm_tip)
+
+    def half_cone_angle_at_u(self, cone_tip: torch.Tensor, u: torch.Tensor):
+        """Angle between the axis [0, x] and the line [x, u]. This angle should be smaller than the
+        half cone aperture at x for real children.
+        """
+        # parent point is treated as the cone tip
+        norm_tip = cone_tip.norm(dim=-1)
+        norm_child = u.norm(dim=-1)
+        dot_prod = (cone_tip * u).sum(dim=-1)
+        edist = (cone_tip - u).norm(dim=-1)  # euclidean distance
+        numerator = dot_prod * (1 + norm_tip**2) - norm_tip**2 * (1 + norm_child**2)
+        denomenator = norm_tip * edist * torch.sqrt(1 + (norm_child**2) * (norm_tip**2) - 2 * dot_prod)
+        return torch.arccos(numerator / denomenator)
 
 class HyperOntoEmbedStatic(torch.nn.Module):
     """Hyperbolic Ontology Embedding Static Version (Fixed Embedding Size)."""
