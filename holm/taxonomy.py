@@ -1,11 +1,67 @@
 from __future__ import annotations
 
+from typing import Optional
 from yacs.config import CfgNode
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
+import torch
 from deeponto.onto import Taxonomy, TaxonomyNegativeSampler
+from deeponto.align.mapping import ReferenceMapping
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class TaxonomyTrainingDataset(torch.utils.data.Dataset):
+    """The training dataset enables dynamic negative sampling."""
+
+    def __init__(
+        self,
+        taxonomy: Taxonomy,
+        training_subsumptions: list,  # list of subsumption pairs for training
+        n_negative_samples: int = 10,
+        node_attribute: Optional[str] = None,
+    ):
+        self.taxonomy = taxonomy
+        self.subsumptions = training_subsumptions
+        self.negative_sampler = TaxonomyNegativeSampler(taxonomy)
+        self.n_negative_samples = n_negative_samples
+        self.node_attribute = node_attribute
+        self.get_name = lambda x: self.taxonomy.get_node_attributes(x)[self.node_attribute]
+
+    def __len__(self):
+        return len(self.graph.edges)
+
+    def __getitem__(self, idx):
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+        if not isinstance(idx, slice):
+            subj, obj = self.subsumptions[idx]
+            # NOTE: Renew negative samples for every `__getitem__` call.
+            negative_objs = self.negative_sampler.sample(subj, self.n_negative_samples)
+            if self.node_attribute:
+                subj = self.get_name(subj)
+                obj = self.get_name(obj)
+                negative_objs = [self.get_name(n) for n in negative_objs]
+            return CfgNode({"subject": subj, "object": obj, "negative_objects": negative_objs})
+        else:
+            samples = []
+            for subj, obj in self.subsumptions[idx]:
+                negative_objs = self.negative_sampler.sample(subj, self.n_negative_samples)
+                if self.node_attribute:
+                    subj = self.get_name(subj)
+                    obj = self.get_name(obj)
+                    negative_objs = [self.get_name(n) for n in negative_objs]
+                sample = CfgNode({"subject": subj, "object": obj, "negative_objects": negative_objs})
+                samples.append(sample)
+            return samples
+
+
+def read_taxonomy_data(data_file: str):
+    logger.info(f"Loading taxonomy data from: {data_file}")
+    return [x.to_tuple() for x in ReferenceMapping.read_table_mappings(data_file)]
 
 
 def transitivity_data_splitting(taxonomy: Taxonomy):
