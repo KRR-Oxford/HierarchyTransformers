@@ -106,13 +106,15 @@ class CentripetalLoss(torch.nn.Module):
     the Euclidean norm of the subsumee.
     """
     def forward(self, subject, objects):
+        """The first object is the correct object and the rest are the negative objects."""
         subject_norm = torch.norm(subject[:, 0, :], dim=-1)  # just one copy of the subject is needed
         object_norm = torch.norm(objects[:, 0, :], dim=-1)  # just the correct object is needed
         # we would like to push away the subject (child) and pull in the object (parent) towards the center of origin
-        return torch.clamp(object_norm - subject_norm, min=0.0) ** 2
+        return torch.clamp(object_norm - subject_norm, min=0.0)
 
 class EntailmentConeLoss(torch.nn.Module):
     def __init__(self, min_norm=0.1, loss_margin=0.1):
+        super().__init__()
         # non-root entities are prevented from being inside the ball of inner radius
         self.min_norm = min_norm  # min_norm the same as min_dist to prevent undefined aperture
         self.inner_radius = 2 * min_norm / (1 + np.sqrt(1 + 4 * (min_norm**2)))
@@ -138,6 +140,18 @@ class EntailmentConeLoss(torch.nn.Module):
         numerator = dot_prod * (1 + norm_tip**2) - norm_tip**2 * (1 + norm_child**2)
         denomenator = norm_tip * edist * torch.sqrt(1 + (norm_child**2) * (norm_tip**2) - 2 * dot_prod)
         return torch.arccos(numerator / denomenator)
+    
+    def energy(self, cone_tip: torch.Tensor, u: torch.Tensor):
+        """Enery function defined as: max(0, cone_angle(u) - half_cone_aperture) given a cone tip.
+        """
+        return torch.clamp(self.cone_angle_at_u(cone_tip, u) - self.half_cone_aperture(cone_tip), min=0.0)
+    
+    def forward(self, subject, objects):
+        """The first object is the correct object and the rest are the negative objects."""
+        positive = self.energy(objects[:, 0, :], subject[:, 0, :]).sum()
+        negatives = torch.clamp(self.loss_margin - self.energy(objects[:, 1:, :], subject[:, 1:, :]), min=0.0).sum()
+        total_num_pairs = torch.numel(subject[:, :, 0])  # batch size * n_pairs_per_sample
+        return (positive + negatives) / total_num_pairs
 
 class HyperOntoEmbedStatic(torch.nn.Module):
     """Hyperbolic Ontology Embedding Static Version (Fixed Embedding Size)."""
