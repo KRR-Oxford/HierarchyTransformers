@@ -126,7 +126,7 @@ class EntailmentConeLoss(torch.nn.Module):
         norm_tip = cone_tip.norm(dim=-1).clamp(min=self.min_norm)  # to prevent undefined aperture
         return torch.arcsin(self.min_norm * (1 - (norm_tip**2)) / norm_tip)
 
-    def half_cone_angle_at_u(self, cone_tip: torch.Tensor, u: torch.Tensor):
+    def cone_angle_at_u(self, cone_tip: torch.Tensor, u: torch.Tensor):
         """Angle between the axis [0, x] and the line [x, u]. This angle should be smaller than the
         half cone aperture at x for real children.
         """
