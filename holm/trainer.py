@@ -3,11 +3,11 @@ from tqdm import tqdm
 from transformers import get_linear_schedule_with_warmup
 from geoopt.optim import RiemannianAdam, RiemannianSGD
 from .taxonomy import TaxonomyTrainingDataset
-from .model import PoincareOntologyEmbedding
+from .model import HyperOntoEmbedfromLM
 from deeponto.onto import Taxonomy
 
 
-class PoincareTrainer:
+class HyperOntoEmbedTrainer:
     def __init__(
         self,
         taxonomy: Taxonomy,
@@ -28,7 +28,7 @@ class PoincareTrainer:
         self.learning_rate = learning_rate
 
         self.device = torch.device(f"cuda:{gpu_device}" if torch.cuda.is_available() else "cpu")
-        self.model = PoincareOntologyEmbedding(self.graph, embed_dim=embed_dim).to(self.device)
+        self.model = HyperOntoEmbedfromLM(taxonomy, embed_dim=embed_dim).to(self.device)
 
         self.optimizer = RiemannianAdam(self.model.parameters(), lr=self.learning_rate)
         self.current_epoch = 0
@@ -40,17 +40,6 @@ class PoincareTrainer:
             self.optimizer,
             num_warmup_steps=self.warmup_epochs * self.n_epoch_steps,  # one epoch warming-up
             num_training_steps=self.n_trainining_steps,
-        )
-
-    @staticmethod
-    def dist_loss(pred_dists: torch.Tensor, positive_idx: int = 0):
-        """Computing log-softmax loss over poincare distances between the subject entity and the object entities.
-
-        NOTE: pred_dists has shape (batch_size, num_distances); {positive_idx} is always the distance with the related entity
-        """
-        return (
-            -torch.sum(-pred_dists[:, positive_idx] - torch.log(torch.sum(torch.exp(-pred_dists), dim=1)))
-            / pred_dists.shape[0]
         )
 
     @property

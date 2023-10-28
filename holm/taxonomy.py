@@ -32,7 +32,7 @@ class TaxonomyTrainingDataset(torch.utils.data.Dataset):
         self.get_name = lambda x: self.taxonomy.get_node_attributes(x)[self.node_attribute]
 
     def __len__(self):
-        return len(self.graph.edges)
+        return len(self.subsumptions)
 
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
