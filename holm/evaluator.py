@@ -14,6 +14,7 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
         self.loader = loader
         self.loss_module = loss_module
         self.device = device
+        self.loss_module.to(self.device)
 
     def __call__(self, model, output_path: str = None, epoch: int = -1, steps: int = -1) -> float:
         """
