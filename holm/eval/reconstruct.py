@@ -16,8 +16,8 @@ from typing import Union, Optional
 from gensim.models.poincare import PoincareKeyedVectors
 import numpy as np
 from tqdm import tqdm
-from ..model import PoincareOntologyEmbedding
-from ..graph import SubsumptionGraph
+from ..old_model import PoincareOntologyEmbedding
+# from ..graph import SubsumptionGraph
 
 
 class ReconstructionEvaluator:
@@ -32,7 +32,7 @@ class ReconstructionEvaluator:
 
     """
 
-    def __init__(self, graph: SubsumptionGraph, embeddings: Union[PoincareOntologyEmbedding, PoincareKeyedVectors]):
+    def __init__(self, graph, embeddings: Union[PoincareOntologyEmbedding, PoincareKeyedVectors]):
         self.graph = graph
 
         if isinstance(embeddings, PoincareOntologyEmbedding):

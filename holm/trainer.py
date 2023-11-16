@@ -3,7 +3,7 @@ from tqdm import tqdm
 from transformers import get_linear_schedule_with_warmup
 from geoopt.optim import RiemannianAdam, RiemannianSGD
 from .taxonomy import TaxonomyTrainingDataset
-from .model import HyperOntoEmbedfromLM
+from .old_model import HyperOntoEmbedfromLM
 from deeponto.onto import Taxonomy
 
 
@@ -27,8 +27,8 @@ class HyperOntoEmbedTrainer:
         )
         self.learning_rate = learning_rate
 
-        self.device = torch.device(f"cuda:{gpu_device}" if torch.cuda.is_available() else "cpu")
-        self.model = HyperOntoEmbedfromLM(taxonomy, embed_dim=embed_dim).to(self.device)
+        # self.device = torch.device(f"cuda:{gpu_device}" if torch.cuda.is_available() else "cpu")
+        self.model = HyperOntoEmbedfromLM(taxonomy, embed_dim=embed_dim, gpu_device=gpu_device)
 
         self.optimizer = RiemannianAdam(self.model.parameters(), lr=self.learning_rate)
         self.current_epoch = 0
@@ -47,10 +47,10 @@ class HyperOntoEmbedTrainer:
         for g in self.optimizer.param_groups:
             return g["lr"]
 
-    def training_step(self, batch, loss_func):
-        batch = batch.to(self.device)
+    def training_step(self, subject, objects, loss_func):
+        # batch = batch.to(self.device)
         self.optimizer.zero_grad(set_to_none=True)
-        preds = self.model(batch)
+        preds = self.model(subject, *objects)
         loss = loss_func(preds)
         loss.backward()
         self.optimizer.step()
@@ -64,7 +64,9 @@ class HyperOntoEmbedTrainer:
         #     self.dataloader = self.get_dataloader(weighted_negative_sampling=False)
         # running_loss = 0.0
         for batch in self.dataloader:
-            loss = self.training_step(batch, loss_func)
+            subject = batch.subject
+            objects = list(zip(batch.object, *batch.negative_objects))
+            loss = self.training_step(subject, objects, loss_func)
             # running_loss += loss
             epoch_bar.set_postfix({"loss": loss.item(), "lr": self.lr})
             epoch_bar.update()
