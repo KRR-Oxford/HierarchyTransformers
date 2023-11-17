@@ -21,21 +21,29 @@ class HyperbolicLoss(torch.nn.Module):
         model: SentenceTransformer,
         manifold: PoincareBall,
         loss_weights: dict = {"cluster": 1.0, "centri": 1.0, "cone": 1.0},
+        cluster_loss_margin: float = 1.0,
+        centri_loss_margin: float = 0.1,
+        min_euclidean_norm: float = 0.1,
+        cone_loss_margin: float = 0.1
     ):
         super(HyperbolicLoss, self).__init__()
         self.manifold = manifold
         self.distance_metric = manifold.dist
         self.model = model
         self.loss_weights = loss_weights
-        self.min_norm = 0.1
+        self.cluster_loss_margin = cluster_loss_margin
+        self.centri_loss_margin = centri_loss_margin
+        self.min_euclidean_norm = min_euclidean_norm
+        self.cone_loss_margin = cone_loss_margin
+        
 
     def half_cone_aperture(self, cone_tip: torch.Tensor):
         """Angle between the axis [0, x] (line through 0 and x) and the boundary of the cone at x,
         where x is the cone tip.
         """
         # cone tip means the point x is the tip of the hyperbolic cone
-        norm_tip = cone_tip.norm(dim=-1).clamp(min=self.min_norm)  # to prevent undefined aperture
-        return torch.arcsin(self.min_norm * (1 - (norm_tip**2)) / norm_tip)
+        norm_tip = cone_tip.norm(dim=-1).clamp(min=self.min_euclidean_norm)  # to prevent undefined aperture
+        return torch.arcsin(self.min_euclidean_norm * (1 - (norm_tip**2)) / norm_tip)
 
     def cone_angle_at_u(self, cone_tip: torch.Tensor, u: torch.Tensor):
         """Angle between the axis [0, x] and the line [x, u]. This angle should be smaller than the
@@ -67,7 +75,7 @@ class HyperbolicLoss(torch.nn.Module):
         distances = self.distance_metric(rep_anchor, rep_other)
         # cluster_losses = 0.5 * (labels.float() * distances.pow(2) + (1 - labels).float() * F.relu(self.margin - distances).pow(2))
         cluster_loss = 0.5 * (
-            labels.float() * distances.pow(2) + (1 - labels).float() * F.relu(1.0 - distances).pow(2)
+            labels.float() * distances.pow(2) + (1 - labels).float() * F.relu(self.cluster_loss_margin - distances).pow(2)
         )
         cluster_loss = cluster_loss.mean()
 
@@ -79,12 +87,12 @@ class HyperbolicLoss(torch.nn.Module):
             rep_other, self.manifold.origin(rep_other.shape).to(rep_other.device)
         )
         # child further than parent w.r.t. origin
-        centri_loss = labels.float() * F.relu(0.1 + rep_other_hyper_norms - rep_anchor_hyper_norms)
+        centri_loss = labels.float() * F.relu(self.centri_loss_margin + rep_other_hyper_norms - rep_anchor_hyper_norms)
         centri_loss = centri_loss.sum() / labels.float().sum()
 
         # ENTAILMENT CONE LOSS
         energies = self.energy(cone_tip=rep_other, u=rep_anchor)
-        cone_loss = labels.float() * energies.pow(2) + (1 - labels).float() * F.relu(0.1 - energies).pow(2)
+        cone_loss = labels.float() * energies.pow(2) + (1 - labels).float() * F.relu(self.cone_loss_margin - energies).pow(2)
         cone_loss = cone_loss.mean()
 
         # logger.info(labels)

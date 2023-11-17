@@ -81,7 +81,7 @@ model.fit(
     output_path="experiments/trial.stage1=cluster+centri",
 )
 
-second_stage = True
+second_stage = False
 
 if second_stage:
     hyper_loss = HyperbolicLoss(model, manifold, {"cluster": 0.0, "centri": 0.0, "cone": 10.0})
