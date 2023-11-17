@@ -1,6 +1,7 @@
 from tqdm.autonotebook import trange
 import torch
 from sentence_transformers.evaluation import SentenceEvaluator
+from deeponto.utils import save_file
 
 
 class HyperbolicLossEvaluator(SentenceEvaluator):
@@ -45,7 +46,7 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
                 sentence_features, labels = next(data_iterator)
                 # move data to gpu
                 for i in range(0, len(sentence_features)):
-                    for key, value in sentence_features[i].items():
+                    for key, _ in sentence_features[i].items():
                         sentence_features[i][key] = sentence_features[i][key].to(self.device)
                 labels = labels.to(self.device)
                 loss += self.loss_module(sentence_features, labels).item()
@@ -55,5 +56,9 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
         self.loss_module.zero_grad()
         self.loss_module.train()
         model.save(f"{output_path}/epoch={epoch}.step={steps}")
+
+        results = self.loss_module.get_config_dict()
+        results["loss"] = final_loss
+        save_file(results, f"{output_path}/epoch={epoch}.step={steps}/val_results.json")
 
         return -final_loss

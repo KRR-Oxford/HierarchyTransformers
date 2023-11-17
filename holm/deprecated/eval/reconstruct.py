@@ -16,7 +16,7 @@ from typing import Union, Optional
 from gensim.models.poincare import PoincareKeyedVectors
 import numpy as np
 from tqdm import tqdm
-from ..old_model import PoincareOntologyEmbedding
+from ..deprecated.model import PoincareOntologyEmbedding
 # from ..graph import SubsumptionGraph
 
 

@@ -3,7 +3,7 @@ from tqdm import tqdm
 from transformers import get_linear_schedule_with_warmup
 from geoopt.optim import RiemannianAdam, RiemannianSGD
 from .taxonomy import TaxonomyTrainingDataset
-from .old_model import HyperOntoEmbedfromLM
+from .model import HyperOntoEmbedfromLM
 from deeponto.onto import Taxonomy
 
 
