@@ -3,6 +3,10 @@ import torch
 from sentence_transformers.evaluation import SentenceEvaluator
 from deeponto.utils import save_file
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class HyperbolicLossEvaluator(SentenceEvaluator):
     """
@@ -42,23 +46,28 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
         num_batches = len(self.loader)
         data_iterator = iter(self.loader)
         with torch.no_grad():
-            for _ in trange(num_batches, desc="Iteration", smoothing=0.05, disable=False):
+            for num_batch in trange(num_batches, desc="Iteration", smoothing=0.05, disable=False):
                 sentence_features, labels = next(data_iterator)
                 # move data to gpu
                 for i in range(0, len(sentence_features)):
                     for key, _ in sentence_features[i].items():
                         sentence_features[i][key] = sentence_features[i][key].to(self.device)
                 labels = labels.to(self.device)
-                loss += self.loss_module(sentence_features, labels).item()
+                cur_loss = self.loss_module(sentence_features, labels)
+                if not torch.isnan(cur_loss):
+                    loss += cur_loss.item()
+                    logger.info(f"validation_loss={loss / (num_batch + 1)}")
+                else:
+                    logger.info(f"skip as detecting nan loss")
 
-        final_loss = loss / num_batches
+        # final_loss = loss / num_batches
 
         self.loss_module.zero_grad()
         self.loss_module.train()
         model.save(f"{output_path}/epoch={epoch}.step={steps}")
 
         results = self.loss_module.get_config_dict()
-        results["loss"] = final_loss
+        results["loss"] = loss / (num_batch + 1)
         save_file(results, f"{output_path}/epoch={epoch}.step={steps}/val_results.json")
 
-        return -final_loss
+        return -loss

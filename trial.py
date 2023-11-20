@@ -1,96 +1,90 @@
-from deeponto.onto import WordnetTaxonomy, TaxonomyNegativeSampler
-from datasets import load_dataset, Features, Value
-from typing import Dict, Iterable
+from deeponto.onto import WordnetTaxonomy, OntologyTaxonomy
+from deeponto.utils import load_file, print_dict
+from datasets import load_dataset
 import os
 import torch
 from torch.utils.data import DataLoader
-
-torch.set_default_dtype(torch.float64)
-from geoopt.manifolds import PoincareBall
-from geoopt.tensor import ManifoldParameter
-from geoopt.optim import RiemannianAdam, RiemannianSGD
-from sentence_transformers import (
-    SentenceTransformer,
-    LoggingHandler,
-    InputExample,
-    SentencesDataset,
-    models,
-    losses,
-)
+from sentence_transformers import SentenceTransformer
 import logging
 import numpy as np
+import click
+from yacs.config import CfgNode
 
-logging.basicConfig(format="%(asctime)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S", level=logging.INFO)
+from hierarchy_transformer.loss import HyperbolicLoss
+from hierarchy_transformer.evaluator import HyperbolicLossEvaluator
+from hierarchy_transformer.utils import example_generator
+
+
 logger = logging.getLogger(__name__)
 
-from holm.loss import HyperbolicLoss
-from holm.evaluator import HyperbolicLossEvaluator
+@click.command()
+@click.option("-c", "--config_file", type=click.Path(exists=True))
+@click.option("-g", "--gpu_id", type=int, default=0)
+def main(config_file: str, gpu_id: int):
+    
+    config = CfgNode(load_file(config_file))
+    
+    # load taxonomy and dataset
+    wt = WordnetTaxonomy()
+    data_path = config.data_path
+    trans_dataset = load_dataset(
+        "json",
+        data_files={
+            "base": os.path.join(data_path, "base.jsonl"),
+            "train": os.path.join(data_path, "train.jsonl"),
+            "val": os.path.join(data_path, "val.jsonl"),
+            "test": os.path.join(data_path, "test.jsonl"),
+        },
+    )
+
+    # load base edges for training
+    base_examples = example_generator(wt, trans_dataset["base"])
+    train_portion = config.train.trans_train_portion
+    train_examples = []
+    if train_portion > 0.0:
+        logger.info(f"{train_portion} transitivie edges used for training.")
+        train_examples = example_generator(wt, trans_dataset["train"])
+        num_train_examples = int(train_portion * len(train_examples))
+        train_examples = list(np.random.choice(train_examples, size=num_train_examples, replace=False))
+    else:
+        logger.info("No transitivie edges used for training.")
+    train_examples = base_examples + train_examples
+    train_dataloaer = DataLoader(train_examples, shuffle=True, batch_size=config.train.train_batch_size)
+    val_examples = example_generator(wt, trans_dataset["val"])[:config.train.eval_batch_size * 20]
+    val_dataloader = DataLoader(val_examples, shuffle=True, batch_size=config.train.eval_batch_size)
 
 
-wt = WordnetTaxonomy()
-data_path = "data/wordnet/trans"
-trans_dataset = load_dataset(
-    "json",
-    data_files={
-        "base": os.path.join(data_path, "base.jsonl"),
-        "train": os.path.join(data_path, "train.jsonl"),
-        "val": os.path.join(data_path, "val.jsonl"),
-        "test": os.path.join(data_path, "test.jsonl"),
-    },
-)
+    device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
+    pretrained = SentenceTransformer(config.pretrained, device=device)
+    modules = list(pretrained.modules())
+    model = SentenceTransformer(modules=[modules[1], modules[-2]], device=device)
 
-
-def example_generator(dataset):
-    examples = []
-    for sample in dataset:
-        child = wt.get_node_attributes(sample["child"])["name"]
-        parent = wt.get_node_attributes(sample["parent"])["name"]
-        negative_parents = [wt.get_node_attributes(neg)["name"] for neg in sample["negative_parents"]]
-        examples.append(InputExample(texts=[child, parent], label=1))
-        examples += [InputExample(texts=[child, neg], label=0) for neg in negative_parents]
-    return examples
-
-
-base_examples = example_generator(trans_dataset["base"])
-base_dataloader = DataLoader(base_examples, shuffle=True, batch_size=256)
-
-val_examples = example_generator(trans_dataset["val"])
-val_dataloader = DataLoader(val_examples, shuffle=True, batch_size=1024)
-
-
-gpu_id = 1
-device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
-pretrained = SentenceTransformer("all-MiniLM-L6-v2", device=device)
-modules = list(pretrained.modules())
-model = SentenceTransformer(modules=[modules[1], modules[-2]], device=device)
-
-
-cluster_centri_weights = {"cluster": 1.0, "centri": 1.0, "cone": 0.0}
-cone_only_weights = {"cluster": 0.0, "centri": 0.0, "cone": 10.0}
-
-curvature = 1 / modules[1].get_word_embedding_dimension()  # bigger ball
-manifold = PoincareBall(c=curvature)
-hyper_loss = HyperbolicLoss(model, manifold, cluster_centri_weights)
-hyper_loss.to(device)
-val_evaluator = HyperbolicLossEvaluator(val_dataloader, hyper_loss, device)
-model.fit(
-    train_objectives=[(base_dataloader, hyper_loss)],
-    epochs=3,
-    warmup_steps=500,
-    evaluator=val_evaluator,
-    output_path="experiments/trial.stage1=cluster+centri",
-)
-
-second_stage = False
-
-if second_stage:
-    hyper_loss = HyperbolicLoss(model, manifold, {"cluster": 0.0, "centri": 0.0, "cone": 10.0})
+    print(print_dict(config.train.loss))
+    hyper_loss = HyperbolicLoss(
+        model=model,
+        training_mode=config.train.training_mode,
+        loss_weights={
+            "cluster": config.train.loss.cluster.weight, 
+            "centri": config.train.loss.centri.weight, 
+            "cone": config.train.loss.cone.weight},
+        min_distance=config.train.loss.cluster.min_distance,
+        cluster_loss_margin=config.train.loss.cluster.margin,
+        centri_loss_margin=config.train.loss.centri.margin,
+        cone_loss_margin=config.train.loss.cone.margin,
+    )
     hyper_loss.to(device)
     val_evaluator = HyperbolicLossEvaluator(val_dataloader, hyper_loss, device)
+    
     model.fit(
-        train_objectives=[(base_dataloader, hyper_loss)],
-        epochs=3,
-        warmup_steps=500,
+        train_objectives=[(train_dataloaer, hyper_loss)],
+        epochs=config.train.train_epochs,
+        optimizer_params={"lr": float(config.train.learning_rate)},  # defaults to 2e-5
+        # steps_per_epoch=5,
+        warmup_steps=config.train.warmup_steps,
         evaluator=val_evaluator,
-        output_path="experiments/trial.stage1=cluster+centri.stage2=cone",
+        output_path=f"experiments/train={train_portion}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}-cone={list(config.train.loss.cone.values())}",
+        # output_path="experiments/trial.train=0.2.stage1=cluster+centri",
     )
+
+if __name__ == "__main__":
+    main()
