@@ -5,8 +5,8 @@ pretrained: "all-MiniLM-L6-v2"
 train:
   training_mode: bigger_ball
   trans_train_portion: 0.0
-  train_epochs: 3
-  learning_rate: 2e-5
+  num_epochs: 5
+  learning_rate: 1e-5
   warmup_steps: 500
   train_batch_size: 256
   eval_batch_size: 1024
@@ -16,7 +16,7 @@ train:
       min_distance: 0.1
       margin: 1.0
     centri:
-      weight: 2.0
+      weight: 1.0
       margin: 0.1
     cone:  # cone loss is only applicable for smaller_cube (unit Poincare ball)
       weight: 0.0

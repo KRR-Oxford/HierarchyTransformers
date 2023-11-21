@@ -36,7 +36,9 @@ class HyperbolicLoss(torch.nn.Module):
         elif self.training_mode == "smaller_cube":
             self.curvature = 1.0
         self.manifold = PoincareBall(c=self.curvature)
-        self.dist = self.manifold.dist
+        logging.info(f"Poincare ball curvature: {self.manifold.c}")
+        # print("curvature:", self.manifold.c)
+        self.distance_metric = self.manifold.dist
         # self.dist = lambda u, v: torch.acosh(1 + 2 * (u - v).norm(dim=-1).pow(2) / (1 - u.norm(dim=-1).pow(2)) * (1 - v.norm(dim=-1).pow(2)))
         self.manifold_origin = self.manifold.origin(self.embed_dim)
         self.loss_weights = loss_weights
@@ -45,9 +47,6 @@ class HyperbolicLoss(torch.nn.Module):
         self.centri_loss_margin = centri_loss_margin
         self.min_euclidean_norm = min_euclidean_norm
         self.cone_loss_margin = cone_loss_margin
-        
-        # self._running_loss = 0.
-        # self._num_batches = 0
 
     def half_cone_aperture(self, cone_tip: torch.Tensor):
         """Angle between the axis [0, x] (line through 0 and x) and the boundary of the cone at x,
@@ -76,7 +75,7 @@ class HyperbolicLoss(torch.nn.Module):
 
     def get_config_dict(self):
         # distance_metric_name = self.distance_metric.__name__
-        config = dict()
+        config = {"distance_metric": self.distance_metric.__name__}
         config["cluster"] = {
             "weight": self.loss_weights["cluster"],
             "min_distance": self.min_distance,
@@ -91,46 +90,42 @@ class HyperbolicLoss(torch.nn.Module):
         assert len(reps) == 2
         rep_anchor, rep_other = reps
 
-        if self.training_mode == "smaller_cube":
-            # shrink the cube into the unit ball
-            rep_anchor = rep_anchor / np.sqrt(self.embed_dim)
-            rep_other = rep_other / np.sqrt(self.embed_dim)
+        # if self.training_mode == "smaller_cube":
+        #     # shrink the cube into the unit ball
+        #     rep_anchor = rep_anchor / np.sqrt(self.embed_dim)
+        #     rep_other = rep_other / np.sqrt(self.embed_dim)
 
         # CLUSTERING LOSS
-        distances = self.dist(rep_anchor, rep_other)
+        distances = self.distance_metric(rep_anchor, rep_other)
         # cluster_losses = 0.5 * (labels.float() * distances.pow(2) + (1 - labels).float() * F.relu(self.margin - distances).pow(2))
         cluster_loss = (
-            labels.float() * F.relu(distances - self.min_distance).pow(2) + 
-            (1 - labels).float() * F.relu(self.cluster_loss_margin - distances).pow(2)
+            labels.float() * F.relu(distances - self.min_distance) #.pow(2)
+            + (1 - labels).float() * F.relu(self.cluster_loss_margin - distances) #.pow(2)
         )
-
         cluster_loss = cluster_loss.mean()
 
         # CENTRIPETAL LOSS
-        rep_anchor_hyper_norms = self.dist(rep_anchor, self.manifold_origin.to(rep_anchor.device))
-        rep_other_hyper_norms = self.dist(rep_other, self.manifold_origin.to(rep_other.device))
+        rep_anchor_hyper_norms = self.distance_metric(rep_anchor, self.manifold_origin.to(rep_anchor.device))
+        rep_other_hyper_norms = self.distance_metric(rep_other, self.manifold_origin.to(rep_other.device))
         # child further than parent w.r.t. origin
         centri_loss = labels.float() * F.relu(self.centri_loss_margin + rep_other_hyper_norms - rep_anchor_hyper_norms)
         centri_loss = centri_loss.sum() / labels.float().sum()
 
         # ENTAILMENT CONE LOSS (only make sense for unit Poincare Ball)
-        energies = self.energy(cone_tip=rep_other, u=rep_anchor)
-        cone_loss = (
-            labels.float() * energies.pow(2) + 
-            (1 - labels).float() * F.relu(self.cone_loss_margin - energies).pow(2)
-        )
-        cone_loss = cone_loss.mean()
-        cone_loss = 0.0 if torch.isnan(cone_loss) else cone_loss
+        # energies = self.energy(cone_tip=rep_other, u=rep_anchor)
+        # cone_loss = labels.float() * energies.pow(2) + (1 - labels).float() * F.relu(self.cone_loss_margin - energies).pow(2)
+        # cone_loss = cone_loss.mean()
 
         loss = (
             self.loss_weights["cluster"] * cluster_loss
             + self.loss_weights["centri"] * centri_loss
-            + self.loss_weights["cone"] * cone_loss
+            # + self.loss_weights["cone"] * cone_loss
         )
         logger.info(
-            f"weighted={loss:.6f};" + 
-            f"cluster={cluster_loss:.6f};" +
-            f"centri={centri_loss:.6f};" + 
-            f"cone={cone_loss:.6f}"
+            f"weighted={loss:.6f};"
+            + f"cluster={cluster_loss:.6f};"
+            + f"centri={centri_loss:.6f};"
+            # + f"cone={cone_loss:.6f}"
         )
+        # logger.info(f"weighted={loss}; cluster={cluster_loss}; centri={centri_loss}; cone={cone_loss}")
         return loss
