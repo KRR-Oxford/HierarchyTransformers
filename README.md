@@ -1,2 +1,3 @@
-# HyperTrans
-Investigating transitivity closure using hyperbolic embeddings.
+# HELM
+
+Retraining language models as hierarchy encoders.
