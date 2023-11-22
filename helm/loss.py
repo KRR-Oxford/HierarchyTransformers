@@ -97,10 +97,9 @@ class HyperbolicLoss(torch.nn.Module):
 
         # CLUSTERING LOSS
         distances = self.distance_metric(rep_anchor, rep_other)
-        # cluster_losses = 0.5 * (labels.float() * distances.pow(2) + (1 - labels).float() * F.relu(self.margin - distances).pow(2))
         cluster_loss = (
-            labels.float() * F.relu(distances - self.min_distance) #.pow(2)
-            + (1 - labels).float() * F.relu(self.cluster_loss_margin - distances) #.pow(2)
+            labels.float() * F.relu(distances - self.min_distance)
+            + (1 - labels).float() * F.relu(self.cluster_loss_margin - distances) 
         )
         cluster_loss = cluster_loss.mean()
 

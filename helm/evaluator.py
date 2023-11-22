@@ -23,21 +23,22 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
         self.device = device
         self.loss_module.to(self.device)
 
-    def evaluate_f1(self, result_mat: torch.Tensor):
+    @staticmethod
+    def evaluate_f1(result_mat: torch.Tensor, granuality: int = 1000):
         
         positives = result_mat[result_mat[:, 0] == 1.0]
         negatives = result_mat[result_mat[:, 0] == 0.0]
         positive_scores = positives[:, 1] + (positives[:, 3] - positives[:, 2])
         negative_scores = negatives[:, 1] + (negatives[:, 3] - negatives[:, 2])
-        start = int(positive_scores.min() * 1000)
-        end = int(negative_scores.max() * 1000)
+        start = int(positive_scores.min() * granuality)
+        end = int(negative_scores.max() * granuality)
         
         best_threshold = -1
         best_f1 = 0.0
         best_scores = None
         
         for threshold in range(start, end):
-            threshold = threshold / (end - start)
+            threshold = threshold / granuality
             tp = (positive_scores <= threshold).sum()
             fp = (negative_scores <= threshold).sum()
             tn = (negative_scores > threshold).sum()
@@ -52,11 +53,11 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
                 best_threshold = threshold
                 best_scores = {
                     "threshold": best_threshold,
-                    "P": precision,
-                    "R": recall,
-                    "f1": best_f1,
-                    "ACC+": pos_accuracy,
-                    "ACC-": neg_accuracy,
+                    "P": precision.item(),
+                    "R": recall.item(),
+                    "f1": best_f1.item(),
+                    "ACC+": pos_accuracy.item(),
+                    "ACC-": neg_accuracy.item(),
                 }
         return best_scores
 
@@ -119,7 +120,6 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
 
         # compute score
         result_mat = torch.cat(results, dim=0)
-        torch.save(result_mat, f"{output_path}/epoch={epoch}.step={steps}/eval_results.pt")
         eval_scores = self.evaluate_f1(result_mat)
 
         self.loss_module.zero_grad()
@@ -129,6 +129,7 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
         results = self.loss_module.get_config_dict()
         results["loss"] = eval_loss / (num_batch + 1)
         results["scores"] = eval_scores
+        torch.save(result_mat, f"{output_path}/epoch={epoch}.step={steps}/eval_results.pt")
         save_file(results, f"{output_path}/epoch={epoch}.step={steps}/eval_results.json")
 
         return -eval_loss
