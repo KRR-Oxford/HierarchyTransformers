@@ -33,21 +33,21 @@ def main(config_file: str, gpu_id: int):
     trans_dataset = load_dataset(
         "json",
         data_files={
-            "base": os.path.join(data_path, "base.jsonl"),
-            "train": os.path.join(data_path, "train.jsonl"),
+            "train_base": os.path.join(data_path, "train_base.jsonl"),
+            "train_trans": os.path.join(data_path, "train_trans.jsonl"),
             "val": os.path.join(data_path, "val.jsonl"),
             "test": os.path.join(data_path, "test.jsonl"),
         },
     )
 
     # load base edges for training
-    base_examples = example_generator(wt, trans_dataset["base"], config.train.hard_negative_first)
-    train_portion = config.train.trans_train_portion
+    base_examples = example_generator(wt, trans_dataset["train_base"], config.train.hard_negative_first)
+    train_trans_portion = config.train.train_trans_portion
     train_examples = []
-    if train_portion > 0.0:
-        logger.info(f"{train_portion} transitivie edges used for training.")
-        train_examples = example_generator(wt, trans_dataset["train"], config.train.hard_negative_first)
-        num_train_examples = int(train_portion * len(train_examples))
+    if train_trans_portion > 0.0:
+        logger.info(f"{train_trans_portion} transitivie edges used for training.")
+        train_examples = example_generator(wt, trans_dataset["train_trans"], config.train.hard_negative_first)
+        num_train_examples = int(train_trans_portion * len(train_examples))
         train_examples = list(np.random.choice(train_examples, size=num_train_examples, replace=False))
     else:
         logger.info("No transitivie edges used for training.")
@@ -88,7 +88,7 @@ def main(config_file: str, gpu_id: int):
         # steps_per_epoch=5,
         warmup_steps=config.train.warmup_steps,
         evaluator=val_evaluator,
-        output_path=f"experiments/train={train_portion}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}-cone={list(config.train.loss.cone.values())}",
+        output_path=f"experiments/train={train_trans_portion}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}-cone={list(config.train.loss.cone.values())}",
         # output_path="experiments/trial.train=0.2.stage1=cluster+centri",
     )
 

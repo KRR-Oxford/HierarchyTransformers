@@ -4,7 +4,7 @@ pretrained: "all-MiniLM-L6-v2"
 
 train:
   training_mode: bigger_ball
-  trans_train_portion: 0.0
+  train_trans_portion: 0.0
   num_epochs: 5
   learning_rate: 1e-5
   warmup_steps: 500
