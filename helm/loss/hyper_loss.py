@@ -30,7 +30,7 @@ class HyperbolicLoss(torch.nn.Module):
         # distance_metric_name = self.distance_metric.__name__
         config = {"distance_metric": f"combined"}
         for weight, loss_func in self.loss_dict.items():
-            config[loss_func.__name__] = {"weight": weight, **loss_func.get_config_dict()}
+            config[type(loss_func).__name__] = {"weight": weight, **loss_func.get_config_dict()}
         return config
 
     def forward(self, sentence_features: Iterable[Dict[str, torch.Tensor]], labels: torch.Tensor):
