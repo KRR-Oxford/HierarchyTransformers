@@ -60,7 +60,7 @@ def main(config_file: str, gpu_id: int):
     val_examples = example_generator(
         wt, trans_dataset["val"], config.train.hard_negative_first, config.train.apply_triplet_loss
     )
-    val_dataloader = DataLoader(val_examples, shuffle=True, batch_size=config.train.eval_batch_size)
+    val_dataloader = DataLoader(val_examples, shuffle=False, batch_size=config.train.eval_batch_size)
 
     # load pre-trained model
     device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
@@ -79,10 +79,12 @@ def main(config_file: str, gpu_id: int):
     losses = []
 
     if config.train.loss.cluster.weight > 0.0:
-        cluster_loss_class = ClusteringTripletLoss if config.train.apply_triplet_loss else ClusteringLoss
-        cluster_loss = cluster_loss_class(
-            manifold, config.train.loss.cluster.positive_margin, config.train.loss.cluster.margin
-        )
+        if config.train.apply_triplet_loss:
+            cluster_loss = ClusteringTripletLoss(manifold, config.train.loss.cluster.margin)
+        else:
+            cluster_loss = ClusteringLoss(
+                manifold, config.train.loss.cluster.positive_margin, config.train.loss.cluster.margin
+            )
         losses.append((config.train.loss.cluster.weight, cluster_loss))
 
     if config.train.loss.centri.weight > 0.0:
@@ -95,7 +97,7 @@ def main(config_file: str, gpu_id: int):
         cone_loss = cone_loss_class(manifold, config.train.loss.cone.min_euclidean_norm, config.train.loss.cone.margin)
         losses.append((config.train.loss.cone.weight, cone_loss))
 
-    hyper_loss = HyperbolicLoss(model, *losses)
+    hyper_loss = HyperbolicLoss(model, config.train.apply_triplet_loss, *losses)
     print(hyper_loss.get_config_dict())
     hyper_loss.to(device)
     val_evaluator = HyperbolicLossEvaluator(val_dataloader, hyper_loss, manifold, device)

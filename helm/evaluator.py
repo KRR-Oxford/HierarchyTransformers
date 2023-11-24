@@ -26,29 +26,28 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
         self.loss_module.to(self.device)
 
     @staticmethod
-    def evaluate_f1(result_mat: torch.Tensor, granuality: int = 1000):
+    def evaluate_f1(result_mat: torch.Tensor, granuality: int = 1000, scale_down_truths: float = 1.0):
         
-        positives = result_mat[result_mat[:, 0] == 1.0]
-        negatives = result_mat[result_mat[:, 0] == 0.0]
-        positive_scores = positives[:, 1] + (positives[:, 3] - positives[:, 2])
-        negative_scores = negatives[:, 1] + (negatives[:, 3] - negatives[:, 2])
-        start = int(positive_scores.min() * granuality)
-        end = int(negative_scores.max() * granuality)
-        
+        scores = result_mat[:, 1] + (result_mat[:, 3] - result_mat[:, 2])
+        start = int(scores.min() * granuality)
+        end = int(scores.max() * granuality)
+
         best_threshold = -1
         best_f1 = 0.0
         best_scores = None
-        
+
         for threshold in range(start, end):
             threshold = threshold / granuality
-            tp = (positive_scores <= threshold).sum()
-            fp = (negative_scores <= threshold).sum()
-            tn = (negative_scores > threshold).sum()
-            # fn = (positive_scores > threshold).sum()
-            pos_accuracy = tp / len(positive_scores)
-            neg_accuracy = tn / len(negative_scores)
+            positives = result_mat[scores <= threshold]
+            negatives = result_mat[scores > threshold]
+            tp = (positives[:, 0] == 1.0).sum() / scale_down_truths
+            fp = (positives[:, 0] == 0.0).sum()
+            tn = (negatives[:, 0] == 0.0).sum()
+            fn = (negatives[:, 0] == 1.0).sum() / scale_down_truths
+            accuracy = (tp + tn) / (tp + fp + tn + fn)
+            neg_accuracy = tn / (fp + tn)
             precision = tp / (tp + fp)
-            recall = tp / len(positive_scores)
+            recall = tp / (tp + fn)
             f1 = 2 * precision * recall / (precision + recall)
             if f1 > best_f1:
                 best_f1 = f1
@@ -58,7 +57,7 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
                     "P": precision.item(),
                     "R": recall.item(),
                     "f1": best_f1.item(),
-                    "ACC+": pos_accuracy.item(),
+                    "ACC": accuracy.item(),
                     "ACC-": neg_accuracy.item(),
                 }
         return best_scores
@@ -105,12 +104,57 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
 
                 # compute eval matrix
                 reps = [model(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features]
-                assert len(reps) == 2
-                rep_anchor, rep_other = reps
-                dists = self.loss_module.manifold.distance(rep_anchor, rep_other)
-                rep_anchor_norms = self.loss_module.manifold.distance(rep_anchor, self.manifold_origin.to(rep_anchor.device))
-                rep_other_norms = self.loss_module.manifold.distance(rep_other, self.manifold_origin.to(rep_other.device))
-                results.append(torch.stack([labels, dists, rep_anchor_norms, rep_other_norms]).T)
+                if not self.loss_module.apply_triplet_loss:
+                    assert len(reps) == 2
+                    rep_anchor, rep_other = reps
+
+                    dists = self.manifold.dist(rep_anchor, rep_other)
+
+                    rep_anchor_norms = self.manifold.dist(
+                        rep_anchor, self.manifold.origin(rep_anchor.shape).to(rep_anchor.device)
+                    )
+                    rep_other_norms = self.manifold.dist(
+                        rep_other, self.manifold.origin(rep_other.shape).to(rep_other.device)
+                    )
+
+                    results.append(torch.stack([labels, dists, rep_anchor_norms, rep_other_norms]).T)
+                else:
+                    assert len(reps) == 3
+                    rep_anchor, rep_positive, rep_negative = reps
+
+                    positive_dists = self.manifold.dist(rep_anchor, rep_positive)
+                    negative_dists = self.manifold.dist(rep_anchor, rep_negative)
+
+                    rep_anchor_norms = self.manifold.dist(
+                        rep_anchor, self.manifold.origin(rep_anchor.shape).to(rep_anchor.device)
+                    )
+                    rep_positive_norms = self.manifold.dist(
+                        rep_positive, self.manifold.origin(rep_positive.shape).to(rep_positive.device)
+                    )
+                    rep_negative_norms = self.manifold.dist(
+                        rep_negative, self.manifold.origin(rep_negative.shape).to(rep_negative.device)
+                    )
+
+                    results.append(
+                        torch.stack(
+                            [
+                                torch.ones(positive_dists.shape).to(positive_dists.device),
+                                positive_dists,
+                                rep_anchor_norms,
+                                rep_positive_norms,
+                            ]
+                        ).T
+                    )
+                    results.append(
+                        torch.stack(
+                            [
+                                torch.zeros(negative_dists.shape).to(negative_dists.device),
+                                negative_dists,
+                                rep_anchor_norms,
+                                rep_negative_norms,
+                            ]
+                        ).T
+                    )
 
                 # compute eval loss
                 cur_loss = self.loss_module(sentence_features, labels)
@@ -122,7 +166,8 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
 
         # compute score
         result_mat = torch.cat(results, dim=0)
-        eval_scores = self.evaluate_f1(result_mat)
+        scale_down_truths = 10.0 if self.loss_module.apply_triplet_loss else 1.0
+        eval_scores = self.evaluate_f1(result_mat, 1000, scale_down_truths)
 
         self.loss_module.zero_grad()
         self.loss_module.train()
