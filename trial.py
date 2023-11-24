@@ -57,10 +57,11 @@ def main(config_file: str, gpu_id: int):
         logger.info("No transitivie edges used for training.")
     train_examples = base_examples + train_examples
     train_dataloaer = DataLoader(train_examples, shuffle=True, batch_size=config.train.train_batch_size)
-    val_examples = example_generator(
-        wt, trans_dataset["val"], config.train.hard_negative_first, config.train.apply_triplet_loss
-    )
-    val_dataloader = DataLoader(val_examples, shuffle=False, batch_size=config.train.eval_batch_size)
+    # val_examples = example_generator(
+    #     wt, trans_dataset["val"], config.train.hard_negative_first, config.train.apply_triplet_loss
+    # )
+    # val_dataloader = DataLoader(val_examples, shuffle=False, batch_size=config.train.eval_batch_size)
+    val_dataloader = DataLoader(base_examples, shuffle=False, batch_size=config.train.eval_batch_size)  # need to decrease the loss on training data now
 
     # load pre-trained model
     device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
