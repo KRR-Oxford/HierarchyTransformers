@@ -108,7 +108,6 @@ def main(config_file: str, gpu_id: int):
         warmup_steps=config.train.warmup_steps,
         evaluator=val_evaluator,
         output_path=f"experiments/triplet={config.train.apply_triplet_loss}-train={train_trans_portion}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}-cone={list(config.train.loss.cone.values())}",
-        # output_path="experiments/trial.train=0.2.stage1=cluster+centri",
     )
 
 
