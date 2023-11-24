@@ -27,7 +27,7 @@ class HyperbolicLoss(torch.nn.Module):
     def get_config_dict(self):
         # distance_metric_name = self.distance_metric.__name__
         config = {"distance_metric": f"combined"}
-        for weight, loss_func in self.loss_dict.items():
+        for weight, loss_func in self.weight_and_loss:
             config[type(loss_func).__name__] = {"weight": weight, **loss_func.get_config_dict()}
         return config
 
@@ -37,7 +37,7 @@ class HyperbolicLoss(torch.nn.Module):
         rep_anchor, rep_other = reps
 
         weighted_loss = 0.0
-        report = dict()
+        report = {"weighted": None}
         for weight, loss_func in self.weight_and_loss:
             cur_loss = loss_func(rep_anchor, rep_other, labels)
             report[type(loss_func).__name__] = cur_loss.item()
@@ -54,7 +54,9 @@ class HyperbolicTripletLoss(torch.nn.Module):
     def __init__(
         self,
         model: SentenceTransformer,
-        *weight_and_loss: Tuple[float, Union[ClusteringTripletLoss, CentripetalTripletLoss, EntailmentConeTripletLoss]],
+        *weight_and_loss: Tuple[
+            float, Union[ClusteringTripletLoss, CentripetalTripletLoss, EntailmentConeTripletLoss]
+        ],
     ):
         super(HyperbolicLoss, self).__init__()
 
@@ -64,7 +66,7 @@ class HyperbolicTripletLoss(torch.nn.Module):
     def get_config_dict(self):
         # distance_metric_name = self.distance_metric.__name__
         config = {"distance_metric": f"combined"}
-        for weight, loss_func in self.loss_dict.items():
+        for weight, loss_func in self.weight_and_loss.items():
             config[type(loss_func).__name__] = {"weight": weight, **loss_func.get_config_dict()}
         return config
 
@@ -74,7 +76,7 @@ class HyperbolicTripletLoss(torch.nn.Module):
         rep_anchor, rep_positive, rep_other = reps
 
         weighted_loss = 0.0
-        report = dict()
+        report = {"weighted": None}
         for weight, loss_func in self.weight_and_loss:
             cur_loss = loss_func(rep_anchor, rep_positive, rep_other)
             report[type(loss_func).__name__] = cur_loss.item()
