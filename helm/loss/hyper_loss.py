@@ -20,20 +20,15 @@ class HyperbolicLoss(torch.nn.Module):
         self,
         model: SentenceTransformer,
         loss_dict: Dict[float, Union[ClusteringLoss, CentripetalLoss, EntailmentConeLoss]],  # weights and loss funcs
-        apply_unit_ball_projection: bool = False,  # True means smaller cube
     ):
         super(HyperbolicLoss, self).__init__()
 
         self.model = model
         self.loss_dict = loss_dict
-        self.embed_dim = self.model._first_module().get_word_embedding_dimension()
-        self.curvature = 1 / self.embed_dim if not apply_unit_ball_projection else 1.0
-        self.manifold = PoincareBall(c=self.curvature)
-        logging.info(f"Poincare ball curvature: {self.manifold.c}")
 
     def get_config_dict(self):
         # distance_metric_name = self.distance_metric.__name__
-        config = {"distance_metric": f"PoincareBall(c={self.curvature})"}
+        config = {"distance_metric": f"combined"}
         for weight, loss_func in self.loss_dict.items():
             config[loss_func.__name__] = {"weight": weight, **loss_func.get_config_dict()}
         return config
@@ -64,20 +59,15 @@ class HyperbolicTripletLoss(torch.nn.Module):
         loss_dict: Dict[
             float, Union[ClusteringTripletLoss, CentripetalTripletLoss, EntailmentConeTripletLoss]
         ],  # weights and loss funcs
-        apply_unit_ball_projection: bool = False,  # True means smaller cube
     ):
         super(HyperbolicLoss, self).__init__()
 
         self.model = model
         self.loss_dict = loss_dict
-        self.embed_dim = self.model._first_module().get_word_embedding_dimension()
-        self.curvature = 1 / self.embed_dim if not apply_unit_ball_projection else 1.0
-        self.manifold = PoincareBall(c=self.curvature)
-        logging.info(f"Poincare ball curvature: {self.manifold.c}")
 
     def get_config_dict(self):
         # distance_metric_name = self.distance_metric.__name__
-        config = {"distance_metric": f"PoincareBall(c={self.curvature})"}
+        config = {"distance_metric": f"combined"}
         for weight, loss_func in self.loss_dict.items():
             config[loss_func.__name__] = {"weight": weight, **loss_func.get_config_dict()}
         return config

@@ -10,18 +10,18 @@ import numpy as np
 import click
 from yacs.config import CfgNode
 
-from helm.loss import HyperbolicLoss
+from helm.loss import *
 from helm.evaluator import HyperbolicLossEvaluator
 from helm.utils import example_generator
 
 
 logger = logging.getLogger(__name__)
 
+
 @click.command()
 @click.option("-c", "--config_file", type=click.Path(exists=True))
 @click.option("-g", "--gpu_id", type=int, default=0)
 def main(config_file: str, gpu_id: int):
-
     # set_seed(8888)
     # config_file = "./config.yaml"
     # gpu_id = 1
@@ -56,27 +56,39 @@ def main(config_file: str, gpu_id: int):
     val_examples = example_generator(wt, trans_dataset["val"], config.train.hard_negative_first)
     val_dataloader = DataLoader(val_examples, shuffle=True, batch_size=config.train.eval_batch_size)
 
-
+    # load pre-trained model
     device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
     pretrained = SentenceTransformer(config.pretrained, device=device)
     modules = list(pretrained.modules())
     model = SentenceTransformer(modules=[modules[1], modules[-2]], device=device)
     print(model)
 
-    hyper_loss = HyperbolicLoss(
-        model=model,
-        training_mode=config.train.training_mode,
-        loss_weights={
-            "cluster": config.train.loss.cluster.weight, 
-            "centri": config.train.loss.centri.weight, 
-            "cone": config.train.loss.cone.weight,
-        },
-        min_distance=config.train.loss.cluster.min_distance,
-        cluster_loss_margin=config.train.loss.cluster.margin,
-        centri_loss_margin=config.train.loss.centri.margin,
-        min_euclidean_norm=config.train.loss.cone.min_euclidean_norm,
-        cone_loss_margin=config.train.loss.cone.margin,
-    )
+    # manifold
+    embed_dim = model._first_module().get_word_embedding_dimension()
+    curvature = 1 / embed_dim if not config.apply_unit_ball_projection else 1.0
+    manifold = PoincareBall(c=curvature)
+    logging.info(f"Poincare ball curvature: {manifold.c}")
+
+    # loss
+    loss_dict = dict()
+
+    if config.train.loss.cluster.weight > 0.0:
+        cluster_loss = ClusteringLoss(
+            manifold, config.train.loss.cluster.positive_margin, config.train.loss.cluster.margin
+        )
+        loss_dict[config.train.loss.cluster.weight] = cluster_loss
+
+    if config.train.loss.centri.weight > 0.0:
+        centri_loss = CentripetalLoss(manifold, embed_dim, config.train.loss.centri.margin)
+        loss_dict[config.train.loss.centri.weight] = centri_loss
+
+    if config.train.loss.cone.weight > 0.0:
+        cone_loss = EntailmentConeLoss(
+            manifold, config.train.loss.cone.min_euclidean_norm, config.train.loss.cone.margin
+        )
+        loss_dict[config.train.loss.cone.weight] = cone_loss
+
+    hyper_loss = HyperbolicLoss(model=model, loss_dict=loss_dict)
     print(print_dict(hyper_loss.get_config_dict()))
     hyper_loss.to(device)
     val_evaluator = HyperbolicLossEvaluator(val_dataloader, hyper_loss, device)
