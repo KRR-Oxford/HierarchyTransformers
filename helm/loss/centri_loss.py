@@ -5,9 +5,10 @@ from geoopt.manifolds import PoincareBall
 
 class CentripetalLoss(torch.nn.Module):
     """Loss for regulating the distances of child and parent entities to the manifold's origin, i.e.,
-        
-        dist(child, origin) > dist(parent, origin).
+
+    dist(child, origin) > dist(parent, origin).
     """
+
     def __init__(self, manifold: PoincareBall, embed_dim: int, margin: float):
         super(CentripetalLoss, self).__init__()
         self.manifold = manifold
@@ -23,12 +24,12 @@ class CentripetalLoss(torch.nn.Module):
         rep_other_hyper_norms = self.manifold.dist(rep_other, self.manifold_origin.to(rep_other.device))
         # child further than parent w.r.t. origin
         centri_loss = labels.float() * F.relu(self.margin + rep_other_hyper_norms - rep_anchor_hyper_norms)
-        centri_loss = centri_loss.sum() / labels.float().sum()
+        return centri_loss.sum() / labels.float().sum()
 
 
 class CentripetalTripletLoss(torch.nn.Module):
-    """A variant of the `CentripetalLoss` when inputs are triplets.
-    """
+    """A variant of the `CentripetalLoss` when inputs are triplets."""
+
     def __init__(self, manifold: PoincareBall, embed_dim: int, margin: float):
         super(CentripetalTripletLoss, self).__init__()
         self.manifold = manifold
@@ -43,5 +44,5 @@ class CentripetalTripletLoss(torch.nn.Module):
         rep_anchor_hyper_norms = self.manifold.dist(rep_anchor, self.manifold_origin.to(rep_anchor.device))
         rep_positive_hyper_norms = self.manifold.dist(rep_positive, self.manifold_origin.to(rep_positive.device))
         # child further than parent w.r.t. origin
-        centri_loss = F.relu(self.margin + rep_positive_hyper_norms - rep_anchor_hyper_norms)
-        centri_loss = centri_loss.mean()
+        centri_triplet_loss = F.relu(self.margin + rep_positive_hyper_norms - rep_anchor_hyper_norms)
+        return centri_triplet_loss.mean()
