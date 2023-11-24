@@ -96,7 +96,7 @@ def main(config_file: str, gpu_id: int):
         losses.append((config.train.loss.cone.weight, cone_loss))
 
     hyper_loss = HyperbolicLoss(model, *losses)
-    print(hyper_loss.getconfig_dict())
+    print(hyper_loss.get_config_dict())
     hyper_loss.to(device)
     val_evaluator = HyperbolicLossEvaluator(val_dataloader, hyper_loss, device)
 
