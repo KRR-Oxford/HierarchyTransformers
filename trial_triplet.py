@@ -73,23 +73,21 @@ def main(config_file: str, gpu_id: int):
     loss_dict = dict()
 
     if config.train.loss.cluster.weight > 0.0:
-        cluster_loss = ClusteringLoss(
-            manifold, config.train.loss.cluster.positive_margin, config.train.loss.cluster.margin
-        )
+        cluster_loss = ClusteringTripletLoss(manifold, config.train.loss.cluster.margin)
         loss_dict[config.train.loss.cluster.weight] = cluster_loss
 
     if config.train.loss.centri.weight > 0.0:
-        centri_loss = CentripetalLoss(manifold, embed_dim, config.train.loss.centri.margin)
+        centri_loss = CentripetalTripletLoss(manifold, embed_dim, config.train.loss.centri.margin)
         loss_dict[config.train.loss.centri.weight] = centri_loss
 
     if config.train.loss.cone.weight > 0.0:
-        cone_loss = EntailmentConeLoss(
+        cone_loss = EntailmentConeTripletLoss(
             manifold, config.train.loss.cone.min_euclidean_norm, config.train.loss.cone.margin
         )
-        loss_dict[config.train.loss.cone.weight] = cone_loss
+        loss_dict[config.train.loss.cone.weight] = cone_loss     
+    print(loss_dict)
 
     hyper_loss = HyperbolicLoss(model=model, loss_dict=loss_dict)
-    print(print_dict(hyper_loss.get_config_dict()))
     hyper_loss.to(device)
     val_evaluator = HyperbolicLossEvaluator(val_dataloader, hyper_loss, device)
 
@@ -100,7 +98,7 @@ def main(config_file: str, gpu_id: int):
         # steps_per_epoch=5,
         warmup_steps=config.train.warmup_steps,
         evaluator=val_evaluator,
-        output_path=f"experiments/train={train_trans_portion}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}-cone={list(config.train.loss.cone.values())}",
+        output_path=f"experiments/triplet-train={train_trans_portion}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}-cone={list(config.train.loss.cone.values())}",
         # output_path="experiments/trial.train=0.2.stage1=cluster+centri",
     )
 

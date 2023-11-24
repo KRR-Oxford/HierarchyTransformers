@@ -1,10 +1,8 @@
-from typing import Iterable, Dict, Union
+from typing import Iterable, Dict, Union, Tuple
 import torch
 import torch.nn.functional as F
 from sentence_transformers.SentenceTransformer import SentenceTransformer
 import logging
-from geoopt.manifolds import PoincareBall
-from deeponto.utils import print_dict
 
 from .cluster_loss import *
 from .centri_loss import *
@@ -19,12 +17,12 @@ class HyperbolicLoss(torch.nn.Module):
     def __init__(
         self,
         model: SentenceTransformer,
-        loss_dict: Dict[float, Union[ClusteringLoss, CentripetalLoss, EntailmentConeLoss]],  # weights and loss funcs
+        *weight_and_loss: Tuple[float, Union[ClusteringLoss, CentripetalLoss, EntailmentConeLoss]],
     ):
         super(HyperbolicLoss, self).__init__()
 
         self.model = model
-        self.loss_dict = loss_dict
+        self.weight_and_loss = weight_and_loss
 
     def get_config_dict(self):
         # distance_metric_name = self.distance_metric.__name__
@@ -40,12 +38,12 @@ class HyperbolicLoss(torch.nn.Module):
 
         weighted_loss = 0.0
         report = dict()
-        for weight, loss_func in self.loss_dict.items():
+        for weight, loss_func in self.weight_and_loss:
             cur_loss = loss_func(rep_anchor, rep_other, labels)
-            report[loss_func.__name__] = cur_loss.item()
+            report[type(loss_func).__name__] = cur_loss.item()
             weighted_loss += weight * cur_loss
-        report["weighted"] = weighted_loss.item()
-        logging.info(print_dict(report))
+        report["weighted"] = round(weighted_loss.item(), 6)
+        logging.info(report)
 
         return weighted_loss
 
@@ -56,14 +54,12 @@ class HyperbolicTripletLoss(torch.nn.Module):
     def __init__(
         self,
         model: SentenceTransformer,
-        loss_dict: Dict[
-            float, Union[ClusteringTripletLoss, CentripetalTripletLoss, EntailmentConeTripletLoss]
-        ],  # weights and loss funcs
+        *weight_and_loss: Tuple[float, Union[ClusteringTripletLoss, CentripetalTripletLoss, EntailmentConeTripletLoss]],
     ):
         super(HyperbolicLoss, self).__init__()
 
         self.model = model
-        self.loss_dict = loss_dict
+        self.weight_and_loss = weight_and_loss
 
     def get_config_dict(self):
         # distance_metric_name = self.distance_metric.__name__
@@ -79,11 +75,11 @@ class HyperbolicTripletLoss(torch.nn.Module):
 
         weighted_loss = 0.0
         report = dict()
-        for weight, loss_func in self.loss_dict.items():
+        for weight, loss_func in self.weight_and_loss:
             cur_loss = loss_func(rep_anchor, rep_positive, rep_other)
-            report[loss_func.__name__] = cur_loss.item()
+            report[type(loss_func).__name__] = cur_loss.item()
             weighted_loss += weight * cur_loss
-        report["weighted"] = weighted_loss.item()
-        logging.info(print_dict(report))
+        report["weighted"] = round(weighted_loss.item(), 6)
+        logging.info(report)
 
         return weighted_loss

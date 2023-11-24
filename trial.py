@@ -70,26 +70,26 @@ def main(config_file: str, gpu_id: int):
     logging.info(f"Poincare ball curvature: {manifold.c}")
 
     # loss
-    loss_dict = dict()
+    losses = []
 
     if config.train.loss.cluster.weight > 0.0:
         cluster_loss = ClusteringLoss(
             manifold, config.train.loss.cluster.positive_margin, config.train.loss.cluster.margin
         )
-        loss_dict[config.train.loss.cluster.weight] = cluster_loss
+        losses.append((config.train.loss.cluster.weight, cluster_loss))
 
     if config.train.loss.centri.weight > 0.0:
         centri_loss = CentripetalLoss(manifold, embed_dim, config.train.loss.centri.margin)
-        loss_dict[config.train.loss.centri.weight] = centri_loss
+        losses.append((config.train.loss.centri.weight, centri_loss))
 
     if config.train.loss.cone.weight > 0.0:
         cone_loss = EntailmentConeLoss(
             manifold, config.train.loss.cone.min_euclidean_norm, config.train.loss.cone.margin
         )
-        loss_dict[config.train.loss.cone.weight] = cone_loss
+        losses.append((config.train.loss.cone.weight, cone_loss))
+    print(losses)
 
-    hyper_loss = HyperbolicLoss(model=model, loss_dict=loss_dict)
-    print(print_dict(hyper_loss.get_config_dict()))
+    hyper_loss = HyperbolicLoss(model, *losses)
     hyper_loss.to(device)
     val_evaluator = HyperbolicLossEvaluator(val_dataloader, hyper_loss, device)
 
