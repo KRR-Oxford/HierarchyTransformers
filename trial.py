@@ -98,7 +98,7 @@ def main(config_file: str, gpu_id: int):
     hyper_loss = HyperbolicLoss(model, *losses)
     print(hyper_loss.get_config_dict())
     hyper_loss.to(device)
-    val_evaluator = HyperbolicLossEvaluator(val_dataloader, hyper_loss, device)
+    val_evaluator = HyperbolicLossEvaluator(val_dataloader, hyper_loss, manifold, device)
 
     model.fit(
         train_objectives=[(train_dataloaer, hyper_loss)],
