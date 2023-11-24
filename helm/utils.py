@@ -1,8 +1,6 @@
 from deeponto.onto import Taxonomy
 from datasets import Dataset
-from sentence_transformers import LoggingHandler, InputExample
-
-
+from sentence_transformers import InputExample
 from tqdm.auto import tqdm
 
 
