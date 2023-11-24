@@ -1,4 +1,5 @@
 from tqdm.autonotebook import trange
+from geoopt.manifolds import PoincareBall
 import torch
 from torch.utils.data import DataLoader
 from sentence_transformers.evaluation import SentenceEvaluator
@@ -17,9 +18,10 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
     Extend this class and implement __call__ for custom evaluators.
     """
 
-    def __init__(self, data_loader: DataLoader, loss_module: HyperbolicLoss, device):
+    def __init__(self, data_loader: DataLoader, loss_module: HyperbolicLoss, manifold: PoincareBall, device):
         self.data_loader = data_loader
         self.loss_module = loss_module
+        self.manifold = manifold
         self.device = device
         self.loss_module.to(self.device)
 
@@ -105,9 +107,9 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
                 reps = [model(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features]
                 assert len(reps) == 2
                 rep_anchor, rep_other = reps
-                dists = self.loss_module.distance_metric(rep_anchor, rep_other)
-                rep_anchor_norms = self.loss_module.distance_metric(rep_anchor, self.loss_module.manifold_origin.to(rep_anchor.device))
-                rep_other_norms = self.loss_module.distance_metric(rep_other, self.loss_module.manifold_origin.to(rep_other.device))
+                dists = self.loss_module.manifold.distance(rep_anchor, rep_other)
+                rep_anchor_norms = self.loss_module.manifold.distance(rep_anchor, self.manifold_origin.to(rep_anchor.device))
+                rep_other_norms = self.loss_module.manifold.distance(rep_other, self.manifold_origin.to(rep_other.device))
                 results.append(torch.stack([labels, dists, rep_anchor_norms, rep_other_norms]).T)
 
                 # compute eval loss
