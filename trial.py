@@ -41,19 +41,25 @@ def main(config_file: str, gpu_id: int):
     )
 
     # load base edges for training
-    base_examples = example_generator(wt, trans_dataset["train_base"], config.train.hard_negative_first)
+    base_examples = example_generator(
+        wt, trans_dataset["train_base"], config.train.hard_negative_first, config.train.apply_triplet_loss
+    )
     train_trans_portion = config.train.train_trans_portion
     train_examples = []
     if train_trans_portion > 0.0:
         logger.info(f"{train_trans_portion} transitivie edges used for training.")
-        train_examples = example_generator(wt, trans_dataset["train_trans"], config.train.hard_negative_first)
+        train_examples = example_generator(
+            wt, trans_dataset["train_trans"], config.train.hard_negative_first, config.train.apply_triplet_loss
+        )
         num_train_examples = int(train_trans_portion * len(train_examples))
         train_examples = list(np.random.choice(train_examples, size=num_train_examples, replace=False))
     else:
         logger.info("No transitivie edges used for training.")
     train_examples = base_examples + train_examples
     train_dataloaer = DataLoader(train_examples, shuffle=True, batch_size=config.train.train_batch_size)
-    val_examples = example_generator(wt, trans_dataset["val"], config.train.hard_negative_first)
+    val_examples = example_generator(
+        wt, trans_dataset["val"], config.train.hard_negative_first, config.train.apply_triplet_loss
+    )
     val_dataloader = DataLoader(val_examples, shuffle=True, batch_size=config.train.eval_batch_size)
 
     # load pre-trained model
@@ -73,23 +79,24 @@ def main(config_file: str, gpu_id: int):
     losses = []
 
     if config.train.loss.cluster.weight > 0.0:
-        cluster_loss = ClusteringLoss(
+        cluster_loss_class = ClusteringTripletLoss if config.train.apply_triplet_loss else ClusteringLoss
+        cluster_loss = cluster_loss_class(
             manifold, config.train.loss.cluster.positive_margin, config.train.loss.cluster.margin
         )
         losses.append((config.train.loss.cluster.weight, cluster_loss))
 
     if config.train.loss.centri.weight > 0.0:
-        centri_loss = CentripetalLoss(manifold, embed_dim, config.train.loss.centri.margin)
+        centri_loss_class = CentripetalTripletLoss if config.train.apply_triplet_loss else CentripetalLoss
+        centri_loss = centri_loss_class(manifold, embed_dim, config.train.loss.centri.margin)
         losses.append((config.train.loss.centri.weight, centri_loss))
 
     if config.train.loss.cone.weight > 0.0:
-        cone_loss = EntailmentConeLoss(
-            manifold, config.train.loss.cone.min_euclidean_norm, config.train.loss.cone.margin
-        )
+        cone_loss_class = EntailmentConeTripletLoss if config.train.apply_triplet_loss else EntailmentConeLoss
+        cone_loss = cone_loss_class(manifold, config.train.loss.cone.min_euclidean_norm, config.train.loss.cone.margin)
         losses.append((config.train.loss.cone.weight, cone_loss))
-    print(losses)
 
     hyper_loss = HyperbolicLoss(model, *losses)
+    print(hyper_loss.getconfig_dict())
     hyper_loss.to(device)
     val_evaluator = HyperbolicLossEvaluator(val_dataloader, hyper_loss, device)
 
@@ -100,7 +107,7 @@ def main(config_file: str, gpu_id: int):
         # steps_per_epoch=5,
         warmup_steps=config.train.warmup_steps,
         evaluator=val_evaluator,
-        output_path=f"experiments/train={train_trans_portion}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}-cone={list(config.train.loss.cone.values())}",
+        output_path=f"experiments/triplet={config.train.apply_triplet_loss}-train={train_trans_portion}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}-cone={list(config.train.loss.cone.values())}",
         # output_path="experiments/trial.train=0.2.stage1=cluster+centri",
     )
 
