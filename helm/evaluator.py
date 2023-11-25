@@ -27,7 +27,6 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
 
     @staticmethod
     def evaluate_f1(result_mat: torch.Tensor, granuality: int = 1000):
-        
         scores = result_mat[:, 1] + (result_mat[:, 3] - result_mat[:, 2])
         start = int(scores.min() * granuality)
         end = int(scores.max() * granuality)
@@ -110,12 +109,8 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
 
                     dists = self.manifold.dist(rep_anchor, rep_other)
 
-                    rep_anchor_norms = self.manifold.dist(
-                        rep_anchor, self.manifold.origin(rep_anchor.shape).to(rep_anchor.device)
-                    )
-                    rep_other_norms = self.manifold.dist(
-                        rep_other, self.manifold.origin(rep_other.shape).to(rep_other.device)
-                    )
+                    rep_anchor_norms = self.manifold.dist0(rep_anchor)
+                    rep_other_norms = self.manifold.dist0(rep_other)
 
                     results.append(torch.stack([labels, dists, rep_anchor_norms, rep_other_norms]).T)
                 else:
@@ -125,15 +120,9 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
                     positive_dists = self.manifold.dist(rep_anchor, rep_positive)
                     negative_dists = self.manifold.dist(rep_anchor, rep_negative)
 
-                    rep_anchor_norms = self.manifold.dist(
-                        rep_anchor, self.manifold.origin(rep_anchor.shape).to(rep_anchor.device)
-                    )
-                    rep_positive_norms = self.manifold.dist(
-                        rep_positive, self.manifold.origin(rep_positive.shape).to(rep_positive.device)
-                    )
-                    rep_negative_norms = self.manifold.dist(
-                        rep_negative, self.manifold.origin(rep_negative.shape).to(rep_negative.device)
-                    )
+                    rep_anchor_norms = self.manifold.dist0(rep_anchor)
+                    rep_positive_norms = self.manifold.dist0(rep_positive)
+                    rep_negative_norms = self.manifold.dist0(rep_negative)
 
                     results.append(
                         torch.stack(
@@ -165,7 +154,7 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
                     logger.info(f"skip as detecting nan loss")
 
         # compute score
-        result_mat = torch.cat(results, dim=0)        
+        result_mat = torch.cat(results, dim=0)
         if self.loss_module.apply_triplet_loss:
             logging.info("reshape result matrix following evaluation order")
             # 10 negatives per positive
@@ -173,7 +162,7 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
             negative_mat = result_mat[result_mat[:, 0] == 0.0]
             real_mat = []
             for i in range(len(positive_mat)):
-                real_mat += [positive_mat[i].unsqueeze(0), negative_mat[10 * i: 10 * (i+1)]]
+                real_mat += [positive_mat[i].unsqueeze(0), negative_mat[10 * i : 10 * (i + 1)]]
             result_mat = torch.concat(real_mat, dim=0)
         eval_scores = self.evaluate_f1(result_mat, 1000)
 
@@ -184,7 +173,7 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
         results = self.loss_module.get_config_dict()
         results["loss"] = eval_loss / (num_batch + 1)
         results["scores"] = eval_scores
-            
+
         torch.save(result_mat, f"{output_path}/epoch={epoch}.step={steps}/eval_results.pt")
         save_file(results, f"{output_path}/epoch={epoch}.step={steps}/eval_results.json")
 

@@ -4,7 +4,7 @@ from datasets import load_dataset
 import os
 import torch
 from torch.utils.data import DataLoader
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, models
 import logging
 import numpy as np
 import click
@@ -66,12 +66,14 @@ def main(config_file: str, gpu_id: int):
     # load pre-trained model
     device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
     pretrained = SentenceTransformer(config.pretrained, device=device)
+    embed_dim = pretrained._first_module().get_word_embedding_dimension()
     modules = list(pretrained.modules())
+    #TODO: check dense
+    # dense = models.Dense(embed_dim, embed_dim)
     model = SentenceTransformer(modules=[modules[1], modules[-2]], device=device)
     print(model)
 
     # manifold
-    embed_dim = model._first_module().get_word_embedding_dimension()
     curvature = 1 / embed_dim if not config.apply_unit_ball_projection else 1.0
     manifold = PoincareBall(c=curvature)
     logging.info(f"Poincare ball curvature: {manifold.c}")
