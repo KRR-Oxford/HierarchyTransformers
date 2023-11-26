@@ -10,9 +10,9 @@ import numpy as np
 import click
 from yacs.config import CfgNode
 
-from helm.loss import *
-from helm.evaluator import HyperbolicLossEvaluator
-from helm.utils import example_generator
+from hite.loss import *
+from hite.evaluator import HyperbolicLossEvaluator
+from hite.utils import example_generator
 
 
 logger = logging.getLogger(__name__)
