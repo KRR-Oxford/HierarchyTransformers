@@ -84,18 +84,18 @@ def main(config_file: str, gpu_id: int):
         if config.train.apply_triplet_loss:
             cluster_loss = ClusteringTripletLoss(manifold, config.train.loss.cluster.margin)
         else:
-            cluster_loss = ClusteringLoss(
+            cluster_loss = ClusteringConstrastiveLoss(
                 manifold, config.train.loss.cluster.positive_margin, config.train.loss.cluster.margin
             )
         losses.append((config.train.loss.cluster.weight, cluster_loss))
 
     if config.train.loss.centri.weight > 0.0:
-        centri_loss_class = CentripetalTripletLoss if config.train.apply_triplet_loss else CentripetalLoss
+        centri_loss_class = CentripetalTripletLoss if config.train.apply_triplet_loss else CentripetalContrastiveLoss
         centri_loss = centri_loss_class(manifold, embed_dim, config.train.loss.centri.margin)
         losses.append((config.train.loss.centri.weight, centri_loss))
 
     if config.train.loss.cone.weight > 0.0:
-        cone_loss_class = EntailmentConeTripletLoss if config.train.apply_triplet_loss else EntailmentConeLoss
+        cone_loss_class = EntailmentConeTripletLoss if config.train.apply_triplet_loss else EntailmentConeConstrastiveLoss
         cone_loss = cone_loss_class(manifold, config.train.loss.cone.min_euclidean_norm, config.train.loss.cone.margin)
         losses.append((config.train.loss.cone.weight, cone_loss))
 

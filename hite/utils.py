@@ -7,6 +7,14 @@ from tqdm.auto import tqdm
 def example_generator(
     taxonomy: Taxonomy, dataset: Dataset, hard_negative_first: bool = False, in_triplets: bool = False
 ):
+    """Prepare examples in different formats.
+
+    Args:
+        taxonomy (Taxonomy): A taxonomy that can provide names for entities.
+        dataset (Dataset): Input dataset to be formatted.
+        hard_negative_first (bool, optional): Using hard negative samples (siblings) or not. Defaults to `False`.
+        in_triplets (bool, optional): Present in triplets or not. Defaults to `False`.
+    """
     examples = []
     for sample in tqdm(dataset, leave=True, desc=f"Prepare examples for {dataset.split._name}"):
         child = taxonomy.get_node_attributes(sample["child"])["name"]

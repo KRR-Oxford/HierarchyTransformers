@@ -13,10 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class HyperbolicLossEvaluator(SentenceEvaluator):
-    """
-    Base class for all evaluators
-
-    Extend this class and implement __call__ for custom evaluators.
+    """Hyperbolic loss evaluator that extends the base evaluator from `sentence_transformers.evaluation`.
     """
 
     def __init__(

@@ -3,11 +3,49 @@ import torch.nn.functional as F
 from geoopt.manifolds import PoincareBall
 
 
-class ClusteringLoss(torch.nn.Module):
-    """Loss that clusters entities that have a subsumption relationship.
+class ClusteringTripletLoss(torch.nn.Module):
+    """Hyperbolic loss that clusters entities in subsumptions.
+    
+    Essentially, this loss is expected to achieve:
+    $$
+        d(child, parent) < d(child, non-parent)
+    $$
+
+    Inputs are presented in `(rep_anchor, rep_positive, rep_negative)`.
     """
+
+    def __init__(self, manifold: PoincareBall, margin: float):
+        super(ClusteringTripletLoss, self).__init__()
+        self.manifold = manifold
+        self.margin = margin
+
+    def get_config_dict(self):
+        config = {
+            "distance_metric": f"PoincareBall(c={self.manifold.c}).dist",
+            "margin": self.margin,
+        }
+        return config
+
+    def forward(self, rep_anchor: torch.Tensor, rep_positive: torch.Tensor, rep_negative: torch.Tensor):
+        distances_positive = self.manifold.dist(rep_anchor, rep_positive)
+        distances_negative = self.manifold.dist(rep_anchor, rep_negative)
+        cluster_triplet_loss = F.relu(distances_positive - distances_negative + self.margin)
+        return cluster_triplet_loss.mean()
+
+
+class ClusteringConstrastiveLoss(torch.nn.Module):
+    """Hyperbolic loss that clusters entities in subsumptions.
+    
+    Essentially, this loss is expected to achieve:
+    $$
+        d(child, parent) < d(child, non-parent)
+    $$
+
+    Inputs are presented in `(rep_anchor, rep_other, label)`.
+    """
+
     def __init__(self, manifold: PoincareBall, positive_margin: float, negative_margin: float):
-        super(ClusteringLoss, self).__init__()
+        super(ClusteringConstrastiveLoss, self).__init__()
         self.manifold = manifold
         self.positive_margin = positive_margin
         self.negative_margin = negative_margin
@@ -27,25 +65,3 @@ class ClusteringLoss(torch.nn.Module):
         negative_loss = (1 - labels).float() * F.relu(self.negative_margin - distances)
         cluster_loss = positive_loss + negative_loss
         return cluster_loss.mean()
-
-
-class ClusteringTripletLoss(torch.nn.Module):
-    """A variant of `ClusteringLoss` when inputs are triplets.
-    """
-    def __init__(self, manifold: PoincareBall, margin: float):
-        super(ClusteringTripletLoss, self).__init__()
-        self.manifold = manifold
-        self.margin = margin
-
-    def get_config_dict(self):
-        config = {
-            "distance_metric": f"PoincareBall(c={self.manifold.c}).dist",
-            "margin": self.margin,
-        }
-        return config
-
-    def forward(self, rep_anchor: torch.Tensor, rep_positive: torch.Tensor, rep_negative: torch.Tensor):
-        distances_positive = self.manifold.dist(rep_anchor, rep_positive)
-        distances_negative = self.manifold.dist(rep_anchor, rep_negative)
-        cluster_triplet_loss = F.relu(distances_positive - distances_negative + self.margin)
-        return cluster_triplet_loss.mean()

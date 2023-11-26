@@ -12,13 +12,15 @@ logger = logging.getLogger(__name__)
 
 
 class HyperbolicLoss(torch.nn.Module):
-    """Combined loss of multiple hyperbolic loss functions."""
+    """Hyperbolic loss that combines defined individual losses and applies weights."""
 
     def __init__(
         self,
         model: SentenceTransformer,
         apply_triplet_loss: bool = False,
-        *weight_and_loss: Tuple[float, Union[ClusteringLoss, CentripetalLoss, EntailmentConeLoss]],
+        *weight_and_loss: Tuple[
+            float, Union[ClusteringConstrastiveLoss, CentripetalContrastiveLoss, EntailmentConeConstrastiveLoss]
+        ],
     ):
         super(HyperbolicLoss, self).__init__()
 
@@ -35,7 +37,7 @@ class HyperbolicLoss(torch.nn.Module):
 
     def forward(self, sentence_features: Iterable[Dict[str, torch.Tensor]], labels: torch.Tensor):
         reps = [self.model(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features]
-        
+
         if not self.apply_triplet_loss:
             assert len(reps) == 2
             rep_anchor, rep_other = reps
