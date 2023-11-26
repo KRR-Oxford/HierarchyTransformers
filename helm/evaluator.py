@@ -3,6 +3,7 @@ from geoopt.manifolds import PoincareBall
 import torch
 from torch.utils.data import DataLoader
 from sentence_transformers.evaluation import SentenceEvaluator
+from sentence_transformers import SentenceTransformer
 from deeponto.utils import save_file
 import logging
 
@@ -18,15 +19,25 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
     Extend this class and implement __call__ for custom evaluators.
     """
 
-    def __init__(self, data_loader: DataLoader, loss_module: HyperbolicLoss, manifold: PoincareBall, device):
-        self.data_loader = data_loader
+    def __init__(
+        self, 
+        loss_module: HyperbolicLoss, 
+        manifold: PoincareBall, 
+        device,
+        val_dataloader: DataLoader,
+        test_dataloader: DataLoader = None,
+        train_dataloader: DataLoader = None,
+    ):
+        self.val_dataloader = val_dataloader
+        self.test_dataloader = test_dataloader
+        self.train_dataloader = train_dataloader
         self.loss_module = loss_module
         self.manifold = manifold
         self.device = device
         self.loss_module.to(self.device)
 
     @staticmethod
-    def evaluate_f1(result_mat: torch.Tensor, granuality: int = 1000):
+    def evaluate_f1(result_mat: torch.Tensor, granuality: int = 1000, best_val_threshold: float = None):
         scores = result_mat[:, 1] + (result_mat[:, 3] - result_mat[:, 2])
         start = int(scores.min() * granuality)
         end = int(scores.max() * granuality)
@@ -36,7 +47,10 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
         best_scores = None
 
         for threshold in range(start, end):
-            threshold = threshold / granuality
+            if best_val_threshold:
+                threshold = best_val_threshold
+            else:
+                threshold = threshold / granuality
             positives = result_mat[scores <= threshold]
             negatives = result_mat[scores > threshold]
             tp = (positives[:, 0] == 1.0).sum()
@@ -59,40 +73,20 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
                     "ACC": accuracy.item(),
                     "ACC-": neg_accuracy.item(),
                 }
+            if best_val_threshold:
+                break
         return best_scores
-
-    def __call__(self, model, output_path: str = None, epoch: int = -1, steps: int = -1) -> float:
-        """
-        This is called during training to evaluate the model.
-        It returns a score for the evaluation with a higher score indicating a better result.
-
-        :param model:
-            the model to evaluate
-        :param output_path:
-            path where predictions and metrics are written to
-        :param epoch
-            the epoch where the evaluation takes place.
-            This is used for the file prefixes.
-            If this is -1, then we assume evaluation on test data.
-        :param steps
-            the steps in the current epoch at time of the evaluation.
-            This is used for the file prefixes.
-            If this is -1, then we assume evaluation at the end of the epoch.
-        :return: a score for the evaluation with a higher score indicating a better result
-        """
-
-        # set to eval mode
-        model.eval()
-        self.loss_module.eval()
-
+    
+    def evaluate_dataloader(self, model: SentenceTransformer, dataloader: DataLoader, best_val_threshold: float = None):
+        
         # set up data iterator
-        self.data_loader.collate_fn = model.smart_batching_collate
-        data_iterator = iter(self.data_loader)
+        dataloader.collate_fn = model.smart_batching_collate
+        data_iterator = iter(dataloader)
 
         eval_loss = 0.0
         results = []
         with torch.no_grad():
-            for num_batch in trange(len(self.data_loader), desc="Iteration", smoothing=0.05, disable=False):
+            for num_batch in trange(len(dataloader), desc="Iteration", smoothing=0.05, disable=False):
                 sentence_features, labels = next(data_iterator)
 
                 # move data to gpu
@@ -164,17 +158,58 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
             for i in range(len(positive_mat)):
                 real_mat += [positive_mat[i].unsqueeze(0), negative_mat[10 * i : 10 * (i + 1)]]
             result_mat = torch.concat(real_mat, dim=0)
-        eval_scores = self.evaluate_f1(result_mat, 1000)
+        eval_scores = self.evaluate_f1(result_mat, 1000, best_val_threshold)
 
         self.loss_module.zero_grad()
         self.loss_module.train()
-        model.save(f"{output_path}/epoch={epoch}.step={steps}")
 
         results = self.loss_module.get_config_dict()
         results["loss"] = eval_loss / (num_batch + 1)
         results["scores"] = eval_scores
+        
+        return result_mat, results
 
-        torch.save(result_mat, f"{output_path}/epoch={epoch}.step={steps}/eval_results.pt")
-        save_file(results, f"{output_path}/epoch={epoch}.step={steps}/eval_results.json")
 
-        return -eval_loss
+    def __call__(self, model, output_path: str = None, epoch: int = -1, steps: int = -1) -> float:
+        """
+        This is called during training to evaluate the model.
+        It returns a score for the evaluation with a higher score indicating a better result.
+
+        :param model:
+            the model to evaluate
+        :param output_path:
+            path where predictions and metrics are written to
+        :param epoch
+            the epoch where the evaluation takes place.
+            This is used for the file prefixes.
+            If this is -1, then we assume evaluation on test data.
+        :param steps
+            the steps in the current epoch at time of the evaluation.
+            This is used for the file prefixes.
+            If this is -1, then we assume evaluation at the end of the epoch.
+        :return: a score for the evaluation with a higher score indicating a better result
+        """
+
+        # set to eval mode
+        model.eval()
+        self.loss_module.eval()
+        model.save(f"{output_path}/epoch={epoch}.step={steps}")
+        
+        if self.train_dataloader:
+            logger.info("Evaluate on train examples...")
+            train_result_mat, train_results = self.evaluate_dataloader(model, self.train_dataloader, None)
+            torch.save(train_result_mat, f"{output_path}/epoch={epoch}.step={steps}/train_result_mat.pt")
+            save_file(train_results, f"{output_path}/epoch={epoch}.step={steps}/train_results.json")
+        
+        logger.info("Evaluate on val examples...")
+        val_result_mat, val_results = self.evaluate_dataloader(model, self.val_dataloader, None)
+        torch.save(val_result_mat, f"{output_path}/epoch={epoch}.step={steps}/val_result_mat.pt")
+        save_file(val_results, f"{output_path}/epoch={epoch}.step={steps}/val_results.json")
+        
+        if self.test_dataloader:
+            logger.info("Evaluate on test examples using best val threshold...")
+            test_result_mat, test_results = self.evaluate_dataloader(model, self.test_dataloader, val_results["scores"]["threshold"])
+            torch.save(test_result_mat, f"{output_path}/epoch={epoch}.step={steps}/test_result_mat.pt")
+            save_file(test_results, f"{output_path}/epoch={epoch}.step={steps}/test_results.json")
+
+        return val_results["scores"]["f1"]
