@@ -1,10 +1,10 @@
-from deeponto.onto import WordnetTaxonomy, OntologyTaxonomy
-from deeponto.utils import load_file, print_dict, set_seed
+from deeponto.onto import WordnetTaxonomy
+from deeponto.utils import load_file, set_seed
 from datasets import load_dataset
 import os
 import torch
 from torch.utils.data import DataLoader
-from sentence_transformers import SentenceTransformer, models
+from sentence_transformers import SentenceTransformer
 import logging
 import numpy as np
 import click
