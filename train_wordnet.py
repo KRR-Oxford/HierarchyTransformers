@@ -11,7 +11,7 @@ import click
 from yacs.config import CfgNode
 
 from hite.loss import *
-from hite.evaluator import HyperbolicLossEvaluator
+from hite.evaluation import HyperbolicLossEvaluator
 from hite.utils import example_generator
 
 
@@ -28,7 +28,7 @@ def main(config_file: str, gpu_id: int):
     # load taxonomy and dataset
     wt = WordnetTaxonomy()
     data_path = config.data_path
-    trans_dataset = load_dataset(
+    dataset = load_dataset(
         "json",
         data_files={
             "train_base": os.path.join(data_path, "train_base.jsonl"),
@@ -40,14 +40,14 @@ def main(config_file: str, gpu_id: int):
 
     # load base edges for training
     base_examples = example_generator(
-        wt, trans_dataset["train_base"], config.train.hard_negative_first, config.train.apply_triplet_loss
+        wt, dataset["train_base"], config.train.hard_negative_first, config.train.apply_triplet_loss
     )
     train_trans_portion = config.train.train_trans_portion
     train_examples = []
     if train_trans_portion > 0.0:
         logger.info(f"{train_trans_portion} transitivie edges used for training.")
         train_examples = example_generator(
-            wt, trans_dataset["train_trans"], config.train.hard_negative_first, config.train.apply_triplet_loss
+            wt, dataset["train_trans"], config.train.hard_negative_first, config.train.apply_triplet_loss
         )
         num_train_examples = int(train_trans_portion * len(train_examples))
         train_examples = list(np.random.choice(train_examples, size=num_train_examples, replace=False))
@@ -56,10 +56,10 @@ def main(config_file: str, gpu_id: int):
     train_examples = base_examples + train_examples
     train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=config.train.train_batch_size)
     val_examples = example_generator(
-        wt, trans_dataset["val"], config.train.hard_negative_first, config.train.apply_triplet_loss
+        wt, dataset["val"], config.train.hard_negative_first, config.train.apply_triplet_loss
     )
     val_dataloader = DataLoader(val_examples, shuffle=False, batch_size=config.train.eval_batch_size)
-    test_examples = example_generator(wt, trans_dataset["test"], config.train.hard_negative_first, config.train.apply_triplet_loss)
+    test_examples = example_generator(wt, dataset["test"], config.train.hard_negative_first, config.train.apply_triplet_loss)
     test_dataloader = DataLoader(test_examples, shuffle=False, batch_size=config.train.eval_batch_size)
 
     # load pre-trained model
@@ -111,7 +111,7 @@ def main(config_file: str, gpu_id: int):
         # steps_per_epoch=5,
         warmup_steps=config.train.warmup_steps,
         evaluator=val_evaluator,
-        output_path=f"experiments/triplet={config.train.apply_triplet_loss}-hard_first={config.train.hard_negative_first}-train={train_trans_portion}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}-cone={list(config.train.loss.cone.values())}",
+        output_path=f"experiments/subs-triplet={config.train.apply_triplet_loss}-hard_first={config.train.hard_negative_first}-train={train_trans_portion}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}-cone={list(config.train.loss.cone.values())}",
     )
 
 
