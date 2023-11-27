@@ -4,6 +4,7 @@ import torch
 from torch.utils.data import DataLoader
 from sentence_transformers.evaluation import SentenceEvaluator
 from sentence_transformers import SentenceTransformer
+import evaluate
 from deeponto.utils import save_file
 import logging
 
@@ -20,7 +21,7 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
         self, 
         loss_module: HyperbolicLoss, 
         manifold: PoincareBall, 
-        device,
+        device: torch.device,
         val_dataloader: DataLoader,
         test_dataloader: DataLoader = None,
         train_dataloader: DataLoader = None,
@@ -210,3 +211,82 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
             save_file(test_results, f"{output_path}/epoch={epoch}.step={steps}/test_results.json")
 
         return val_results["scores"]["f1"]
+
+
+# class PerplexityEvaluator:
+    
+#     def __init__(self, device: torch.device, val_examples: list, test_examples: list):
+        
+#         self.perplexity = evaluate.load("perplexity", module_type="metric")
+#         self.val_examples = val_examples
+#         self.test_examples = test_examples
+#         self.device = device
+        
+#     def __call__(self, model_id: str, output_path: str):
+        
+#         # validation
+#         val_inputs = [" is a ".join(x.texts) for x in self.val_examples]
+#         val_labels = [x.label for x in self.val_examples]
+#         val_results = self.perplexity.compute(
+#             model_id=model_id,
+#             add_start_token=False,
+#             predictions=val_inputs,
+#             device=self.device
+#         )
+#         val_perplexities = torch.tensor(val_results["perplexities"]).to(self.device)
+#         val_labels = torch.tensor(val_labels).to(self.device)
+        
+#         best_val_f1 = -1
+#         best_val_scores = None
+#         best_val_threshold = None
+#         thresholds = list(range(int(val_perplexities.min()), int(val_perplexities.max(), 100)))
+#         for i in trange(len(thresholds), desc="Iteration", smoothing=0.05, disable=False):
+#             threshold = thresholds[i]
+#             val_predictions = val_perplexities >= threshold
+#             tp = torch.sum((val_labels==1) & (val_predictions==1))
+#             fp = torch.sum((val_labels==0) & (val_predictions==1))
+#             fn = torch.sum((val_predictions!=1) & (val_labels==1))
+#             precision = tp / (tp + fp)
+#             recall = tp / (tp + fn)
+#             f1 = 2 * (precision * recall) / (precision + recall)
+#             acc = torch.sum(val_labels == val_predictions)
+#             if f1 >= best_val_f1:
+#                 best_val_f1 = f1
+#                 best_val_threshold = threshold
+#                 best_val_scores = {
+#                     "threshold": best_val_threshold,
+#                     "P": precision,
+#                     "R": recall,
+#                     "f1": best_val_f1,
+#                     "ACC": acc,
+#                 }
+#         save_file(best_val_scores, f"{output_path}/perplexity_val_results.json")
+        
+        
+#         # testing
+#         test_inputs = [" is a ".join(x.texts) for x in self.test_examples]
+#         test_labels = [x.label for x in self.test_examples]
+#         test_results = self.perplexity.compute(
+#             model_id=model_id,
+#             add_start_token=False,
+#             predictions=test_inputs,
+#             device=self.device
+#         )
+#         test_perplexities = torch.tensor(test_results["perplexities"]).to(self.device)
+#         test_labels = torch.tensor(test_labels).to(self.device)
+#         test_predictions = test_perplexities >= best_val_threshold
+#         tp = torch.sum((test_labels==1) & (test_predictions==1))
+#         fp = torch.sum((test_labels==0) & (test_predictions==1))
+#         fn = torch.sum((test_predictions!=1) & (test_labels==1))
+#         precision = tp / (tp + fp)
+#         recall = tp / (tp + fn)
+#         f1 = 2 * (precision * recall) / (precision + recall)
+#         acc = torch.sum(test_labels == test_predictions)
+#         test_scores = {
+#             "threshold": best_val_threshold,
+#             "P": precision,
+#             "R": recall,
+#             "f1": f1,
+#             "ACC": acc,
+#         }
+#         save_file(test_scores, f"{output_path}/perplexity_test_results.json")

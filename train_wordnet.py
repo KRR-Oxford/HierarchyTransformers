@@ -1,4 +1,3 @@
-from deeponto.onto import WordnetTaxonomy
 from deeponto.utils import load_file, set_seed
 from datasets import load_dataset
 import os
@@ -26,7 +25,6 @@ def main(config_file: str, gpu_id: int):
     config = CfgNode(load_file(config_file))
 
     # load taxonomy and dataset
-    wt = WordnetTaxonomy()
     data_path = config.data_path
     dataset = load_dataset(
         "json",
@@ -37,17 +35,29 @@ def main(config_file: str, gpu_id: int):
             "test": os.path.join(data_path, "test.jsonl"),
         },
     )
+    entity_data = load_dataset(
+        "json", data_files={
+            "lexicon": os.path.join(data_path, "..", "entities.jsonl")
+        }
+    )
+    
+    entity_lexicon = dict()
+    for ent in entity_data["lexicon"]:
+        entity_lexicon[ent["id"]] = {
+            "name": ent["name"],
+            "definition": ent["definition"],
+        }
 
     # load base edges for training
     base_examples = example_generator(
-        wt, dataset["train_base"], config.train.hard_negative_first, config.train.apply_triplet_loss
+        entity_lexicon, dataset["train_base"], config.train.hard_negative_first, config.train.apply_triplet_loss
     )
     train_trans_portion = config.train.train_trans_portion
     train_examples = []
     if train_trans_portion > 0.0:
         logger.info(f"{train_trans_portion} transitivie edges used for training.")
         train_examples = example_generator(
-            wt, dataset["train_trans"], config.train.hard_negative_first, config.train.apply_triplet_loss
+            entity_lexicon, dataset["train_trans"], config.train.hard_negative_first, config.train.apply_triplet_loss
         )
         num_train_examples = int(train_trans_portion * len(train_examples))
         train_examples = list(np.random.choice(train_examples, size=num_train_examples, replace=False))
@@ -56,10 +66,10 @@ def main(config_file: str, gpu_id: int):
     train_examples = base_examples + train_examples
     train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=config.train.train_batch_size)
     val_examples = example_generator(
-        wt, dataset["val"], config.train.hard_negative_first, config.train.apply_triplet_loss
+        entity_lexicon, dataset["val"], config.train.hard_negative_first, config.train.apply_triplet_loss
     )
     val_dataloader = DataLoader(val_examples, shuffle=False, batch_size=config.train.eval_batch_size)
-    test_examples = example_generator(wt, dataset["test"], config.train.hard_negative_first, config.train.apply_triplet_loss)
+    test_examples = example_generator(entity_lexicon, dataset["test"], config.train.hard_negative_first, config.train.apply_triplet_loss)
     test_dataloader = DataLoader(test_examples, shuffle=False, batch_size=config.train.eval_batch_size)
 
     # load pre-trained model
