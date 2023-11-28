@@ -35,12 +35,8 @@ def main(config_file: str, gpu_id: int):
             "test": os.path.join(data_path, "test.jsonl"),
         },
     )
-    entity_data = load_dataset(
-        "json", data_files={
-            "lexicon": os.path.join(data_path, "..", "entities.jsonl")
-        }
-    )
-    
+    entity_data = load_dataset("json", data_files={"lexicon": os.path.join(data_path, "..", "entities.jsonl")})
+
     entity_lexicon = dict()
     for ent in entity_data["lexicon"]:
         entity_lexicon[ent["id"]] = {
@@ -69,7 +65,9 @@ def main(config_file: str, gpu_id: int):
         entity_lexicon, dataset["val"], config.train.hard_negative_first, config.train.apply_triplet_loss
     )
     val_dataloader = DataLoader(val_examples, shuffle=False, batch_size=config.train.eval_batch_size)
-    test_examples = example_generator(entity_lexicon, dataset["test"], config.train.hard_negative_first, config.train.apply_triplet_loss)
+    test_examples = example_generator(
+        entity_lexicon, dataset["test"], config.train.hard_negative_first, config.train.apply_triplet_loss
+    )
     test_dataloader = DataLoader(test_examples, shuffle=False, batch_size=config.train.eval_batch_size)
 
     # load pre-trained model
@@ -105,22 +103,26 @@ def main(config_file: str, gpu_id: int):
         losses.append((config.train.loss.centri.weight, centri_loss))
 
     if config.train.loss.cone.weight > 0.0:
-        cone_loss_class = EntailmentConeTripletLoss if config.train.apply_triplet_loss else EntailmentConeConstrastiveLoss
+        cone_loss_class = (
+            EntailmentConeTripletLoss if config.train.apply_triplet_loss else EntailmentConeConstrastiveLoss
+        )
         cone_loss = cone_loss_class(manifold, config.train.loss.cone.min_euclidean_norm, config.train.loss.cone.margin)
         losses.append((config.train.loss.cone.weight, cone_loss))
 
     hyper_loss = HyperbolicLoss(model, config.train.apply_triplet_loss, *losses)
     print(hyper_loss.get_config_dict())
     hyper_loss.to(device)
-    val_evaluator = HyperbolicLossEvaluator(hyper_loss, manifold, device, val_dataloader, test_dataloader, train_dataloader)
+    hyper_loss_evaluator = HyperbolicLossEvaluator(
+        hyper_loss, manifold, device, val_dataloader, test_dataloader, train_dataloader
+    )
 
     model.fit(
         train_objectives=[(train_dataloader, hyper_loss)],
         epochs=config.train.num_epochs,
         optimizer_params={"lr": float(config.train.learning_rate)},  # defaults to 2e-5
-        # steps_per_epoch=5,
+        # steps_per_epoch=5, # for testing use
         warmup_steps=config.train.warmup_steps,
-        evaluator=val_evaluator,
+        evaluator=hyper_loss_evaluator,
         output_path=f"experiments/subs-triplet={config.train.apply_triplet_loss}-hard_first={config.train.hard_negative_first}-train={train_trans_portion}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}-cone={list(config.train.loss.cone.values())}",
     )
 
