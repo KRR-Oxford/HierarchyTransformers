@@ -174,4 +174,4 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
             torch.save(test_result_mat, f"{output_path}/epoch={epoch}.step={steps}/test_result_mat.pt")
             save_file(test_results, f"{output_path}/epoch={epoch}.step={steps}/test_results.json")
 
-        return val_results["scores"]["f1"]
+        return val_results["scores"]["F1"]

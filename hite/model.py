@@ -25,6 +25,8 @@ def load_sentence_transformer(pretrained: str, device: torch.device) -> Sentence
         pooling = models.Pooling(transformer.get_word_embedding_dimension())
         model = SentenceTransformer(modules=[transformer, pooling])
         logger.info(f"Load `{pretrained}` from `huggingface-transformers`.")
+        
+    return model
 
 
 def get_manifold(embed_dim: int) -> PoincareBall:
