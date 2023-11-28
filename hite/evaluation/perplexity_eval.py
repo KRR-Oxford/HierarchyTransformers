@@ -42,54 +42,25 @@ class PerplexityEvaluator:
         
         # validation
         val_labels = [x.label for x in val_examples]
-        val_results = [self.pseudo_perplexity_for_parent(sample.texts[0], sample.texts[1]) for sample in tqdm(val_examples, desc="Validation")] 
-        val_perplexities = torch.tensor(val_results).to(self.device)
+        val_perplexities = [self.pseudo_perplexity_for_parent(sample.texts[0], sample.texts[1]) for sample in tqdm(val_examples, desc="Validation")] 
+        val_perplexities = torch.tensor(val_perplexities).to(self.device)
         val_labels = torch.tensor(val_labels).to(self.device)
         
-        best_val_f1 = -1
-        best_val_scores = None
-        best_val_threshold = None
+        best_val_f1 = -1.0
+        best_val_results = None
         thresholds = list(range(int(val_perplexities.min()), int(val_perplexities.max()), 100))
         for threshold in tqdm(thresholds, desc="Iteration"):
-            val_predictions = val_perplexities < threshold
-            tp = torch.sum((val_labels==1) & (val_predictions==1))
-            fp = torch.sum((val_labels==0) & (val_predictions==1))
-            fn = torch.sum((val_predictions!=1) & (val_labels==1))
-            precision = tp / (tp + fp)
-            recall = tp / (tp + fn)
-            f1 = 2 * (precision * recall) / (precision + recall)
-            acc = torch.sum(val_labels == val_predictions) / len(val_labels)
-            if f1 >= best_val_f1:
-                best_val_f1 = f1
-                best_val_threshold = threshold
-                best_val_scores = {
-                    "threshold": best_val_threshold,
-                    "P": precision,
-                    "R": recall,
-                    "f1": best_val_f1,
-                    "ACC": acc,
-                }
-        save_file(best_val_scores, f"{output_path}/perplexity_val_results.json")
+            results = threshold_evaluate(val_perplexities, val_labels, threshold)
+            if results["F1"] >= best_val_f1:
+                best_val_f1 = results["F1"]
+                best_val_results = results
+        save_file(best_val_results, f"{output_path}/perplexity_val_results.json")
         
         
         # testing
         test_labels = [x.label for x in test_examples]
-        test_results = [self.pseudo_perplexity_for_parent(sample.texts[0], sample.texts[1]) for sample in tqdm(test_examples, desc="Testing")] 
-        test_perplexities = torch.tensor(test_results).to(self.device)
+        test_perplexities = [self.pseudo_perplexity_for_parent(sample.texts[0], sample.texts[1]) for sample in tqdm(test_examples, desc="Testing")] 
+        test_perplexities = torch.tensor(test_perplexities).to(self.device)
         test_labels = torch.tensor(test_labels).to(self.device)
-        test_predictions = test_perplexities < best_val_threshold
-        tp = torch.sum((test_labels==1) & (test_predictions==1))
-        fp = torch.sum((test_labels==0) & (test_predictions==1))
-        fn = torch.sum((test_predictions!=1) & (test_labels==1))
-        precision = tp / (tp + fp)
-        recall = tp / (tp + fn)
-        f1 = 2 * (precision * recall) / (precision + recall)
-        acc = torch.sum(test_labels == test_predictions) / len(test_labels)
-        test_scores = {
-            "threshold": best_val_threshold,
-            "P": precision,
-            "R": recall,
-            "f1": f1,
-            "ACC": acc,
-        }
-        save_file(test_scores, f"{output_path}/perplexity_test_results.json")
+        test_results = threshold_evaluate(test_perplexities, test_labels, best_val_results["threshold"])
+        save_file(test_results, f"{output_path}/perplexity_test_results.json")
