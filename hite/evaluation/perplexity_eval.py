@@ -6,11 +6,11 @@ from .eval_metrics import threshold_evaluate
 
 class PerplexityEvaluator:
     
-    def __init__(self, model_id: str, device: torch.device):
+    def __init__(self, pretrained: str, device: torch.device):
         
         self.device = device
-        self.model = AutoModelForMaskedLM.from_pretrained(model_id).to(device)
-        self.tokenizer = AutoTokenizer.from_pretrained(model_id)
+        self.model = AutoModelForMaskedLM.from_pretrained(pretrained).to(device)
+        self.tokenizer = AutoTokenizer.from_pretrained(pretrained)
         
         
     def pseudo_perplexity_for_parent(self, child: str, parent: str):

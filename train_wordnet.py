@@ -1,7 +1,4 @@
 from deeponto.utils import load_file, set_seed
-from datasets import load_dataset
-import os
-import torch
 from torch.utils.data import DataLoader
 from sentence_transformers import SentenceTransformer
 import logging
@@ -9,9 +6,10 @@ import numpy as np
 import click
 from yacs.config import CfgNode
 
+from hite.model import *
 from hite.loss import *
 from hite.evaluation import HyperbolicLossEvaluator
-from hite.utils import example_generator
+from hite.utils import example_generator, load_hierarchy_dataset, get_device
 
 
 logger = logging.getLogger(__name__)
@@ -26,23 +24,7 @@ def main(config_file: str, gpu_id: int):
 
     # load taxonomy and dataset
     data_path = config.data_path
-    dataset = load_dataset(
-        "json",
-        data_files={
-            "train_base": os.path.join(data_path, "train_base.jsonl"),
-            "train_trans": os.path.join(data_path, "train_trans.jsonl"),
-            "val": os.path.join(data_path, "val.jsonl"),
-            "test": os.path.join(data_path, "test.jsonl"),
-        },
-    )
-    entity_data = load_dataset("json", data_files={"lexicon": os.path.join(data_path, "..", "entities.jsonl")})
-
-    entity_lexicon = dict()
-    for ent in entity_data["lexicon"]:
-        entity_lexicon[ent["id"]] = {
-            "name": ent["name"],
-            "definition": ent["definition"],
-        }
+    dataset, entity_lexicon = load_hierarchy_dataset(data_path)
 
     # load base edges for training
     base_examples = example_generator(
@@ -71,19 +53,13 @@ def main(config_file: str, gpu_id: int):
     test_dataloader = DataLoader(test_examples, shuffle=False, batch_size=config.train.eval_batch_size)
 
     # load pre-trained model
-    device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
-    pretrained = SentenceTransformer(config.pretrained, device=device)
-    embed_dim = pretrained._first_module().get_word_embedding_dimension()
-    modules = list(pretrained.modules())
-    # TODO: check dense
-    # dense = models.Dense(embed_dim, embed_dim)
-    model = SentenceTransformer(modules=[modules[1], modules[-2]], device=device)
-    print(model)
+    device = get_device(gpu_id)
+    model = load_sentence_transformer(config.pretrained, device)
 
     # manifold
-    curvature = 1 / embed_dim if not config.apply_unit_ball_projection else 1.0
-    manifold = PoincareBall(c=curvature)
-    logging.info(f"Poincare ball curvature: {manifold.c}")
+    embed_dim = model._first_module().get_word_embedding_dimension()
+    manifold = get_manifold(embed_dim)
+    # curvature = 1 / embed_dim if not config.apply_unit_ball_projection else 1.0
 
     # loss
     losses = []

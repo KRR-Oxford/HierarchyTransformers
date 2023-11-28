@@ -1,6 +1,39 @@
-from datasets import Dataset
+import os
+import torch
+from datasets import Dataset, load_dataset
 from sentence_transformers import InputExample
 from tqdm.auto import tqdm
+
+
+
+def get_device(gpu_id: int):
+    return torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
+
+
+def load_hierarchy_dataset(data_path: str):
+    """Load hierarchy dataset and entity lexicon.
+    """
+
+    dataset = load_dataset(
+        "json",
+        data_files={
+            "train_base": os.path.join(data_path, "train_base.jsonl"),
+            "train_trans": os.path.join(data_path, "train_trans.jsonl"),
+            "val": os.path.join(data_path, "val.jsonl"),
+            "test": os.path.join(data_path, "test.jsonl"),
+        },
+    )
+    
+    entity_data = load_dataset("json", data_files={"lexicon": os.path.join(data_path, "..", "entities.jsonl")})
+
+    entity_lexicon = dict()
+    for ent in entity_data["lexicon"]:
+        entity_lexicon[ent["id"]] = {
+            "name": ent["name"],
+            "definition": ent["definition"],
+        }
+        
+    return dataset, entity_lexicon
 
 
 def example_generator(
