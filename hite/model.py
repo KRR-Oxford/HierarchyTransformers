@@ -16,7 +16,7 @@ def load_sentence_transformer(pretrained: str, device: torch.device) -> Sentence
         transformer = pretrained_model._modules["0"]
         pooling = pretrained_model._modules["1"]
         assert isinstance(pooling, models.Pooling)
-        model = SentenceTransformer(modules=[transformer, pooling])
+        model = SentenceTransformer(modules=[transformer, pooling], device=device)
         logger.info(f"Load `{pretrained}` from `sentence-transformers`.")
         print(model)
     except:
