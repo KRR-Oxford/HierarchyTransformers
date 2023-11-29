@@ -1,6 +1,5 @@
 from deeponto.utils import load_file, set_seed
 from torch.utils.data import DataLoader
-from sentence_transformers import SentenceTransformer
 import logging
 import numpy as np
 import click
