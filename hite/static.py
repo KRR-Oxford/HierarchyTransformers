@@ -108,25 +108,3 @@ class StaticPoincareEmbedTrainer:
                 epoch_bar.update()
             self.current_epoch += 1
         torch.save(self.model, f"{output_path}/poincare.{self.model.embed_dim}d.pt")
-
-
-class StaticPoincareEmbedEvaluator:
-    
-    def __init__(self, model_path: str, device: torch.device):
-        self.model = torch.load(model_path)
-        self.device = device
-        self.model.to(self.device)
-        
-    def __call__(self, val_dataloader: DataLoader, test_dataloader: DataLoader, output_path: str):
-        
-        val_results = []
-        for batch in val_dataloader:
-            batch.to(self.device)
-            subject, objects = self.model(batch)
-            dists = self.model.manifold.dist(subject, objects)
-            subject_norms = self.model.manifold.dist0(subject)
-            objects_norms = self.model.manifold.dist0(objects)
-            val_results.append(torch.stack([dists, subject_norms, objects_norms]).T)
-        val_result_mat = torch.concat(val_results, dim=0)
-        torch.save(val_result_mat, f"{output_path}/val_result_mat.pt")
-        # save_file(val_results, f"{output_path}/epoch={epoch}.step={steps}/val_results.json")

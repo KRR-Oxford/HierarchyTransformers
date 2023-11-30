@@ -1,7 +1,7 @@
 from deeponto.utils import load_file, set_seed
 from torch.utils.data import DataLoader
 import logging
-import numpy as np
+import random
 import click
 from yacs.config import CfgNode
 
@@ -36,7 +36,7 @@ def main(config_file: str, gpu_id: int):
         logger.info(f"{train_trans_portion} transitivie edges used for training.")
         train_examples = static_example_generator(ent2idx, dataset["train_trans"], config.train.hard_negative_first)
         num_train_examples = int(train_trans_portion * len(train_examples))
-        train_examples = list(np.random.choice(train_examples, size=num_train_examples, replace=False))
+        train_examples = list(random.sample(train_examples, k=num_train_examples))
     else:
         logger.info("No transitivie edges used for training.")
     train_examples = base_examples + train_examples
