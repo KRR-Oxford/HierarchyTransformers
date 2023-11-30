@@ -1,0 +1,58 @@
+from deeponto.utils import load_file, set_seed
+from torch.utils.data import DataLoader
+import logging
+import numpy as np
+import click
+from yacs.config import CfgNode
+
+from hite.static import *
+from hite.utils import static_example_generator, load_hierarchy_dataset, get_device
+
+
+logger = logging.getLogger(__name__)
+
+
+@click.command()
+@click.option("-c", "--config_file", type=click.Path(exists=True))
+@click.option("-g", "--gpu_id", type=int, default=0)
+def main(config_file: str, gpu_id: int):
+    # set_seed(8888)
+    config = CfgNode(load_file(config_file))
+
+    # load taxonomy and dataset
+    data_path = config.data_path
+    dataset, entity_lexicon = load_hierarchy_dataset(data_path)
+
+    # init static poincare embedding
+    model = StaticPoincareEmbed(list(entity_lexicon.keys()), embed_dim=config.train.embed_dim)
+    print(model)
+    ent2idx = model.ent2idx
+
+    # load base edges for training
+    base_examples = static_example_generator(ent2idx, dataset["train_base"], config.train.hard_negative_first)
+    train_trans_portion = config.train.train_trans_portion
+    train_examples = []
+    if train_trans_portion > 0.0:
+        logger.info(f"{train_trans_portion} transitivie edges used for training.")
+        train_examples = static_example_generator(ent2idx, dataset["train_trans"], config.train.hard_negative_first)
+        num_train_examples = int(train_trans_portion * len(train_examples))
+        train_examples = list(np.random.choice(train_examples, size=num_train_examples, replace=False))
+    else:
+        logger.info("No transitivie edges used for training.")
+    train_examples = base_examples + train_examples
+    train_dataloader = DataLoader(torch.tensor(train_examples), shuffle=True, batch_size=config.train.train_batch_size)
+
+    device = get_device(gpu_id)
+    static_trainer = StaticPoincareEmbedTrainer(
+        model=model,
+        device=device,
+        train_dataloader=train_dataloader,
+        learning_rate=config.train.learning_rate,
+        num_epochs=config.train.num_epochs,
+        num_warmup_epochs=config.train.num_warmup_epochs,
+    )
+    static_trainer.run("experiments")
+
+
+if __name__ == "__main__":
+    main()

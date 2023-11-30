@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
-from geoopt.manifolds import PoincareBall, ManifoldParameter
+from geoopt.manifolds import PoincareBall
+from geoopt import ManifoldParameter
 from tqdm import tqdm
 from transformers import get_linear_schedule_with_warmup
 from geoopt.optim import RiemannianAdam
@@ -18,7 +19,7 @@ class StaticPoincareEmbed(torch.nn.Module):
         super().__init__()
 
         self.entities = entity_ids
-        self.idx2ent = {idx: ent for idx, ent in self.entities}
+        self.idx2ent = {idx: ent for idx, ent in enumerate(self.entities)}
         self.ent2idx = {v: k for k, v in self.idx2ent.items()}
         self.embed_dim = embed_dim
         self.manifold = PoincareBall()
@@ -81,7 +82,7 @@ class StaticPoincareEmbedTrainer:
 
     def dist_loss(self, subject: torch.Tensor, objects: torch.Tensor):
         # first object is always the correct one
-        pred_dists = self.manifold.dist(subject, objects)
+        pred_dists = self.model.manifold.dist(subject, objects)
         correct_object_indices = torch.tensor([0] * len(pred_dists)).to(pred_dists.device)
         return self.cross_entropy(-pred_dists, correct_object_indices)
 
@@ -95,21 +96,37 @@ class StaticPoincareEmbedTrainer:
         self.scheduler.step()
         return loss
 
-    def training_epoch(self):
-        epoch_bar = tqdm(range(self.num_epoch_steps), desc=f"Epoch {self.current_epoch + 1}", leave=True, unit="batch")
-        for batch in self.train_dataloader:
-            loss = self.training_step(batch)
-            # running_loss += loss
-            epoch_bar.set_postfix({"loss": loss.item(), "lr": self.lr})
-            epoch_bar.update()
-        self.current_epoch += 1
-
-    def run(self):
+    def run(self, output_path: str):
         for _ in range(self.num_epochs):
-            self.training_epoch(self.dist_loss)
-        torch.save(self.model, f"experiments/poincare.{self.model.embed_dim}d.pt")
+            epoch_bar = tqdm(
+                range(self.num_epoch_steps), desc=f"Epoch {self.current_epoch + 1}", leave=True, unit="batch"
+            )
+            for batch in self.train_dataloader:
+                loss = self.training_step(batch)
+                # running_loss += loss
+                epoch_bar.set_postfix({"loss": loss.item(), "lr": self.lr})
+                epoch_bar.update()
+            self.current_epoch += 1
+        torch.save(self.model, f"{output_path}/poincare.{self.model.embed_dim}d.pt")
 
 
 class StaticPoincareEmbedEvaluator:
-    def __init__(self):
-        pass
+    
+    def __init__(self, model_path: str, device: torch.device):
+        self.model = torch.load(model_path)
+        self.device = device
+        self.model.to(self.device)
+        
+    def __call__(self, val_dataloader: DataLoader, test_dataloader: DataLoader, output_path: str):
+        
+        val_results = []
+        for batch in val_dataloader:
+            batch.to(self.device)
+            subject, objects = self.model(batch)
+            dists = self.model.manifold.dist(subject, objects)
+            subject_norms = self.model.manifold.dist0(subject)
+            objects_norms = self.model.manifold.dist0(objects)
+            val_results.append(torch.stack([dists, subject_norms, objects_norms]).T)
+        val_result_mat = torch.concat(val_results, dim=0)
+        torch.save(val_result_mat, f"{output_path}/val_result_mat.pt")
+        # save_file(val_results, f"{output_path}/epoch={epoch}.step={steps}/val_results.json")

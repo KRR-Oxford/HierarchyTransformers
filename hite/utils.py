@@ -63,3 +63,16 @@ def example_generator(
         else:
             examples += [InputExample(texts=[child, parent, neg]) for neg in negative_parents]
     return examples
+
+
+def static_example_generator(ent2idx: dict, dataset: Dataset, hard_negative_first: bool = False):
+    examples = []
+    for sample in dataset:
+        negative_parents = sample["random_negatives"]
+        siblings = sample["hard_negatives"]
+        if hard_negative_first:
+            negative_parents = (siblings + negative_parents)[:10]
+        cur_example = [sample["child"], sample["parent"]] + negative_parents
+        cur_example = [ent2idx[x] for x in cur_example]
+        examples.append(cur_example)
+    return examples
