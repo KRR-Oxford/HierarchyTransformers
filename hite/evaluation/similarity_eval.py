@@ -4,7 +4,7 @@ from deeponto.utils import save_file
 from tqdm.auto import tqdm
 from .eval_metrics import threshold_evaluate
 
-class SimilarityEvaluator:
+class MaskFillSimilarityEvaluator:
     
     def __init__(self, model_id: str, device: torch.device):
         

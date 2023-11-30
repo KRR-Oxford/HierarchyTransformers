@@ -4,7 +4,7 @@ from deeponto.utils import save_file
 from tqdm.auto import tqdm
 from .eval_metrics import threshold_evaluate
 
-class PerplexityEvaluator:
+class MaskFillPerplexityEvaluator:
     
     def __init__(self, pretrained: str, device: torch.device):
         
