@@ -97,7 +97,6 @@ def main(config_file: str, gpu_id: int):
         train_dataloader=train_dataloader if config.train.eval_train else None,
     )
 
-    setting = data_path.split("/")[-1]
     model.fit(
         train_objectives=[(train_dataloader, hyper_loss)],
         epochs=config.train.num_epochs,
@@ -105,7 +104,7 @@ def main(config_file: str, gpu_id: int):
         # steps_per_epoch=5, # for testing use
         warmup_steps=config.train.warmup_steps,
         evaluator=hyper_loss_evaluator,
-        output_path=f"experiments/{setting}-triplet={config.train.apply_triplet_loss}-hard_first={config.train.hard_negative_first}-train={train_trans_portion}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}-cone={list(config.train.loss.cone.values())}",
+        output_path=f"experiments/{config.task}-hard={config.train.hard_negative_first}-triplet={config.train.apply_triplet_loss}-train={train_trans_portion}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}",
     )
 
 

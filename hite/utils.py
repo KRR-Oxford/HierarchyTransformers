@@ -36,7 +36,7 @@ def load_hierarchy_dataset(data_path: str):
     with open(os.path.join(data_path, "entity_lexicon.json"), "r") as input:
         entity_lexicon = json.load(input)
 
-    return {"transitive_closure": trans_dataset, "inductive_prediction": inductive_dataset}, entity_lexicon
+    return {"trans": trans_dataset, "induc": inductive_dataset}, entity_lexicon
 
 
 def example_generator(
