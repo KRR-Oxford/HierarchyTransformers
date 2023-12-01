@@ -52,7 +52,7 @@ def main(config_file: str, gpu_id: int):
         num_epochs=config.train.num_epochs,
         num_warmup_epochs=config.train.num_warmup_epochs,
     )
-    static_trainer.run("experiments/static")
+    static_trainer.run("experiments")
 
 
 if __name__ == "__main__":
