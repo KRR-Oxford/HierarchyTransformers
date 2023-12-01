@@ -22,6 +22,7 @@ def main(config_file: str, gpu_id: int):
     # load taxonomy and dataset
     data_path = config.data_path
     dataset, entity_lexicon = load_hierarchy_dataset(data_path)
+    dataset = dataset[config.task]
 
     # init static poincare embedding
     model = StaticPoincareEmbed(list(entity_lexicon.keys()), embed_dim=config.train.embed_dim)
@@ -29,12 +30,12 @@ def main(config_file: str, gpu_id: int):
     ent2idx = model.ent2idx
 
     # load base edges for training
-    base_examples = static_example_generator(ent2idx, dataset["train_base"], config.train.hard_negative_first)
+    base_examples = static_example_generator(ent2idx, dataset["train"], config.train.hard_negative_first)
     train_trans_portion = config.train.train_trans_portion
     train_examples = []
     if train_trans_portion > 0.0:
         logger.info(f"{train_trans_portion} transitivie edges used for training.")
-        train_examples = static_example_generator(ent2idx, dataset["train_trans"], config.train.hard_negative_first)
+        train_examples = static_example_generator(ent2idx, dataset["trans_train"], config.train.hard_negative_first)
         num_train_examples = int(train_trans_portion * len(train_examples))
         train_examples = list(random.sample(train_examples, k=num_train_examples))
     else:
@@ -51,7 +52,7 @@ def main(config_file: str, gpu_id: int):
         num_epochs=config.train.num_epochs,
         num_warmup_epochs=config.train.num_warmup_epochs,
     )
-    static_trainer.run("experiments")
+    static_trainer.run("experiments/static")
 
 
 if __name__ == "__main__":
