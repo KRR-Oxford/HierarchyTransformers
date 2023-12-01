@@ -5,13 +5,13 @@ from torch.utils.data import DataLoader
 from sentence_transformers.evaluation import SentenceEvaluator
 from sentence_transformers import SentenceTransformer
 from deeponto.utils import save_file
+from pathlib import Path
 import logging
-
-from ..loss import HyperbolicLoss
-from .eval_metrics import threshold_evaluate
 
 logger = logging.getLogger(__name__)
 
+from ..loss import HyperbolicLoss
+from .eval_metrics import threshold_evaluate
 
 class HyperbolicLossEvaluator(SentenceEvaluator):
     """Hyperbolic loss evaluator that extends the base evaluator from `sentence_transformers.evaluation`.
@@ -155,7 +155,8 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
         # set to eval mode
         model.eval()
         self.loss_module.eval()
-        model.save(f"{output_path}/epoch={epoch}.step={steps}")
+        Path(f"{output_path}/epoch={epoch}.step={steps}").mkdir(parents=True, exist_ok=True)
+        # model.save(f"{output_path}/epoch={epoch}.step={steps}")
         
         if self.train_dataloader:
             logger.info("Evaluate on train examples...")
