@@ -55,10 +55,10 @@ def example_generator(
         child = entity_lexicon[sample["child"]]["name"]
         parent = entity_lexicon[sample["parent"]]["name"]
         negative_parents = [entity_lexicon[neg]["name"] for neg in sample["random_negatives"]]
-        siblings = [entity_lexicon[sib]["name"] for sib in sample["hard_negatives"]]
+        hard_negatives = [entity_lexicon[sib]["name"] for sib in sample["hard_negatives"]]
         if hard_negative_first:
             # extract siblings first, if not enough, add the random negative parents
-            negative_parents = (siblings + negative_parents)[:10]
+            negative_parents = (hard_negatives + negative_parents)[:10]
 
         if not in_triplets:
             examples.append(InputExample(texts=[child, parent], label=1))
@@ -72,9 +72,9 @@ def static_example_generator(ent2idx: dict, dataset: Dataset, hard_negative_firs
     examples = []
     for sample in dataset:
         negative_parents = sample["random_negatives"]
-        siblings = sample["hard_negatives"]
+        hard_negatives = sample["hard_negatives"]
         if hard_negative_first:
-            negative_parents = (siblings + negative_parents)[:10]
+            negative_parents = (hard_negatives + negative_parents)[:10]
         cur_example = [sample["child"], sample["parent"]] + negative_parents
         cur_example = [ent2idx[x] for x in cur_example]
         examples.append(cur_example)
