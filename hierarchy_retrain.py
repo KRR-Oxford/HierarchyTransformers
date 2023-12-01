@@ -18,23 +18,24 @@ logger = logging.getLogger(__name__)
 @click.option("-c", "--config_file", type=click.Path(exists=True))
 @click.option("-g", "--gpu_id", type=int, default=0)
 def main(config_file: str, gpu_id: int):
-    # set_seed(8888)
+    set_seed(8888)
     config = CfgNode(load_file(config_file))
 
     # load taxonomy and dataset
     data_path = config.data_path
     dataset, entity_lexicon = load_hierarchy_dataset(data_path)
+    dataset = dataset[config.task]
 
     # load base edges for training
     base_examples = example_generator(
-        entity_lexicon, dataset["train_base"], config.train.hard_negative_first, config.train.apply_triplet_loss
+        entity_lexicon, dataset["train"], config.train.hard_negative_first, config.train.apply_triplet_loss
     )
-    train_trans_portion = config.train.train_trans_portion
+    train_trans_portion = config.train.trans_train_portion
     train_examples = []
     if train_trans_portion > 0.0:
         logger.info(f"{train_trans_portion} transitivie edges used for training.")
         train_examples = example_generator(
-            entity_lexicon, dataset["train_trans"], config.train.hard_negative_first, config.train.apply_triplet_loss
+            entity_lexicon, dataset["trans_train"], config.train.hard_negative_first, config.train.apply_triplet_loss
         )
         num_train_examples = int(train_trans_portion * len(train_examples))
         train_examples = list(np.random.choice(train_examples, size=num_train_examples, replace=False))
@@ -96,6 +97,7 @@ def main(config_file: str, gpu_id: int):
         train_dataloader=train_dataloader if config.train.eval_train else None,
     )
 
+    setting = data_path.split("/")[-1]
     model.fit(
         train_objectives=[(train_dataloader, hyper_loss)],
         epochs=config.train.num_epochs,
@@ -103,7 +105,7 @@ def main(config_file: str, gpu_id: int):
         # steps_per_epoch=5, # for testing use
         warmup_steps=config.train.warmup_steps,
         evaluator=hyper_loss_evaluator,
-        output_path=f"experiments/subs-triplet={config.train.apply_triplet_loss}-hard_first={config.train.hard_negative_first}-train={train_trans_portion}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}-cone={list(config.train.loss.cone.values())}",
+        output_path=f"experiments/{setting}-triplet={config.train.apply_triplet_loss}-hard_first={config.train.hard_negative_first}-train={train_trans_portion}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}-cone={list(config.train.loss.cone.values())}",
     )
 
 

@@ -3,7 +3,7 @@ import torch
 from datasets import Dataset, load_dataset
 from sentence_transformers import InputExample
 from tqdm.auto import tqdm
-
+import json
 
 
 def get_device(gpu_id: int):
@@ -11,29 +11,32 @@ def get_device(gpu_id: int):
 
 
 def load_hierarchy_dataset(data_path: str):
-    """Load hierarchy dataset and entity lexicon.
-    """
+    """Load hierarchy dataset and entity lexicon."""
 
-    dataset = load_dataset(
+    trans_dataset = load_dataset(
         "json",
         data_files={
-            "train_base": os.path.join(data_path, "train_base.jsonl"),
-            "train_trans": os.path.join(data_path, "train_trans.jsonl"),
-            "val": os.path.join(data_path, "val.jsonl"),
-            "test": os.path.join(data_path, "test.jsonl"),
+            "train": os.path.join(data_path, "trans", "base.jsonl"),
+            "trans_train": os.path.join(data_path, "trans", "trans_train.jsonl"),
+            "val": os.path.join(data_path, "trans", "trans_val.jsonl"),
+            "test": os.path.join(data_path, "trans", "trans_test.jsonl"),
         },
     )
-    
-    entity_data = load_dataset("json", data_files={"lexicon": os.path.join(data_path, "..", "entities.jsonl")})
 
-    entity_lexicon = dict()
-    for ent in entity_data["lexicon"]:
-        entity_lexicon[ent["id"]] = {
-            "name": ent["name"],
-            "definition": ent["definition"],
-        }
-        
-    return dataset, entity_lexicon
+    inductive_dataset = load_dataset(
+        "json",
+        data_files={
+            "train": os.path.join(data_path, "induc", "base_train.jsonl"),
+            "trans_train": os.path.join(data_path, "induc", "trans_base_train.jsonl"),
+            "val": os.path.join(data_path, "induc", "base_val.jsonl"),
+            "test": os.path.join(data_path, "induc", "base_test.jsonl"),
+        },
+    )
+
+    with open(os.path.join(data_path, "entity_lexicon.json"), "r") as input:
+        entity_lexicon = json.load(input)
+
+    return {"transitive_closure": trans_dataset, "inductive_prediction": inductive_dataset}, entity_lexicon
 
 
 def example_generator(
