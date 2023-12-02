@@ -25,6 +25,8 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
         val_dataloader: DataLoader,
         test_dataloader: DataLoader = None,
         train_dataloader: DataLoader = None,
+        centri_score_weight: float = 1.0,
+        
     ):
         self.val_dataloader = val_dataloader
         self.test_dataloader = test_dataloader
@@ -33,10 +35,11 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
         self.manifold = manifold
         self.device = device
         self.loss_module.to(self.device)
+        self.centri_score_weight = centri_score_weight
 
     @staticmethod
-    def evaluate(result_mat: torch.Tensor, granuality: int = 1000, best_val_threshold: float = None):
-        scores = result_mat[:, 1] + (result_mat[:, 3] - result_mat[:, 2])
+    def evaluate(result_mat: torch.Tensor, granuality: int = 1000, best_val_threshold: float = None, centri_score_weight: float = 1.0):
+        scores = result_mat[:, 1] + centri_score_weight * (result_mat[:, 3] - result_mat[:, 2])
         
         if best_val_threshold:
             logger.info(f"Evaluate based on selected threshold: {best_val_threshold}.")
@@ -135,7 +138,7 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
             for i in range(len(positive_mat)):
                 real_mat += [positive_mat[i].unsqueeze(0), negative_mat[10 * i : 10 * (i + 1)]]
             result_mat = torch.concat(real_mat, dim=0)
-        eval_scores = self.evaluate(result_mat, 1000, best_val_threshold)
+        eval_scores = self.evaluate(result_mat, 1000, best_val_threshold, self.centri_score_weight)
 
         self.loss_module.zero_grad()
         self.loss_module.train()
