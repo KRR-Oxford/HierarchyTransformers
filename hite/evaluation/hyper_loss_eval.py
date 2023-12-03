@@ -46,7 +46,9 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
                 f"Evaluate based on selected hyperparams: centri_score_weight={best_val_centri_score_weight}; threshold={best_val_threshold}."
             )
             scores = result_mat[:, 1] + best_val_centri_score_weight * (result_mat[:, 3] - result_mat[:, 2])
-            return threshold_evaluate(scores, result_mat[:, 0], best_val_threshold)
+            results = {"centri_score_weight": best_val_centri_score_weight}
+            results.update(threshold_evaluate(scores, result_mat[:, 0], best_val_threshold))
+            return results
 
         best_f1 = -1.0
         best_results = None
@@ -160,7 +162,7 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
             for i in range(len(positive_mat)):
                 real_mat += [positive_mat[i].unsqueeze(0), negative_mat[10 * i : 10 * (i + 1)]]
             result_mat = torch.concat(real_mat, dim=0)
-        eval_scores = self.evaluate(result_mat, 1000, best_val_threshold, best_val_centri_score_weight)
+        eval_scores = self.evaluate(result_mat, 100, best_val_threshold, best_val_centri_score_weight)
 
         self.loss_module.zero_grad()
         self.loss_module.train()
