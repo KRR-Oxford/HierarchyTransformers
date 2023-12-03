@@ -101,7 +101,7 @@ def main(config_file: str, gpu_id: int):
         train_objectives=[(train_dataloader, hyper_loss)],
         epochs=config.train.num_epochs,
         optimizer_params={"lr": float(config.train.learning_rate)},  # defaults to 2e-5
-        # steps_per_epoch=5, # for testing use
+        # steps_per_epoch=20, # for testing use
         warmup_steps=config.train.warmup_steps,
         evaluator=hyper_loss_evaluator,
         output_path=f"experiments/{config.pretrained}-{config.task}-hard={config.train.hard_negative_first}-triplet={config.train.apply_triplet_loss}-train={train_trans_portion}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}",

@@ -13,20 +13,18 @@ logger = logging.getLogger(__name__)
 from ..loss import HyperbolicLoss
 from .eval_metrics import threshold_evaluate
 
+
 class HyperbolicLossEvaluator(SentenceEvaluator):
-    """Hyperbolic loss evaluator that extends the base evaluator from `sentence_transformers.evaluation`.
-    """
+    """Hyperbolic loss evaluator that extends the base evaluator from `sentence_transformers.evaluation`."""
 
     def __init__(
-        self, 
-        loss_module: HyperbolicLoss, 
-        manifold: PoincareBall, 
+        self,
+        loss_module: HyperbolicLoss,
+        manifold: PoincareBall,
         device: torch.device,
         val_dataloader: DataLoader,
         test_dataloader: DataLoader = None,
         train_dataloader: DataLoader = None,
-        centri_score_weight: float = 1.0,
-        
     ):
         self.val_dataloader = val_dataloader
         self.test_dataloader = test_dataloader
@@ -35,30 +33,56 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
         self.manifold = manifold
         self.device = device
         self.loss_module.to(self.device)
-        self.centri_score_weight = centri_score_weight
 
     @staticmethod
-    def evaluate(result_mat: torch.Tensor, granuality: int = 1000, best_val_threshold: float = None, centri_score_weight: float = 1.0):
-        scores = result_mat[:, 1] + centri_score_weight * (result_mat[:, 3] - result_mat[:, 2])
-        
-        if best_val_threshold:
-            logger.info(f"Evaluate based on selected threshold: {best_val_threshold}.")
+    def evaluate(
+        result_mat: torch.Tensor,
+        granuality: int = 100,
+        best_val_centri_score_weight: float = None,
+        best_val_threshold: float = None,
+    ):
+        if best_val_threshold and best_val_centri_score_weight:
+            logger.info(
+                f"Evaluate based on selected hyperparams: centri_score_weight={best_val_centri_score_weight}; threshold={best_val_threshold}."
+            )
+            scores = result_mat[:, 1] + best_val_centri_score_weight * (result_mat[:, 3] - result_mat[:, 2])
             return threshold_evaluate(scores, result_mat[:, 0], best_val_threshold)
-        
-        start = int(scores.min() * granuality)
-        end = int(scores.max() * granuality)
+
         best_f1 = -1.0
         best_results = None
-        for threshold in tqdm(range(start, end), desc="Threshold selection"):
-            threshold = threshold / granuality
-            results = threshold_evaluate(scores, result_mat[:, 0], threshold)
-            if results["F1"] > best_f1:
-                best_results = results
-                best_f1 = results["F1"]
+        is_updated = True
+
+        for centri_score_weight in range(10):
+            # early stop if increasing the centri score weight does not help
+            if not is_updated:
+                break
+            is_updated = False
+
+            centri_score_weight = float(centri_score_weight + 1)
+            scores = result_mat[:, 1] + centri_score_weight * (result_mat[:, 3] - result_mat[:, 2])
+
+            start = int(scores.min() * granuality)
+            end = int(scores.max() * granuality)
+            best_f1 = -1.0
+            best_results = None
+            for threshold in tqdm(range(start, end), desc=f"Thresholding (centri={centri_score_weight})"):
+                threshold = threshold / granuality
+                results = threshold_evaluate(scores, result_mat[:, 0], threshold)
+                if results["F1"] > best_f1:
+                    best_results = {"centri_score_weight": centri_score_weight}
+                    best_results.update(results)
+                    best_f1 = results["F1"]
+                    is_updated = True
+
         return best_results
-    
-    def evaluate_dataloader(self, model: SentenceTransformer, dataloader: DataLoader, best_val_threshold: float = None):
-        
+
+    def evaluate_dataloader(
+        self,
+        model: SentenceTransformer,
+        dataloader: DataLoader,
+        best_val_centri_score_weight: float = None,
+        best_val_threshold: float = None,
+    ):
         # set up data iterator
         dataloader.collate_fn = model.smart_batching_collate
         data_iterator = iter(dataloader)
@@ -138,7 +162,7 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
             for i in range(len(positive_mat)):
                 real_mat += [positive_mat[i].unsqueeze(0), negative_mat[10 * i : 10 * (i + 1)]]
             result_mat = torch.concat(real_mat, dim=0)
-        eval_scores = self.evaluate(result_mat, 1000, best_val_threshold, self.centri_score_weight)
+        eval_scores = self.evaluate(result_mat, 1000, best_val_threshold, best_val_centri_score_weight)
 
         self.loss_module.zero_grad()
         self.loss_module.train()
@@ -146,12 +170,11 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
         results = self.loss_module.get_config_dict()
         results["loss"] = eval_loss / (num_batch + 1)
         results["scores"] = eval_scores
-        
+
         return result_mat, results
 
-
     def __call__(self, model, output_path: str = None, epoch: int = -1, steps: int = -1) -> float:
-        """This is called during training to evaluate the model. 
+        """This is called during training to evaluate the model.
         It returns a score for the evaluation with a higher score indicating a better result.
         """
 
@@ -160,21 +183,26 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
         self.loss_module.eval()
         Path(f"{output_path}/epoch={epoch}.step={steps}").mkdir(parents=True, exist_ok=True)
         # model.save(f"{output_path}/epoch={epoch}.step={steps}")
-        
+
         if self.train_dataloader:
             logger.info("Evaluate on train examples...")
-            train_result_mat, train_results = self.evaluate_dataloader(model, self.train_dataloader, None)
+            train_result_mat, train_results = self.evaluate_dataloader(model, self.train_dataloader)
             torch.save(train_result_mat, f"{output_path}/epoch={epoch}.step={steps}/train_result_mat.pt")
             save_file(train_results, f"{output_path}/epoch={epoch}.step={steps}/train_results.json")
-        
+
         logger.info("Evaluate on val examples...")
-        val_result_mat, val_results = self.evaluate_dataloader(model, self.val_dataloader, None)
+        val_result_mat, val_results = self.evaluate_dataloader(model, self.val_dataloader)
         torch.save(val_result_mat, f"{output_path}/epoch={epoch}.step={steps}/val_result_mat.pt")
         save_file(val_results, f"{output_path}/epoch={epoch}.step={steps}/val_results.json")
-        
+
         if self.test_dataloader:
             logger.info("Evaluate on test examples using best val threshold...")
-            test_result_mat, test_results = self.evaluate_dataloader(model, self.test_dataloader, val_results["scores"]["threshold"])
+            test_result_mat, test_results = self.evaluate_dataloader(
+                model,
+                self.test_dataloader,
+                val_results["scores"]["centri_score_weight"],
+                val_results["scores"]["threshold"],
+            )
             torch.save(test_result_mat, f"{output_path}/epoch={epoch}.step={steps}/test_result_mat.pt")
             save_file(test_results, f"{output_path}/epoch={epoch}.step={steps}/test_results.json")
 
