@@ -63,8 +63,6 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
 
             start = int(scores.min() * granuality)
             end = int(scores.max() * granuality)
-            best_f1 = -1.0
-            best_results = None
             for threshold in tqdm(range(start, end), desc=f"Thresholding (centri={centri_score_weight})"):
                 threshold = threshold / granuality
                 results = threshold_evaluate(scores, result_mat[:, 0], threshold)
