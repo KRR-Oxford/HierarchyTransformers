@@ -39,6 +39,17 @@ def load_hierarchy_dataset(data_path: str):
     return {"trans": trans_dataset, "induc": inductive_dataset}, entity_lexicon
 
 
+def load_transfer_testing_dataset(data_path: str):
+    """Load hierarchy dataset and entity lexicon."""
+
+    transfer_dataset = load_dataset("json", data_files={"base": os.path.join(data_path, "base.jsonl")})
+
+    with open(os.path.join(data_path, "entity_lexicon.json"), "r") as input:
+        entity_lexicon = json.load(input)
+
+    return transfer_dataset, entity_lexicon
+
+
 def example_generator(
     entity_lexicon: dict, dataset: Dataset, hard_negative_first: bool = False, in_triplets: bool = False
 ):

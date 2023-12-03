@@ -45,6 +45,8 @@ class MaskFillPerplexityEvaluator:
         val_perplexities = [self.pseudo_perplexity_for_parent(sample.texts[0], sample.texts[1]) for sample in tqdm(val_examples, desc="Validation")] 
         val_perplexities = torch.tensor(val_perplexities).to(self.device)
         val_labels = torch.tensor(val_labels).to(self.device)
+        torch.save(val_perplexities, f"{output_path}/perplexity_val_scores.json")
+        torch.save(val_labels, f"{output_path}/perplexity_val_labels.json")
         
         best_val_f1 = -1.0
         best_val_results = None
@@ -63,4 +65,6 @@ class MaskFillPerplexityEvaluator:
         test_perplexities = torch.tensor(test_perplexities).to(self.device)
         test_labels = torch.tensor(test_labels).to(self.device)
         test_results = threshold_evaluate(test_perplexities, test_labels, best_val_results["threshold"])
+        torch.save(test_perplexities, f"{output_path}/perplexity_test_scores.json")
+        torch.save(test_labels, f"{output_path}/perplexity_test_labels.json")
         save_file(test_results, f"{output_path}/perplexity_test_results.json")
