@@ -162,7 +162,7 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
             for i in range(len(positive_mat)):
                 real_mat += [positive_mat[i].unsqueeze(0), negative_mat[10 * i : 10 * (i + 1)]]
             result_mat = torch.concat(real_mat, dim=0)
-        eval_scores = self.evaluate(result_mat, 100, best_val_threshold, best_val_centri_score_weight)
+        eval_scores = self.evaluate(result_mat, 100, best_val_centri_score_weight, best_val_threshold)
 
         self.loss_module.zero_grad()
         self.loss_module.train()
