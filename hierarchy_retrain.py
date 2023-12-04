@@ -5,10 +5,10 @@ import numpy as np
 import click
 from yacs.config import CfgNode
 
-from hite.model import *
-from hite.loss import *
-from hite.evaluation import HyperbolicLossEvaluator
-from hite.utils import example_generator, load_hierarchy_dataset, get_device
+from hierarchy_transformers.model import *
+from hierarchy_transformers.loss import *
+from hierarchy_transformers.evaluation import HyperbolicLossEvaluator
+from hierarchy_transformers.utils import example_generator, load_hierarchy_dataset, get_device
 
 
 logger = logging.getLogger(__name__)

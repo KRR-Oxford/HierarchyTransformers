@@ -5,8 +5,8 @@ import random
 import click
 from yacs.config import CfgNode
 
-from hite.static import *
-from hite.utils import static_example_generator, load_hierarchy_dataset, get_device
+from hierarchy_transformers.static import *
+from hierarchy_transformers.utils import static_example_generator, load_hierarchy_dataset, get_device
 
 
 logger = logging.getLogger(__name__)

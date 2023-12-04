@@ -1,5 +1,5 @@
-from hite.evaluation import MaskFillPerplexityEvaluator
-from hite.utils import get_device, load_hierarchy_dataset, example_generator
+from hierarchy_transformers.evaluation import MaskFillPerplexityEvaluator
+from hierarchy_transformers.utils import get_device, load_hierarchy_dataset, example_generator
 
 peval = MaskFillPerplexityEvaluator("sentence-transformers/all-MiniLM-L6-v2", get_device(1))
 
