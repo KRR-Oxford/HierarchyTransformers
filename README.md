@@ -1,4 +1,4 @@
-# Hierarchy Transformer Encoder (HiTE)
+# Hierarchy Transformer Encoder
 
 Retraining language models as hierarchy encoders.
 
