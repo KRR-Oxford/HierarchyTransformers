@@ -16,17 +16,14 @@ def load_sentence_transformer(pretrained: str, device: torch.device) -> Sentence
         transformer = pretrained_model._modules["0"]
         pooling = pretrained_model._modules["1"]
         assert isinstance(pooling, models.Pooling)
-        model = SentenceTransformer(modules=[transformer, pooling], device=device)
         logger.info(f"Load `{pretrained}` from `sentence-transformers`.")
-        print(model)
     except:
         # Load from huggingface transformers library
         transformer = models.Transformer(pretrained, max_seq_length=256)
         pooling = models.Pooling(transformer.get_word_embedding_dimension())
-        model = SentenceTransformer(modules=[transformer, pooling])
         logger.info(f"Load `{pretrained}` from `huggingface-transformers`.")
-        
-    return model
+    
+    return SentenceTransformer(modules=[transformer, pooling])
 
 
 def get_manifold(embed_dim: int) -> PoincareBall:
