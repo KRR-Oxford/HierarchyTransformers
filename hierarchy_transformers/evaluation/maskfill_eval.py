@@ -55,7 +55,7 @@ class MaskFillEvaluator:
         
         start = int(val_scores.min() * granuality)
         end = int(val_scores.max() * granuality)
-        for threshold in tqdm(range(start, end), desc="Iteration"):
+        for threshold in tqdm(range(start, end), desc="Thresholding"):
             threshold = threshold / granuality
             results = threshold_evaluate(val_scores, val_labels, threshold, False)
             if results["F1"] >= best_val_f1:
