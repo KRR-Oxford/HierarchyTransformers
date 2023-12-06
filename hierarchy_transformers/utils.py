@@ -90,3 +90,16 @@ def static_example_generator(ent2idx: dict, dataset: Dataset, hard_negative_firs
         cur_example = [ent2idx[x] for x in cur_example]
         examples.append(cur_example)
     return examples
+
+
+def anchored_example_generator(entity_lexicon: dict, dataset: Dataset, hard_negative_first: bool = False):
+    examples = []
+    for sample in dataset:
+        negative_parents = sample["random_negatives"]
+        hard_negatives = sample["hard_negatives"]
+        if hard_negative_first:
+            negative_parents = (hard_negatives + negative_parents)[:10]
+        cur_example = [sample["child"], sample["parent"]] + negative_parents
+        cur_example = [entity_lexicon[x]["name"] for x in cur_example]
+        examples.append(cur_example)
+    return examples
