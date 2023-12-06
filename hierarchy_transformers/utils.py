@@ -62,7 +62,7 @@ def example_generator(
         in_triplets (bool, optional): Present in triplets or not. Defaults to `False`.
     """
     examples = []
-    for sample in tqdm(dataset, leave=True, desc=f"Prepare examples for {dataset.split._name}"):
+    for sample in tqdm(dataset, leave=True, desc=f"Prepare examples (labelled) from {dataset.split._name}"):
         child = entity_lexicon[sample["child"]]["name"]
         parent = entity_lexicon[sample["parent"]]["name"]
         negative_parents = [entity_lexicon[neg]["name"] for neg in sample["random_negatives"]]
@@ -81,7 +81,7 @@ def example_generator(
 
 def static_example_generator(ent2idx: dict, dataset: Dataset, hard_negative_first: bool = False):
     examples = []
-    for sample in dataset:
+    for sample in tqdm(dataset, leave=True, desc=f"Prepare examples (static embeds) from {dataset.split._name}"):
         negative_parents = sample["random_negatives"]
         hard_negatives = sample["hard_negatives"]
         if hard_negative_first:
@@ -94,7 +94,7 @@ def static_example_generator(ent2idx: dict, dataset: Dataset, hard_negative_firs
 
 def anchored_example_generator(entity_lexicon: dict, dataset: Dataset, hard_negative_first: bool = False):
     examples = []
-    for sample in dataset:
+    for sample in tqdm(dataset, leave=True, desc=f"Prepare examples (mask eval) from {dataset.split._name}"):
         negative_parents = sample["random_negatives"]
         hard_negatives = sample["hard_negatives"]
         if hard_negative_first:

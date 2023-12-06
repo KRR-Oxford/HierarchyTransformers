@@ -1,4 +1,4 @@
-from deeponto.utils import load_file, set_seed
+from deeponto.utils import load_file, set_seed, create_path
 from torch.utils.data import DataLoader
 import logging
 import random
@@ -19,7 +19,7 @@ def main(config_file: str, gpu_id: int):
     # set_seed(8888)
     config = CfgNode(load_file(config_file))
 
-    # load taxonomy and dataset
+    # load dataset
     data_path = config.data_path
     dataset, entity_lexicon = load_hierarchy_dataset(data_path)
     dataset = dataset[config.task]
@@ -52,7 +52,9 @@ def main(config_file: str, gpu_id: int):
         num_epochs=config.train.num_epochs,
         num_warmup_epochs=config.train.num_warmup_epochs,
     )
-    static_trainer.run("experiments")
+    output_path = "experiments/static_poincare"
+    create_path(output_path)
+    static_trainer.run(output_path)
 
 
 if __name__ == "__main__":

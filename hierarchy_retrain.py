@@ -21,7 +21,7 @@ def main(config_file: str, gpu_id: int):
     set_seed(8888)
     config = CfgNode(load_file(config_file))
 
-    # load taxonomy and dataset
+    # load dataset
     data_path = config.data_path
     dataset, entity_lexicon = load_hierarchy_dataset(data_path)
     dataset = dataset[config.task]
