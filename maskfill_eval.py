@@ -22,12 +22,12 @@ def main(config_file: str, gpu_id: int):
     data_path = config.data_path
     dataset, entity_lexicon = load_hierarchy_dataset(data_path)
     dataset = dataset[config.task]
-    val_examples = anchored_example_generator(entity_lexicon, dataset["val"])
-    test_examples = anchored_example_generator(entity_lexicon, dataset["test"])
+    val_examples = anchored_example_generator(entity_lexicon, dataset["val"], config.train.hard_negative_first)
+    test_examples = anchored_example_generator(entity_lexicon, dataset["test"], config.train.hard_negative_first)
 
     device = get_device(gpu_id)
     mask_filler = MaskFillEvaluator(config.pretrained, device)
-    output_path = f"experiments/{config.pretrained}-maskfill"
+    output_path = f"experiments/{config.pretrained}-{config.task}-hard={config.train.hard_negative_first}-maskfill"
     create_path(output_path)
     mask_filler(val_examples, test_examples, output_path)
 
