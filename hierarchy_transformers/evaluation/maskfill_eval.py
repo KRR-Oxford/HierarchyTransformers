@@ -31,9 +31,9 @@ class MaskFillEvaluator:
                 elif pred["token_str"].strip().lower() == "no":
                     neg_score += pred["score"]
             # use normalised positive score as final score
-            scores.append(torch.tensor([pos_score, neg_score]).softmax(dim=0)[0].item())
+            scores.append(torch.tensor([pos_score, neg_score]))
 
-        return torch.tensor(scores), torch.tensor(labels)
+        return torch.stack(scores).softmax(dim=-1).T[0], labels
 
     @staticmethod
     def get_batches(lst, batch_size):
