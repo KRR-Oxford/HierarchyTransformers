@@ -2,3 +2,4 @@ from .eval_metrics import threshold_evaluate
 from .hyper_loss_eval import HyperbolicLossEvaluator
 from .static_embed_eval import StaticPoincareEmbedEvaluator
 from .maskfill_eval import MaskFillEvaluator
+from .similarity_eval import SentenceSimilarityEvaluator
