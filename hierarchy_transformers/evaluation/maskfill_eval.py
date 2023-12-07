@@ -1,35 +1,37 @@
 import torch
 from deeponto.utils import save_file
 from tqdm.auto import tqdm
-from transformers import AutoModelForMaskedLM, AutoTokenizer
+from transformers import pipeline
 from .eval_metrics import threshold_evaluate
 
 
 class MaskFillEvaluator:
     def __init__(self, pretrained: str, device: torch.device):
         self.device = device
-        self.tokenizer = AutoTokenizer.from_pretrained(pretrained)
-        self.model = AutoModelForMaskedLM.from_pretrained(pretrained)
-        self.model.to(self.device)
+        self.pipeline = pipeline("fill-mask", pretrained, device=self.device)
+        self.template = lambda child, parent: f"Question: Is {child} a {parent}? Answer: <mask>."
 
-    def mask_fill(self, anchored_batch):
+    def predict(self, batch):
+        
         masked_texts = []
-        # anchored_example: [child, parent, *negative_parents]
-        for anchored_example in anchored_batch:
-            masked_texts.append(f"{anchored_example[0]} is a {self.tokenizer.mask_token}.")
-        with torch.inference_mode():
-            masked_inputs = self.tokenizer(masked_texts, return_tensors="pt", padding=True).to(self.device)
-            logits = self.model(**masked_inputs).logits
-            mask_token_logits = logits[masked_inputs["input_ids"] == self.tokenizer.mask_token_id]
-
-        scores = []
         labels = []
-        for i, anchored_example in enumerate(anchored_batch):
-            cur_logit = mask_token_logits[i]
-            for j, p in enumerate(anchored_example[1:]):
-                p_tokens = self.tokenizer.encode(p, add_special_tokens=False)
-                scores.append(cur_logit[p_tokens].mean().item())
-                labels.append(int(j == 0))
+        for example in batch:
+            child, parent = example.texts
+            masked_texts.append(self.template(child, parent))
+            labels.append(example.label)
+        labels = torch.tensor(labels).to(self.device)
+        
+        scores = []
+        for result in self.pipeline(masked_texts, top_k=10):
+            pos_score = 0.
+            neg_score = 0.
+            for pred in result:
+                if pred["token_str"].strip().lower() == "yes":
+                    pos_score += pred["score"]
+                elif pred["token_str"].strip().lower() == "no":
+                    neg_score += pred["score"]
+            # use normalised positive score as final score
+            scores.append(torch.tensor([pos_score, neg_score]).softmax(dim=0)[0].item())
 
         return torch.tensor(scores), torch.tensor(labels)
 
@@ -38,21 +40,22 @@ class MaskFillEvaluator:
         for i in range(0, len(lst), batch_size):
             yield lst[i : i + batch_size]
 
-    def __call__(self, val_examples: list, test_examples: list, output_path: str, granuality: int = 100):
-
+    def __call__(self, val_examples: list, test_examples: list, output_path: str, eval_batch_size: int = 256, granuality: int = 100):
         # validation
         val_scores = []
         val_labels = []
-        for batch in tqdm(list(self.get_batches(val_examples, 100)), desc="Validating"):
-            cur_scores, cur_labels = self.mask_fill(batch)
+        for batch in tqdm(list(self.get_batches(val_examples, eval_batch_size)), desc="Validating"):
+            cur_scores, cur_labels = self.predict(batch)
             val_scores.append(cur_scores)
             val_labels.append(cur_labels)
         val_scores = torch.concatenate(val_scores, dim=0)
         val_labels = torch.concatenate(val_labels, dim=0)
+        torch.save(val_scores, f"{output_path}/maskfill_val_scores.pt")
+        torch.save(val_labels, f"{output_path}/maskfill_val_labels.pt")
 
         best_val_f1 = -1.0
         best_val_results = None
-        
+
         start = int(val_scores.min() * granuality)
         end = int(val_scores.max() * granuality)
         for threshold in tqdm(range(start, end), desc="Thresholding"):
@@ -66,11 +69,14 @@ class MaskFillEvaluator:
         # testing
         test_scores = []
         test_labels = []
-        for batch in tqdm(list(self.get_batches(test_examples, 100)), desc="Testing"):
-            cur_scores, cur_labels = self.mask_fill(batch)
+        for batch in tqdm(list(self.get_batches(test_examples, eval_batch_size)), desc="Testing"):
+            cur_scores, cur_labels = self.predict(batch)
             test_scores.append(cur_scores)
             test_labels.append(cur_labels)
         test_scores = torch.concatenate(test_scores, dim=0)
         test_labels = torch.concatenate(test_labels, dim=0)
         test_results = threshold_evaluate(test_scores, test_labels, best_val_results["threshold"], False)
+
+        torch.save(test_scores, f"{output_path}/maskfill_test_scores.pt")
+        torch.save(test_labels, f"{output_path}/maskfill_test_labels.pt")
         save_file(test_results, f"{output_path}/maskfill_test_results.json")

@@ -6,7 +6,7 @@ import click
 from yacs.config import CfgNode
 
 from hierarchy_transformers.evaluation import MaskFillEvaluator
-from hierarchy_transformers.utils import anchored_example_generator, load_hierarchy_dataset, get_device
+from hierarchy_transformers.utils import example_generator, load_hierarchy_dataset, get_device
 
 
 logger = logging.getLogger(__name__)
@@ -22,14 +22,14 @@ def main(config_file: str, gpu_id: int):
     data_path = config.data_path
     dataset, entity_lexicon = load_hierarchy_dataset(data_path)
     dataset = dataset[config.task]
-    val_examples = anchored_example_generator(entity_lexicon, dataset["val"], config.train.hard_negative_first)
-    test_examples = anchored_example_generator(entity_lexicon, dataset["test"], config.train.hard_negative_first)
+    val_examples = example_generator(entity_lexicon, dataset["val"], config.train.hard_negative_first)
+    test_examples = example_generator(entity_lexicon, dataset["test"], config.train.hard_negative_first)
 
     device = get_device(gpu_id)
     mask_filler = MaskFillEvaluator(config.pretrained, device)
     output_path = f"experiments/{config.pretrained}-{config.task}-hard={config.train.hard_negative_first}-maskfill"
     create_path(output_path)
-    mask_filler(val_examples, test_examples, output_path)
+    mask_filler(val_examples, test_examples, output_path, config.train.eval_batch_size)
 
 
 if __name__ == "__main__":
