@@ -58,7 +58,7 @@ class PretrainedMaskFillEvaluator(HierarchyEvaluator):
 
     def __call__(self, output_path: str):
         # validation
-        val_scores, val_labels = self.inference(self.val_examples, self.eval_batch_size)
+        val_scores, val_labels = self.inference(self.val_examples)
         torch.save(val_scores, f"{output_path}/maskfill_val_scores.pt")
         torch.save(val_labels, f"{output_path}/maskfill_val_labels.pt")
 
@@ -67,7 +67,7 @@ class PretrainedMaskFillEvaluator(HierarchyEvaluator):
 
         # testing
         if self.test_examples:
-            test_scores, test_labels = self.inference(self.test_examples, self.eval_batch_size)
+            test_scores, test_labels = self.inference(self.test_examples)
             test_results = self.evaluate_by_threshold(test_scores, test_labels, best_val_results["threshold"], False)
 
             torch.save(test_scores, f"{output_path}/maskfill_test_scores.pt")
