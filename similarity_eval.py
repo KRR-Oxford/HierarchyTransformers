@@ -29,7 +29,7 @@ def main(config_file: str, gpu_id: int):
     sim_eval = SentenceSimilarityEvaluator(config.pretrained, device)
     output_path = f"experiments/{config.pretrained}-{config.task}-hard={config.train.hard_negative_first}-simeval"
     create_path(output_path)
-    sim_eval(val_examples, test_examples, output_path, config.train.eval_batch_size)
+    sim_eval(val_examples, test_examples, output_path, config.train.eval_batch_size, 1000)
 
 
 if __name__ == "__main__":
