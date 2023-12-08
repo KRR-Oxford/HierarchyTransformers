@@ -8,7 +8,7 @@ from yacs.config import CfgNode
 from hierarchy_transformers.models import *
 from hierarchy_transformers.losses import *
 from hierarchy_transformers.evaluation import HierarchyRetrainedEvaluator
-from hierarchy_transformers.utils import example_generator, load_hierarchy_dataset, get_device
+from hierarchy_transformers.utils import prepare_hierarchy_examples, load_hierarchy_dataset, get_torch_device
 
 
 logger = logging.getLogger(__name__)
@@ -27,14 +27,14 @@ def main(config_file: str, gpu_id: int):
     dataset = dataset[config.task]
 
     # load base edges for training
-    base_examples = example_generator(
+    base_examples = prepare_hierarchy_examples(
         entity_lexicon, dataset["train"], config.train.hard_negative_first, config.train.apply_triplet_loss
     )
     train_trans_portion = config.train.trans_train_portion
     train_examples = []
     if train_trans_portion > 0.0:
         logger.info(f"{train_trans_portion} transitivie edges used for training.")
-        train_examples = example_generator(
+        train_examples = prepare_hierarchy_examples(
             entity_lexicon, dataset["trans_train"], config.train.hard_negative_first, config.train.apply_triplet_loss
         )
         num_train_examples = int(train_trans_portion * len(train_examples))
@@ -43,17 +43,17 @@ def main(config_file: str, gpu_id: int):
         logger.info("No transitivie edges used for training.")
     train_examples = base_examples + train_examples
     train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=config.train.train_batch_size)
-    val_examples = example_generator(
+    val_examples = prepare_hierarchy_examples(
         entity_lexicon, dataset["val"], config.train.hard_negative_first, config.train.apply_triplet_loss
     )
     val_dataloader = DataLoader(val_examples, shuffle=False, batch_size=config.train.eval_batch_size)
-    test_examples = example_generator(
+    test_examples = prepare_hierarchy_examples(
         entity_lexicon, dataset["test"], config.train.hard_negative_first, config.train.apply_triplet_loss
     )
     test_dataloader = DataLoader(test_examples, shuffle=False, batch_size=config.train.eval_batch_size)
 
     # load pre-trained model
-    device = get_device(gpu_id)
+    device = get_torch_device(gpu_id)
     model = load_pretrained(config.pretrained, device)
 
     # manifold

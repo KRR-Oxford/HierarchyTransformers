@@ -7,7 +7,7 @@ from yacs.config import CfgNode
 from deeponto.utils import load_file, set_seed, create_path
 
 from hierarchy_transformers.models import StaticPoincareEmbed, StaticPoincareEmbedTrainer
-from hierarchy_transformers.utils import static_example_generator, load_hierarchy_dataset, get_device
+from hierarchy_transformers.utils import prepare_hierarchy_examples_for_static, load_hierarchy_dataset, get_torch_device
 
 
 logger = logging.getLogger(__name__)
@@ -31,12 +31,12 @@ def main(config_file: str, gpu_id: int):
     ent2idx = model.ent2idx
 
     # load base edges for training
-    base_examples = static_example_generator(ent2idx, dataset["train"], config.train.hard_negative_first)
+    base_examples = prepare_hierarchy_examples_for_static(ent2idx, dataset["train"], config.train.hard_negative_first)
     train_trans_portion = config.train.train_trans_portion
     train_examples = []
     if train_trans_portion > 0.0:
         logger.info(f"{train_trans_portion} transitivie edges used for training.")
-        train_examples = static_example_generator(ent2idx, dataset["trans_train"], config.train.hard_negative_first)
+        train_examples = prepare_hierarchy_examples_for_static(ent2idx, dataset["trans_train"], config.train.hard_negative_first)
         num_train_examples = int(train_trans_portion * len(train_examples))
         train_examples = list(random.sample(train_examples, k=num_train_examples))
     else:
@@ -44,7 +44,7 @@ def main(config_file: str, gpu_id: int):
     train_examples = base_examples + train_examples
     train_dataloader = DataLoader(torch.tensor(train_examples), shuffle=True, batch_size=config.train.train_batch_size)
 
-    device = get_device(gpu_id)
+    device = get_torch_device(gpu_id)
     static_trainer = StaticPoincareEmbedTrainer(
         model=model,
         device=device,

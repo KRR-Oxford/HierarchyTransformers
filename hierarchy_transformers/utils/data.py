@@ -1,17 +1,18 @@
 import os
-import torch
 from datasets import Dataset, load_dataset
 from sentence_transformers import InputExample
 from tqdm.auto import tqdm
 import json
 
 
-def get_device(gpu_id: int):
-    return torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
-
-
 def load_hierarchy_dataset(data_path: str):
-    """Load hierarchy dataset and entity lexicon."""
+    """Load hierarchy dataset and entity lexicon from:
+
+    `data_dir`:
+        `entity_lexicon`
+        `trans`: `base.jsonl`, `trans_train.jsonl`, `trans_val.jsonl`, `trans_test.jsonl`
+        `induc`: `base_train.jsonl`, `train_base_train.jsonl`, `base_val.jsonl`, `base_test.jsonl`
+    """
 
     trans_dataset = load_dataset(
         "json",
@@ -50,7 +51,7 @@ def load_transfer_testing_dataset(data_path: str):
     return transfer_dataset, entity_lexicon
 
 
-def example_generator(
+def prepare_hierarchy_examples(
     entity_lexicon: dict, dataset: Dataset, hard_negative_first: bool = False, in_triplets: bool = False
 ):
     """Prepare examples in different formats.
@@ -79,7 +80,7 @@ def example_generator(
     return examples
 
 
-def static_example_generator(ent2idx: dict, dataset: Dataset, hard_negative_first: bool = False):
+def prepare_hierarchy_examples_for_static(ent2idx: dict, dataset: Dataset, hard_negative_first: bool = False):
     examples = []
     for sample in tqdm(dataset, leave=True, desc=f"Prepare examples (static embeds) from {dataset.split._name}"):
         negative_parents = sample["random_negatives"]
@@ -92,14 +93,14 @@ def static_example_generator(ent2idx: dict, dataset: Dataset, hard_negative_firs
     return examples
 
 
-def anchored_example_generator(entity_lexicon: dict, dataset: Dataset, hard_negative_first: bool = False):
-    examples = []
-    for sample in tqdm(dataset, leave=True, desc=f"Prepare examples (mask eval) from {dataset.split._name}"):
-        negative_parents = sample["random_negatives"]
-        hard_negatives = sample["hard_negatives"]
-        if hard_negative_first:
-            negative_parents = (hard_negatives + negative_parents)[:10]
-        cur_example = [sample["child"], sample["parent"]] + negative_parents
-        cur_example = [entity_lexicon[x]["name"] for x in cur_example]
-        examples.append(cur_example)
-    return examples
+# def anchored_example_generator(entity_lexicon: dict, dataset: Dataset, hard_negative_first: bool = False):
+#     examples = []
+#     for sample in tqdm(dataset, leave=True, desc=f"Prepare examples (mask eval) from {dataset.split._name}"):
+#         negative_parents = sample["random_negatives"]
+#         hard_negatives = sample["hard_negatives"]
+#         if hard_negative_first:
+#             negative_parents = (hard_negatives + negative_parents)[:10]
+#         cur_example = [sample["child"], sample["parent"]] + negative_parents
+#         cur_example = [entity_lexicon[x]["name"] for x in cur_example]
+#         examples.append(cur_example)
+#     return examples
