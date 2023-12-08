@@ -76,7 +76,7 @@ class HierarchyEvaluator:
             results = HierarchyEvaluator.evaluate_by_threshold(
                 scores, labels, threshold, smaller_scores_better, truth_label
             )
-            if results[determined_metric] > best_determined_metric_value:
+            if results[determined_metric] >= best_determined_metric_value:
                 best_results = preformatted_best_results
                 best_results.update(results)
                 best_determined_metric_value = results[determined_metric]

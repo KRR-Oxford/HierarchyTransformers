@@ -33,6 +33,12 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
         train_examples: Optional[list] = None,
     ):
         super().__init__()
+
+        self.loss_module = loss_module
+        self.manifold = manifold
+        self.device = device
+        self.loss_module.to(self.device)
+
         self.val_dataloader = DataLoader(val_examples, shuffle=False, batch_size=eval_batch_size)
         self.test_dataloader = (
             DataLoader(test_examples, shuffle=False, batch_size=eval_batch_size) if test_examples else None
@@ -40,10 +46,6 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
         self.train_dataloader = (
             DataLoader(train_examples, shuffle=False, batch_size=eval_batch_size) if train_examples else None
         )
-        self.loss_module = loss_module
-        self.manifold = manifold
-        self.device = device
-        self.loss_module.to(self.device)
 
     @classmethod
     def score(cls, result_mat: torch.Tensor, centri_score_weight: float):
@@ -86,7 +88,10 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
         dataloader: DataLoader,
         best_val_centri_score_weight: float = None,
         best_val_threshold: float = None,
+        num_negatives_per_positive_in_triplets: int = 10,
     ):
+        """WARNING: this function is highly customised to our hierarchy datasets
+        where 1 positive sample corresponds to 10 negatives."""
         # set up data iterator
         dataloader.collate_fn = model.smart_batching_collate
         data_iterator = iter(dataloader)
@@ -160,11 +165,16 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
         if self.loss_module.apply_triplet_loss:
             logging.info("reshape result matrix following evaluation order")
             # 10 negatives per positive
-            positive_mat = result_mat[result_mat[:, 0] == 1.0][::10]
+            positive_mat = result_mat[result_mat[:, 0] == 1.0][::num_negatives_per_positive_in_triplets]
             negative_mat = result_mat[result_mat[:, 0] == 0.0]
             real_mat = []
             for i in range(len(positive_mat)):
-                real_mat += [positive_mat[i].unsqueeze(0), negative_mat[10 * i : 10 * (i + 1)]]
+                real_mat += [
+                    positive_mat[i].unsqueeze(0),
+                    negative_mat[
+                        num_negatives_per_positive_in_triplets * i : num_negatives_per_positive_in_triplets * (i + 1)
+                    ],
+                ]
             result_mat = torch.concat(real_mat, dim=0)
         if not best_val_threshold or not best_val_centri_score_weight:
             eval_results = self.search_best_threshold(result_mat, 100)
