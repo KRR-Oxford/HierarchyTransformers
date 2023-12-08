@@ -8,7 +8,7 @@ def threshold_evaluate(
     smaller_the_better: bool = True,
     truth_label: int = 1,
 ):
-    r"""Evaluate precision, recall, f1 based on threshold.
+    r"""Evaluate Precision, Recall, F1, and Accurarcy based on the threshold.
 
     Args:
         scores (torch.Tensor): resulting scores.
