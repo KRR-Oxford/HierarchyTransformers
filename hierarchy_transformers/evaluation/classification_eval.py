@@ -10,17 +10,19 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from ..loss import HyperbolicLoss
-from .eval_metrics import threshold_evaluate
+from sentence_transformers.losses import SoftmaxLoss
+from .eval_functions import threshold_evaluate
 
 
-class HyperbolicLossEvaluator(SentenceEvaluator):
-    """Hyperbolic loss evaluator that extends the base evaluator from `sentence_transformers.evaluation`."""
+class ClassificationEvaluator(SentenceEvaluator):
+    """Evaluator for fine-tuned language models with an additional classification layer.
+    
+    Hierarchy encoding is evaluated based on the fine-tuned binary classification scores.
+    """
 
     def __init__(
         self,
-        loss_module: HyperbolicLoss,
-        manifold: PoincareBall,
+        loss_module: SoftmaxLoss,
         device: torch.device,
         val_dataloader: DataLoader,
         test_dataloader: DataLoader = None,
@@ -30,7 +32,6 @@ class HyperbolicLossEvaluator(SentenceEvaluator):
         self.test_dataloader = test_dataloader
         self.train_dataloader = train_dataloader
         self.loss_module = loss_module
-        self.manifold = manifold
         self.device = device
         self.loss_module.to(self.device)
 

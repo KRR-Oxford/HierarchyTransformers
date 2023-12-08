@@ -1,10 +1,16 @@
 import torch
 from torch.utils.data import DataLoader
 from deeponto.utils import save_file
-from .eval_metrics import threshold_evaluate
+from .eval_functions import threshold_evaluate
 
 
-class StaticPoincareEmbedEvaluator:
+class StaticPoincareEvaluator:
+    """Evaluator for the static Poincare embedding model.
+    
+    Hierarchy encoding is evaluated based on hyperbolic distances between
+    entity embeddings in the unit Poincare ball. 
+    """
+
     def __init__(self, model_path: str, device: torch.device):
         self.model = torch.load(model_path)
         self.device = device

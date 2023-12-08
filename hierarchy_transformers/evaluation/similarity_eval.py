@@ -2,11 +2,17 @@ import torch
 from deeponto.utils import save_file
 from tqdm.auto import tqdm
 
-from .eval_metrics import threshold_evaluate
+from .eval_functions import threshold_evaluate
 from ..model import load_sentence_transformer
 
 
 class SentenceSimilarityEvaluator:
+    """Evaluator for pre-trained language models.
+    
+    Hierarchy encoding based on the similarities between the masked "is-a" sentences
+    and the reference "is-a" sentences.
+    """
+
     def __init__(self, pretrained: str, device: torch.device):
         self.device = device
         self.model = load_sentence_transformer(pretrained, device)
@@ -31,13 +37,19 @@ class SentenceSimilarityEvaluator:
 
         return scores, labels
 
-
     @staticmethod
     def get_batches(lst, batch_size):
         for i in range(0, len(lst), batch_size):
             yield lst[i : i + batch_size]
 
-    def __call__(self, val_examples: list, test_examples: list, output_path: str, eval_batch_size: int = 256, granuality: int = 100):
+    def __call__(
+        self,
+        val_examples: list,
+        test_examples: list,
+        output_path: str,
+        eval_batch_size: int = 256,
+        granuality: int = 100,
+    ):
         # validation
         val_scores = []
         val_labels = []

@@ -7,7 +7,7 @@ from yacs.config import CfgNode
 
 from hierarchy_transformers.model import *
 from hierarchy_transformers.loss import *
-from hierarchy_transformers.evaluation import HyperbolicLossEvaluator
+from hierarchy_transformers.evaluation import HierarchyRetrainedEvaluator
 from hierarchy_transformers.utils import example_generator, load_hierarchy_dataset, get_device
 
 
@@ -88,7 +88,7 @@ def main(config_file: str, gpu_id: int):
     hyper_loss = HyperbolicLoss(model, config.train.apply_triplet_loss, *losses)
     print(hyper_loss.get_config_dict())
     hyper_loss.to(device)
-    hyper_loss_evaluator = HyperbolicLossEvaluator(
+    hit_evaluator = HierarchyRetrainedEvaluator(
         loss_module=hyper_loss,
         manifold=manifold,
         device=device,
@@ -103,7 +103,7 @@ def main(config_file: str, gpu_id: int):
         optimizer_params={"lr": float(config.train.learning_rate)},  # defaults to 2e-5
         # steps_per_epoch=20, # for testing use
         warmup_steps=config.train.warmup_steps,
-        evaluator=hyper_loss_evaluator,
+        evaluator=hit_evaluator,
         output_path=f"experiments/{config.pretrained}-{config.task}-hard={config.train.hard_negative_first}-triplet={config.train.apply_triplet_loss}-train={train_trans_portion}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}",
     )
 
