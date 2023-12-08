@@ -2,55 +2,57 @@ from tqdm.auto import trange, tqdm
 from geoopt.manifolds import PoincareBall
 import torch
 from torch.utils.data import DataLoader
-from sentence_transformers.evaluation import SentenceEvaluator
 from sentence_transformers import SentenceTransformer
 from deeponto.utils import save_file
 from pathlib import Path
+from typing import Optional
 import logging
 
 logger = logging.getLogger(__name__)
 
-from sentence_transformers.losses import SoftmaxLoss
-from .eval_functions import threshold_evaluate
+from ..losses import HyperbolicLoss
+from .hierarchy_eval import HierarchyEvaluator
 
 
-class ClassificationEvaluator(SentenceEvaluator):
-    """Evaluator for fine-tuned language models with an additional classification layer.
-    
-    Hierarchy encoding is evaluated based on the fine-tuned binary classification scores.
+class HierarchyRetrainedEvaluator(HierarchyEvaluator):
+    """Evaluator hierarchy re-trained language models (HiT).
+
+    Hierarchy encoding is evaluated based on the hyperbolic distances between entity
+    embeddings and hyperbolic norms of entity embeddings in the Poincare ball of
+    radius 1/sqrt(N) where N is the embedding dimension.
     """
 
     def __init__(
         self,
-        loss_module: SoftmaxLoss,
+        loss_module: HyperbolicLoss,
+        manifold: PoincareBall,
         device: torch.device,
-        val_dataloader: DataLoader,
-        test_dataloader: DataLoader = None,
-        train_dataloader: DataLoader = None,
+        val_examples: list,
+        eval_batch_size: int,
+        test_examples: Optional[list] = None,
+        train_examples: Optional[list] = None,
     ):
-        self.val_dataloader = val_dataloader
-        self.test_dataloader = test_dataloader
-        self.train_dataloader = train_dataloader
+        super().__init__()
+        self.val_dataloader = DataLoader(val_examples, shuffle=False, batch_size=eval_batch_size)
+        self.test_dataloader = (
+            DataLoader(test_examples, shuffle=False, batch_size=eval_batch_size) if test_examples else None
+        )
+        self.train_dataloader = (
+            DataLoader(train_examples, shuffle=False, batch_size=eval_batch_size) if train_examples else None
+        )
         self.loss_module = loss_module
+        self.manifold = manifold
         self.device = device
         self.loss_module.to(self.device)
 
-    @staticmethod
-    def evaluate(
-        result_mat: torch.Tensor,
-        granuality: int = 100,
-        best_val_centri_score_weight: float = None,
-        best_val_threshold: float = None,
-    ):
-        if best_val_threshold and best_val_centri_score_weight:
-            logger.info(
-                f"Evaluate based on selected hyperparams: centri_score_weight={best_val_centri_score_weight}; threshold={best_val_threshold}."
-            )
-            scores = result_mat[:, 1] + best_val_centri_score_weight * (result_mat[:, 3] - result_mat[:, 2])
-            results = {"centri_score_weight": best_val_centri_score_weight}
-            results.update(threshold_evaluate(scores, result_mat[:, 0], best_val_threshold))
-            return results
+    @classmethod
+    def score(cls, result_mat: torch.Tensor, centri_score_weight: float):
+        scores = result_mat[:, 1] + centri_score_weight * (result_mat[:, 3] - result_mat[:, 2])
+        labels = result_mat[:, 0]
+        return scores, labels
 
+    @classmethod
+    def search_best_threshold(cls, result_mat: torch.Tensor, threshold_granularity: int = 100):
         best_f1 = -1.0
         best_results = None
         is_updated = True
@@ -62,22 +64,22 @@ class ClassificationEvaluator(SentenceEvaluator):
             is_updated = False
 
             centri_score_weight = float(centri_score_weight + 1)
-            scores = result_mat[:, 1] + centri_score_weight * (result_mat[:, 3] - result_mat[:, 2])
-
-            start = int(scores.min() * granuality)
-            end = int(scores.max() * granuality)
-            for threshold in tqdm(range(start, end), desc=f"Thresholding (centri={centri_score_weight})"):
-                threshold = threshold / granuality
-                results = threshold_evaluate(scores, result_mat[:, 0], threshold)
-                if results["F1"] > best_f1:
-                    best_results = {"centri_score_weight": centri_score_weight}
-                    best_results.update(results)
-                    best_f1 = results["F1"]
-                    is_updated = True
+            scores, labels = cls.score(result_mat, centri_score_weight)
+            cur_best_results = super().search_best_threshold(
+                scores,
+                labels,
+                threshold_granularity,
+                determined_metric="F1",
+                best_determined_metric_value=best_f1,
+                preformatted_best_results={"centri_score_weight": centri_score_weight},
+            )
+            if cur_best_results:
+                best_results = cur_best_results
+                is_updated = True
 
         return best_results
 
-    def evaluate_dataloader(
+    def inference(
         self,
         model: SentenceTransformer,
         dataloader: DataLoader,
@@ -163,14 +165,18 @@ class ClassificationEvaluator(SentenceEvaluator):
             for i in range(len(positive_mat)):
                 real_mat += [positive_mat[i].unsqueeze(0), negative_mat[10 * i : 10 * (i + 1)]]
             result_mat = torch.concat(real_mat, dim=0)
-        eval_scores = self.evaluate(result_mat, 100, best_val_centri_score_weight, best_val_threshold)
+        if not best_val_threshold or not best_val_centri_score_weight:
+            eval_results = self.search_best_threshold(result_mat, 100)
+        else:
+            eval_scores, eval_labels = self.score(result_mat, best_val_centri_score_weight)
+            eval_results = self.evaluate_by_threshold(eval_scores, eval_labels, best_val_threshold)
 
         self.loss_module.zero_grad()
         self.loss_module.train()
 
         results = self.loss_module.get_config_dict()
         results["loss"] = eval_loss / (num_batch + 1)
-        results["scores"] = eval_scores
+        results["scores"] = eval_results
 
         return result_mat, results
 
@@ -187,18 +193,18 @@ class ClassificationEvaluator(SentenceEvaluator):
 
         if self.train_dataloader:
             logger.info("Evaluate on train examples...")
-            train_result_mat, train_results = self.evaluate_dataloader(model, self.train_dataloader)
+            train_result_mat, train_results = self.inference(model, self.train_dataloader)
             torch.save(train_result_mat, f"{output_path}/epoch={epoch}.step={steps}/train_result_mat.pt")
             save_file(train_results, f"{output_path}/epoch={epoch}.step={steps}/train_results.json")
 
         logger.info("Evaluate on val examples...")
-        val_result_mat, val_results = self.evaluate_dataloader(model, self.val_dataloader)
+        val_result_mat, val_results = self.inference(model, self.val_dataloader)
         torch.save(val_result_mat, f"{output_path}/epoch={epoch}.step={steps}/val_result_mat.pt")
         save_file(val_results, f"{output_path}/epoch={epoch}.step={steps}/val_results.json")
 
         if self.test_dataloader:
             logger.info("Evaluate on test examples using best val threshold...")
-            test_result_mat, test_results = self.evaluate_dataloader(
+            test_result_mat, test_results = self.inference(
                 model,
                 self.test_dataloader,
                 val_results["scores"]["centri_score_weight"],

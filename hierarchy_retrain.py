@@ -46,11 +46,11 @@ def main(config_file: str, gpu_id: int):
     val_examples = prepare_hierarchy_examples(
         entity_lexicon, dataset["val"], config.train.hard_negative_first, config.train.apply_triplet_loss
     )
-    val_dataloader = DataLoader(val_examples, shuffle=False, batch_size=config.train.eval_batch_size)
+    # val_dataloader = DataLoader(val_examples, shuffle=False, batch_size=config.train.eval_batch_size)
     test_examples = prepare_hierarchy_examples(
         entity_lexicon, dataset["test"], config.train.hard_negative_first, config.train.apply_triplet_loss
     )
-    test_dataloader = DataLoader(test_examples, shuffle=False, batch_size=config.train.eval_batch_size)
+    # test_dataloader = DataLoader(test_examples, shuffle=False, batch_size=config.train.eval_batch_size)
 
     # load pre-trained model
     device = get_torch_device(gpu_id)
@@ -92,9 +92,10 @@ def main(config_file: str, gpu_id: int):
         loss_module=hyper_loss,
         manifold=manifold,
         device=device,
-        val_dataloader=val_dataloader,
-        test_dataloader=test_dataloader,
-        train_dataloader=train_dataloader if config.train.eval_train else None,
+        val_examples=val_examples,
+        eval_batch_size=config.train.eval_batch_size,
+        test_examples=test_examples,
+        train_examples=train_examples if config.train.eval_train else None
     )
 
     model.fit(

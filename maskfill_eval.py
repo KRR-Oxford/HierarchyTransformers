@@ -5,7 +5,7 @@ import random
 import click
 from yacs.config import CfgNode
 
-from hierarchy_transformers.evaluation import MaskFillEvaluator
+from hierarchy_transformers.evaluation import PretrainedMaskFillEvaluator
 from hierarchy_transformers.utils import prepare_hierarchy_examples, load_hierarchy_dataset, get_torch_device
 
 
@@ -26,7 +26,7 @@ def main(config_file: str, gpu_id: int):
     test_examples = prepare_hierarchy_examples(entity_lexicon, dataset["test"], config.train.hard_negative_first)
 
     device = get_torch_device(gpu_id)
-    mask_filler = MaskFillEvaluator(config.pretrained, device)
+    mask_filler = PretrainedMaskFillEvaluator(config.pretrained, device)
     output_path = f"experiments/{config.pretrained}-{config.task}-hard={config.train.hard_negative_first}-maskfill"
     create_path(output_path)
     mask_filler(val_examples, test_examples, output_path, config.train.eval_batch_size)

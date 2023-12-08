@@ -1,5 +1,4 @@
-from .eval_functions import threshold_evaluate
-from .hit_eval import HierarchyRetrainedEvaluator
-from .static_embed_eval import StaticPoincareEvaluator
-from .maskfill_eval import MaskFillEvaluator
-from .similarity_eval import SentenceSimilarityEvaluator
+from .hierarchy_eval import evaluate_by_threshold
+from .retrained_eval import HierarchyRetrainedEvaluator
+from .static_eval import StaticPoincareEvaluator
+from .pretrained_eval import PretrainedMaskFillEvaluator, PretrainedSentenceSimilarityEvaluator
