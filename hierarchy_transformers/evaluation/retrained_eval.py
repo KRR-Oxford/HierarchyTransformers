@@ -75,6 +75,7 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
             )
             if cur_best_results:
                 best_results = cur_best_results
+                best_f1 = best_results["F1"]
                 is_updated = True
 
         return best_results
