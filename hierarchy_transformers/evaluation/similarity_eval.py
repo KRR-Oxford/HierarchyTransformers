@@ -3,7 +3,7 @@ from deeponto.utils import save_file
 from tqdm.auto import tqdm
 
 from .eval_functions import threshold_evaluate
-from ..model import load_sentence_transformer
+from ..models import load_pretrained
 
 
 class SentenceSimilarityEvaluator:
@@ -15,7 +15,7 @@ class SentenceSimilarityEvaluator:
 
     def __init__(self, pretrained: str, device: torch.device):
         self.device = device
-        self.model = load_sentence_transformer(pretrained, device)
+        self.model = load_pretrained(pretrained, device)
         self.model.to(self.device)
         self.template = lambda child, parent: f"{child} is a {parent}."
         self.mask_token = self.model.tokenizer.mask_token

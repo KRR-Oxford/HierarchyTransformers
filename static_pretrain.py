@@ -1,11 +1,12 @@
-from deeponto.utils import load_file, set_seed, create_path
+import torch
 from torch.utils.data import DataLoader
 import logging
 import random
 import click
 from yacs.config import CfgNode
+from deeponto.utils import load_file, set_seed, create_path
 
-from hierarchy_transformers.static import *
+from hierarchy_transformers.models import StaticPoincareEmbed, StaticPoincareEmbedTrainer
 from hierarchy_transformers.utils import static_example_generator, load_hierarchy_dataset, get_device
 
 

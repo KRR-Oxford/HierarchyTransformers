@@ -5,8 +5,8 @@ import numpy as np
 import click
 from yacs.config import CfgNode
 
-from hierarchy_transformers.model import *
-from hierarchy_transformers.loss import *
+from hierarchy_transformers.models import *
+from hierarchy_transformers.losses import *
 from hierarchy_transformers.evaluation import HierarchyRetrainedEvaluator
 from hierarchy_transformers.utils import example_generator, load_hierarchy_dataset, get_device
 
@@ -54,11 +54,11 @@ def main(config_file: str, gpu_id: int):
 
     # load pre-trained model
     device = get_device(gpu_id)
-    model = load_sentence_transformer(config.pretrained, device)
+    model = load_pretrained(config.pretrained, device)
 
     # manifold
     embed_dim = model._first_module().get_word_embedding_dimension()
-    manifold = get_manifold(embed_dim)
+    manifold = get_circum_poincareball(embed_dim)
     # curvature = 1 / embed_dim if not config.apply_unit_ball_projection else 1.0
 
     # loss

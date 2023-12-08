@@ -10,7 +10,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from ..loss import HyperbolicLoss
+from ..losses import HyperbolicLoss
 from .eval_functions import threshold_evaluate
 
 
