@@ -27,8 +27,8 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
         loss_module: HyperbolicLoss,
         manifold: PoincareBall,
         device: torch.device,
-        val_examples: list,
         eval_batch_size: int,
+        val_examples: list,
         test_examples: Optional[list] = None,
         train_examples: Optional[list] = None,
     ):
@@ -39,13 +39,10 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
         self.device = device
         self.loss_module.to(self.device)
 
-        self.val_dataloader = DataLoader(val_examples, shuffle=False, batch_size=eval_batch_size)
-        self.test_dataloader = (
-            DataLoader(test_examples, shuffle=False, batch_size=eval_batch_size) if test_examples else None
-        )
-        self.train_dataloader = (
-            DataLoader(train_examples, shuffle=False, batch_size=eval_batch_size) if train_examples else None
-        )
+        self.eval_batch_size = eval_batch_size
+        self.val_examples = val_examples
+        self.test_examples = test_examples
+        self.train_examples = train_examples
 
     @classmethod
     def score(cls, result_mat: torch.Tensor, centri_score_weight: float):
@@ -85,7 +82,7 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
     def inference(
         self,
         model: SentenceTransformer,
-        dataloader: DataLoader,
+        examples: list,
         best_val_centri_score_weight: float = None,
         best_val_threshold: float = None,
         num_negatives_per_positive_in_triplets: int = 10,
@@ -93,6 +90,7 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
         """WARNING: this function is highly customised to our hierarchy datasets
         where 1 positive sample corresponds to 10 negatives."""
         # set up data iterator
+        dataloader = DataLoader(examples, shuffle=False, batch_size=self.eval_batch_size)
         dataloader.collate_fn = model.smart_batching_collate
         data_iterator = iter(dataloader)
 
@@ -181,6 +179,7 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
         else:
             eval_scores, eval_labels = self.score(result_mat, best_val_centri_score_weight)
             eval_results = self.evaluate_by_threshold(eval_scores, eval_labels, best_val_threshold)
+            eval_results = {"centri_score_weight": best_val_centri_score_weight, **eval_results}
 
         self.loss_module.zero_grad()
         self.loss_module.train()
@@ -202,22 +201,22 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
         Path(f"{output_path}/epoch={epoch}.step={steps}").mkdir(parents=True, exist_ok=True)
         # model.save(f"{output_path}/epoch={epoch}.step={steps}")
 
-        if self.train_dataloader:
+        if self.train_examples:
             logger.info("Evaluate on train examples...")
-            train_result_mat, train_results = self.inference(model, self.train_dataloader)
+            train_result_mat, train_results = self.inference(model, self.train_examples)
             torch.save(train_result_mat, f"{output_path}/epoch={epoch}.step={steps}/train_result_mat.pt")
             save_file(train_results, f"{output_path}/epoch={epoch}.step={steps}/train_results.json")
 
         logger.info("Evaluate on val examples...")
-        val_result_mat, val_results = self.inference(model, self.val_dataloader)
+        val_result_mat, val_results = self.inference(model, self.val_examples)
         torch.save(val_result_mat, f"{output_path}/epoch={epoch}.step={steps}/val_result_mat.pt")
         save_file(val_results, f"{output_path}/epoch={epoch}.step={steps}/val_results.json")
 
-        if self.test_dataloader:
+        if self.test_examples:
             logger.info("Evaluate on test examples using best val threshold...")
             test_result_mat, test_results = self.inference(
                 model,
-                self.test_dataloader,
+                self.test_examples,
                 val_results["scores"]["centri_score_weight"],
                 val_results["scores"]["threshold"],
             )

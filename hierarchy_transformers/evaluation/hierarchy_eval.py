@@ -11,8 +11,7 @@ class HierarchyEvaluator:
     def __init__(self):
         pass
 
-    def inference(self) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Inference function to produce scores and labels in `torch.Tensor`."""
+    def inference(self):
         raise NotImplementedError
 
     @staticmethod

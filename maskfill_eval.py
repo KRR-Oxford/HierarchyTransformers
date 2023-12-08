@@ -26,10 +26,12 @@ def main(config_file: str, gpu_id: int):
     test_examples = prepare_hierarchy_examples(entity_lexicon, dataset["test"], config.train.hard_negative_first)
 
     device = get_torch_device(gpu_id)
-    mask_filler = PretrainedMaskFillEvaluator(config.pretrained, device)
+    mask_filler = PretrainedMaskFillEvaluator(
+        config.pretrained, device, config.train.eval_batch_size, val_examples, test_examples
+    )
     output_path = f"experiments/{config.pretrained}-{config.task}-hard={config.train.hard_negative_first}-maskfill"
     create_path(output_path)
-    mask_filler(val_examples, test_examples, output_path, config.train.eval_batch_size)
+    mask_filler(output_path)
 
 
 if __name__ == "__main__":
