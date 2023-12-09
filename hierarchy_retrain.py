@@ -78,12 +78,12 @@ def main(config_file: str, gpu_id: int):
         centri_loss = centri_loss_class(manifold, embed_dim, config.train.loss.centri.margin)
         losses.append((config.train.loss.centri.weight, centri_loss))
 
-    if config.train.loss.cone.weight > 0.0:
-        cone_loss_class = (
-            EntailmentConeTripletLoss if config.train.apply_triplet_loss else EntailmentConeConstrastiveLoss
-        )
-        cone_loss = cone_loss_class(manifold, config.train.loss.cone.min_euclidean_norm, config.train.loss.cone.margin)
-        losses.append((config.train.loss.cone.weight, cone_loss))
+    # if config.train.loss.cone.weight > 0.0:
+    #     cone_loss_class = (
+    #         EntailmentConeTripletLoss if config.train.apply_triplet_loss else EntailmentConeConstrastiveLoss
+    #     )
+    #     cone_loss = cone_loss_class(manifold, config.train.loss.cone.min_euclidean_norm, config.train.loss.cone.margin)
+    #     losses.append((config.train.loss.cone.weight, cone_loss))
 
     hyper_loss = HyperbolicLoss(model, config.train.apply_triplet_loss, *losses)
     print(hyper_loss.get_config_dict())

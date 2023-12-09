@@ -63,7 +63,7 @@ def prepare_hierarchy_examples(
         in_triplets (bool, optional): Present in triplets or not. Defaults to `False`.
     """
     examples = []
-    for sample in tqdm(dataset, leave=True, desc=f"Prepare examples (labelled) from {dataset.split._name}"):
+    for sample in tqdm(dataset, leave=True, desc=f"Prepare examples from {dataset.split._name}"):
         child = entity_lexicon[sample["child"]]["name"]
         parent = entity_lexicon[sample["parent"]]["name"]
         negative_parents = [entity_lexicon[neg]["name"] for neg in sample["random_negatives"]]
@@ -82,7 +82,7 @@ def prepare_hierarchy_examples(
 
 def prepare_hierarchy_examples_for_static(ent2idx: dict, dataset: Dataset, hard_negative_first: bool = False):
     examples = []
-    for sample in tqdm(dataset, leave=True, desc=f"Prepare examples (static embeds) from {dataset.split._name}"):
+    for sample in tqdm(dataset, leave=True, desc=f"Prepare examples from {dataset.split._name}"):
         negative_parents = sample["random_negatives"]
         hard_negatives = sample["hard_negatives"]
         if hard_negative_first:
@@ -93,14 +93,26 @@ def prepare_hierarchy_examples_for_static(ent2idx: dict, dataset: Dataset, hard_
     return examples
 
 
-# def anchored_example_generator(entity_lexicon: dict, dataset: Dataset, hard_negative_first: bool = False):
-#     examples = []
-#     for sample in tqdm(dataset, leave=True, desc=f"Prepare examples (mask eval) from {dataset.split._name}"):
-#         negative_parents = sample["random_negatives"]
-#         hard_negatives = sample["hard_negatives"]
-#         if hard_negative_first:
-#             negative_parents = (hard_negatives + negative_parents)[:10]
-#         cur_example = [sample["child"], sample["parent"]] + negative_parents
-#         cur_example = [entity_lexicon[x]["name"] for x in cur_example]
-#         examples.append(cur_example)
-#     return examples
+def prepare_hierarchy_examples_for_finetune(entity_lexicon: dict, dataset: Dataset, hard_negative_first: bool = False):
+    """Prepare examples in different formats.
+
+    Args:
+        entity_lexicon (dict): A lexicon that can provide names for entities.
+        dataset (Dataset): Input dataset to be formatted.
+        hard_negative_first (bool, optional): Using hard negative samples (siblings) or not. Defaults to `False`.
+        in_triplets (bool, optional): Present in triplets or not. Defaults to `False`.
+    """
+    examples = []
+    for sample in tqdm(dataset, leave=True, desc=f"Prepare examples from {dataset.split._name}"):
+        child = entity_lexicon[sample["child"]]["name"]
+        parent = entity_lexicon[sample["parent"]]["name"]
+        negative_parents = [entity_lexicon[neg]["name"] for neg in sample["random_negatives"]]
+        hard_negatives = [entity_lexicon[sib]["name"] for sib in sample["hard_negatives"]]
+        if hard_negative_first:
+            # extract siblings first, if not enough, add the random negative parents
+            negative_parents = (hard_negatives + negative_parents)[:10]
+
+        examples.append({"entity1": child, "entity2": parent, "label": 1})
+        examples += [{"entity1": child, "entity2": neg, "label": 0} for neg in negative_parents]
+
+    return examples
