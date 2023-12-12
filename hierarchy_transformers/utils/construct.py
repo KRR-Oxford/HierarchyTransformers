@@ -60,21 +60,21 @@ class HierarchyDatasetConstructor:
         trans_train_examples, trans_eval_examples = train_test_split(trans_examples, test_size=eval_size)
         trans_val_examples, trans_test_examples = train_test_split(trans_eval_examples, test_size=0.5)
 
-        Path(f"{output_dir}/trans").mkdir(parents=True, exist_ok=True)
-        self.save_dataset(base_examples, f"{output_dir}/trans/base.jsonl")
-        self.save_dataset(trans_train_examples, f"{output_dir}/trans/trans_train.jsonl")
-        self.save_dataset(trans_val_examples, f"{output_dir}/trans/trans_val.jsonl")
-        self.save_dataset(trans_test_examples, f"{output_dir}/trans/trans_test.jsonl")
+        Path(f"{output_dir}/transitivity").mkdir(parents=True, exist_ok=True)
+        self.save_dataset(base_examples, f"{output_dir}/transitivity/train.jsonl")
+        self.save_dataset(trans_train_examples, f"{output_dir}/transitivity/trans_train.jsonl")
+        self.save_dataset(trans_val_examples, f"{output_dir}/transitivity/val.jsonl")
+        self.save_dataset(trans_test_examples, f"{output_dir}/transitivity/test.jsonl")
         
         base_train_examples, base_eval_examples = train_test_split(base_examples, test_size=eval_size)
         base_val_examples, base_test_examples = train_test_split(base_eval_examples, test_size=0.5)
-        base_train_edges = [(x["child"], x["parent"]) for x in base_train_examples]
-        trans_base_train_edges = self.get_transitive_edges(base_train_edges)
-        trans_base_train_examples = []
-        for child, parent in tqdm(trans_base_train_edges, desc="trans on base_train"):
-            trans_base_train_examples.append(self.construct_example(child, parent, num_negative))
-        Path(f"{output_dir}/induc").mkdir(parents=True, exist_ok=True)
-        self.save_dataset(base_train_examples, f"{output_dir}/induc/base_train.jsonl")
-        self.save_dataset(trans_base_train_examples, f"{output_dir}/induc/trans_base_train.jsonl")
-        self.save_dataset(base_val_examples, f"{output_dir}/induc/base_val.jsonl")
-        self.save_dataset(base_test_examples, f"{output_dir}/induc/base_test.jsonl")
+        # base_train_edges = [(x["child"], x["parent"]) for x in base_train_examples]
+        # trans_base_train_edges = self.get_transitive_edges(base_train_edges)
+        # trans_base_train_examples = []
+        # for child, parent in tqdm(trans_base_train_edges, desc="trans on base_train"):
+        #     trans_base_train_examples.append(self.construct_example(child, parent, num_negative))
+        Path(f"{output_dir}/completion").mkdir(parents=True, exist_ok=True)
+        self.save_dataset(base_train_examples, f"{output_dir}/completion/train.jsonl")
+        # self.save_dataset(trans_base_train_examples, f"{output_dir}/induc/trans_base_train.jsonl")
+        self.save_dataset(base_val_examples, f"{output_dir}/completion/val.jsonl")
+        self.save_dataset(base_test_examples, f"{output_dir}/completion/test.jsonl")

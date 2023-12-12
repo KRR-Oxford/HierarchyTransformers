@@ -29,27 +29,34 @@ def main(config_file: str):
     dataset, entity_lexicon = load_hierarchy_dataset(data_path)
     dataset = dataset[config.task]
 
-    # load base edges for training
-    base_examples = prepare_hierarchy_examples_for_finetune(
-        entity_lexicon, dataset["train"], config.train.hard_negative_first
+    # load examples from data splits
+    trans_train_examples = None
+    trans_train_portion = config.train.trans_train_portion
+    if config.task == "transitivity":
+        if trans_train_portion > 0.0:
+            logger.info(f"{trans_train_portion} transitivie edges used for training.")
+            trans_train_examples = prepare_hierarchy_examples_for_finetune(
+                entity_lexicon, dataset["trans_train"], config.train.apply_hard_negatives
+            )
+            num_trans_train_examples = int(trans_train_portion * len(trans_train_examples))
+            trans_train_examples = list(
+                np.random.choice(trans_train_examples, size=num_trans_train_examples, replace=False)
+            )
+        else:
+            logger.info("No transitivie edges used for training.")
+
+    train_examples = prepare_hierarchy_examples_for_finetune(
+        entity_lexicon, dataset["train"], config.train.apply_hard_negatives
     )
-    train_trans_portion = config.train.trans_train_portion
-    train_examples = []
-    if train_trans_portion > 0.0:
-        logger.info(f"{train_trans_portion} transitivie edges used for training.")
-        train_examples = prepare_hierarchy_examples_for_finetune(
-            entity_lexicon, dataset["trans_train"], config.train.hard_negative_first
-        )
-        num_train_examples = int(train_trans_portion * len(train_examples))
-        train_examples = list(np.random.choice(train_examples, size=num_train_examples, replace=False))
-    else:
-        logger.info("No transitivie edges used for training.")
-    train_examples = Dataset.from_list(base_examples + train_examples)
+    if trans_train_examples:
+        train_examples = train_examples + trans_train_examples
+    train_examples = Dataset.from_list(train_examples)
+
     val_examples = Dataset.from_list(
-        prepare_hierarchy_examples_for_finetune(entity_lexicon, dataset["val"], config.train.hard_negative_first)
+        prepare_hierarchy_examples_for_finetune(entity_lexicon, dataset["val"], config.train.apply_hard_negatives)
     )
     test_examples = Dataset.from_list(
-        prepare_hierarchy_examples_for_finetune(entity_lexicon, dataset["test"], config.train.hard_negative_first)
+        prepare_hierarchy_examples_for_finetune(entity_lexicon, dataset["test"], config.train.apply_hard_negatives)
     )
 
     # tokenise dataset
@@ -61,7 +68,7 @@ def main(config_file: str):
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
     # load pretrained model and do fine-tuning
-    output_dir = f"experiments/{config.pretrained}-{config.task}-hard={config.train.hard_negative_first}-train={train_trans_portion}-finetune"
+    output_dir = f"experiments/{config.pretrained}-{config.task}-hard={config.train.apply_hard_negatives}-train={trans_train_portion}-finetune"
     model = AutoModelForSequenceClassification.from_pretrained(config.pretrained, num_labels=2)
     train_args = TrainingArguments(
         output_dir=output_dir,
