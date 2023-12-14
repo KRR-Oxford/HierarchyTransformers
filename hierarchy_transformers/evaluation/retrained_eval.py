@@ -56,13 +56,13 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
         best_results = None
         is_updated = True
 
-        for centri_score_weight in range(10):
+        for centri_score_weight in range(50):
             # early stop if increasing the centri score weight does not help
             if not is_updated:
                 break
             is_updated = False
 
-            centri_score_weight = float(centri_score_weight + 1)
+            centri_score_weight = (centri_score_weight + 0.1) / 10 
             scores, labels = cls.score(result_mat, centri_score_weight)
             cur_best_results = super().search_best_threshold(
                 scores,

@@ -6,7 +6,7 @@ import json
 from typing import Optional
 
 
-def load_hierarchy_dataset(data_path: str):
+def load_hierarchy_dataset(data_path: str, eval_only: bool = False):
     """Load hierarchy dataset and entity lexicon from:
 
     `data_dir`:
@@ -15,29 +15,46 @@ def load_hierarchy_dataset(data_path: str):
         `completion`: `train.jsonl`, `val.jsonl`, `test.jsonl`
     """
 
-    trans_dataset = load_dataset(
-        "json",
-        data_files={
-            "train": os.path.join(data_path, "transitivity", "train.jsonl"),
-            "trans_train": os.path.join(data_path, "transitivity", "trans_train.jsonl"),
-            "val": os.path.join(data_path, "transitivity", "val.jsonl"),
-            "test": os.path.join(data_path, "transitivity", "test.jsonl"),
-        },
-    )
+    trans_datafiles = {
+        "train": os.path.join(data_path, "transitivity", "train.jsonl"),
+        "trans_train": os.path.join(data_path, "transitivity", "trans_train.jsonl"),
+        "val": os.path.join(data_path, "transitivity", "val.jsonl"),
+        "test": os.path.join(data_path, "transitivity", "test.jsonl"),
+    }
+    if eval_only:
+        del trans_datafiles["train"]
+        del trans_datafiles["trans_train"]
+    trans_dataset = load_dataset("json", data_files=trans_datafiles)
 
-    completion_dataset = load_dataset(
-        "json",
-        data_files={
-            "train": os.path.join(data_path, "completion", "train.jsonl"),
-            "val": os.path.join(data_path, "completion", "val.jsonl"),
-            "test": os.path.join(data_path, "completion", "test.jsonl"),
-        },
-    )
+    completion_datafiles = {
+        "train": os.path.join(data_path, "completion", "train.jsonl"),
+        "val": os.path.join(data_path, "completion", "val.jsonl"),
+        "test": os.path.join(data_path, "completion", "test.jsonl"),
+    }
+    if eval_only:
+        del completion_datafiles["train"]
+
+    completion_dataset = load_dataset("json", data_files=completion_datafiles)
 
     with open(os.path.join(data_path, "entity_lexicon.json"), "r") as input:
         entity_lexicon = json.load(input)
 
     return {"transitivity": trans_dataset, "completion": completion_dataset}, entity_lexicon
+
+
+def load_hierarchy_dataset_for_transfer_testing(data_path: str):
+    dataset = load_dataset(
+        "json",
+        data_files={
+            "base_val": os.path.join(data_path, "base_val.jsonl"),
+            "base_test": os.path.join(data_path, "base_test.jsonl"),
+            "trans_val": os.path.join(data_path, "trans_val.jsonl"),
+            "trans_test": os.path.join(data_path, "trans_test.jsonl"),
+        },
+    )
+    with open(os.path.join(data_path, "entity_lexicon.json"), "r") as input:
+        entity_lexicon = json.load(input)
+    return dataset, entity_lexicon
 
 
 def prepare_hierarchy_examples(
