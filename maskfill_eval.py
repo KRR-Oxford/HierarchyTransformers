@@ -20,7 +20,7 @@ def main(config_file: str, gpu_id: int):
     config = CfgNode(load_file(config_file))
 
     data_path = config.data_path
-    dataset, entity_lexicon = load_hierarchy_dataset(data_path)
+    dataset, entity_lexicon = load_hierarchy_dataset(data_path, eval_only=True)
     dataset = dataset[config.task]
     val_examples = prepare_hierarchy_examples(entity_lexicon, dataset["val"], config.train.apply_hard_negatives)
     test_examples = prepare_hierarchy_examples(entity_lexicon, dataset["test"], config.train.apply_hard_negatives)

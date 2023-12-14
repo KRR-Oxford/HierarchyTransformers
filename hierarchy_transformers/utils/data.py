@@ -42,19 +42,19 @@ def load_hierarchy_dataset(data_path: str, eval_only: bool = False):
     return {"transitivity": trans_dataset, "completion": completion_dataset}, entity_lexicon
 
 
-def load_hierarchy_dataset_for_transfer_testing(data_path: str):
-    dataset = load_dataset(
-        "json",
-        data_files={
-            "base_val": os.path.join(data_path, "base_val.jsonl"),
-            "base_test": os.path.join(data_path, "base_test.jsonl"),
-            "trans_val": os.path.join(data_path, "trans_val.jsonl"),
-            "trans_test": os.path.join(data_path, "trans_test.jsonl"),
-        },
-    )
-    with open(os.path.join(data_path, "entity_lexicon.json"), "r") as input:
-        entity_lexicon = json.load(input)
-    return dataset, entity_lexicon
+# def load_hierarchy_dataset_for_transfer_testing(data_path: str):
+#     dataset = load_dataset(
+#         "json",
+#         data_files={
+#             "base_val": os.path.join(data_path, "base_val.jsonl"),
+#             "base_test": os.path.join(data_path, "base_test.jsonl"),
+#             "trans_val": os.path.join(data_path, "trans_val.jsonl"),
+#             "trans_test": os.path.join(data_path, "trans_test.jsonl"),
+#         },
+#     )
+#     with open(os.path.join(data_path, "entity_lexicon.json"), "r") as input:
+#         entity_lexicon = json.load(input)
+#     return dataset, entity_lexicon
 
 
 def prepare_hierarchy_examples(
