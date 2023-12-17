@@ -13,7 +13,7 @@ def entity_norm_plot(hierarchy: Taxonomy, model: SentenceTransformer):
     entity_embeds = model.encode(entity_names, 1024, True, convert_to_tensor=True)
     manifold = PoincareBall(c=1/model._first_module().get_word_embedding_dimension())
     entity_norms = manifold.dist0(entity_embeds)
-    return entity_norms, sns.histplot(entity_norms, bins=10, kde=True, kde_kws={"bw_adjust": 2})
+    return entity_embeds, entity_norms, sns.histplot(entity_norms.cpu().numpy(), bins=10, kde=True, kde_kws={"bw_adjust": 2})
     
 
 def entity_depths_plot(hierarchy: Taxonomy):
