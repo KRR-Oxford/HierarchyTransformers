@@ -62,7 +62,7 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
                 break
             is_updated = False
 
-            centri_score_weight = (centri_score_weight + 0.1) / 10 
+            centri_score_weight = (centri_score_weight + 0.1) / 10
             scores, labels = cls.score(result_mat, centri_score_weight)
             cur_best_results = super().search_best_threshold(
                 scores,
@@ -181,9 +181,6 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
             eval_results = self.evaluate_by_threshold(eval_scores, eval_labels, best_val_threshold)
             eval_results = {"centri_score_weight": best_val_centri_score_weight, **eval_results}
 
-        self.loss_module.zero_grad()
-        self.loss_module.train()
-
         results = self.loss_module.get_config_dict()
         results["loss"] = eval_loss / (num_batch + 1)
         results["scores"] = eval_results
@@ -196,7 +193,6 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
         """
 
         # set to eval mode
-        model.eval()
         self.loss_module.eval()
         Path(f"{output_path}/epoch={epoch}.step={steps}").mkdir(parents=True, exist_ok=True)
         # model.save(f"{output_path}/epoch={epoch}.step={steps}")
@@ -223,4 +219,6 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
             torch.save(test_result_mat, f"{output_path}/epoch={epoch}.step={steps}/test_result_mat.pt")
             save_file(test_results, f"{output_path}/epoch={epoch}.step={steps}/test_results.json")
 
+        self.loss_model.train()
+        
         return val_results["scores"]["F1"]
