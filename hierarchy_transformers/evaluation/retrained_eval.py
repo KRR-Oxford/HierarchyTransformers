@@ -1,7 +1,5 @@
-from tqdm.auto import trange, tqdm
 from geoopt.manifolds import PoincareBall
 import torch
-from torch.utils.data import DataLoader
 from sentence_transformers import SentenceTransformer
 from deeponto.utils import save_file
 from pathlib import Path
@@ -24,7 +22,6 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
 
     def __init__(
         self,
-        loss_module: HyperbolicLoss,
         manifold: PoincareBall,
         device: torch.device,
         eval_batch_size: int,
@@ -34,15 +31,22 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
     ):
         super().__init__()
 
-        self.loss_module = loss_module
         self.manifold = manifold
         self.device = device
-        self.loss_module.to(self.device)
-
         self.eval_batch_size = eval_batch_size
         self.val_examples = val_examples
         self.test_examples = test_examples
         self.train_examples = train_examples
+
+    @staticmethod
+    def encode(model: SentenceTransformer, manifold: PoincareBall, examples: list, eval_batch_size: int):
+        child_embeds = model.encode([x.texts[0] for x in examples], eval_batch_size, convert_to_tensor=True)
+        parent_embeds = model.encode([x.texts[1] for x in examples], eval_batch_size, convert_to_tensor=True)
+        labels = torch.tensor([x.label for x in examples]).to(child_embeds.device)
+        dists = manifold.dist(child_embeds, parent_embeds)
+        child_norms = manifold.dist0(child_embeds)
+        parent_norms = manifold.dist0(parent_embeds)
+        return torch.stack([labels, dists, child_norms, parent_norms]).T
 
     @classmethod
     def score(cls, result_mat: torch.Tensor, centri_score_weight: float):
@@ -85,95 +89,8 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
         examples: list,
         best_val_centri_score_weight: float = None,
         best_val_threshold: float = None,
-        num_negatives_per_positive_in_triplets: int = 10,
     ):
-        """WARNING: this function is highly customised to our hierarchy datasets
-        where 1 positive sample corresponds to 10 negatives."""
-        # set up data iterator
-        dataloader = DataLoader(examples, shuffle=False, batch_size=self.eval_batch_size)
-        dataloader.collate_fn = model.smart_batching_collate
-        data_iterator = iter(dataloader)
-
-        eval_loss = 0.0
-        results = []
-        with torch.no_grad():
-            for num_batch in trange(len(dataloader), desc="Iteration", smoothing=0.05, disable=False):
-                sentence_features, labels = next(data_iterator)
-
-                # move data to gpu
-                for i in range(0, len(sentence_features)):
-                    for key, _ in sentence_features[i].items():
-                        sentence_features[i][key] = sentence_features[i][key].to(self.device)
-                labels = labels.to(self.device)
-
-                # compute eval matrix
-                reps = [model(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features]
-                if not self.loss_module.apply_triplet_loss:
-                    assert len(reps) == 2
-                    rep_anchor, rep_other = reps
-
-                    dists = self.manifold.dist(rep_anchor, rep_other)
-
-                    rep_anchor_norms = self.manifold.dist0(rep_anchor)
-                    rep_other_norms = self.manifold.dist0(rep_other)
-
-                    results.append(torch.stack([labels, dists, rep_anchor_norms, rep_other_norms]).T)
-                else:
-                    assert len(reps) == 3
-                    rep_anchor, rep_positive, rep_negative = reps
-
-                    positive_dists = self.manifold.dist(rep_anchor, rep_positive)
-                    negative_dists = self.manifold.dist(rep_anchor, rep_negative)
-
-                    rep_anchor_norms = self.manifold.dist0(rep_anchor)
-                    rep_positive_norms = self.manifold.dist0(rep_positive)
-                    rep_negative_norms = self.manifold.dist0(rep_negative)
-
-                    results.append(
-                        torch.stack(
-                            [
-                                torch.ones(positive_dists.shape).to(positive_dists.device),
-                                positive_dists,
-                                rep_anchor_norms,
-                                rep_positive_norms,
-                            ]
-                        ).T
-                    )
-                    results.append(
-                        torch.stack(
-                            [
-                                torch.zeros(negative_dists.shape).to(negative_dists.device),
-                                negative_dists,
-                                rep_anchor_norms,
-                                rep_negative_norms,
-                            ]
-                        ).T
-                    )
-
-                # compute eval loss
-                cur_loss = self.loss_module(sentence_features, labels)
-                if not torch.isnan(cur_loss):
-                    eval_loss += cur_loss.item()
-                    logger.info(f"eval_loss={eval_loss / (num_batch + 1)}")
-                else:
-                    logger.info(f"skip as detecting nan loss")
-
-        # compute score
-        result_mat = torch.cat(results, dim=0)
-        if self.loss_module.apply_triplet_loss:
-            logging.info("reshape result matrix following evaluation order")
-            # 10 negatives per positive
-            positive_mat = result_mat[result_mat[:, 0] == 1.0][::num_negatives_per_positive_in_triplets]
-            negative_mat = result_mat[result_mat[:, 0] == 0.0]
-            real_mat = []
-            for i in range(len(positive_mat)):
-                real_mat += [
-                    positive_mat[i].unsqueeze(0),
-                    negative_mat[
-                        num_negatives_per_positive_in_triplets * i : num_negatives_per_positive_in_triplets * (i + 1)
-                    ],
-                ]
-            result_mat = torch.concat(real_mat, dim=0)
+        result_mat = self.encode(model, self.manifold, examples, self.eval_batch_size)
         if not best_val_threshold or not best_val_centri_score_weight:
             eval_results = self.search_best_threshold(result_mat, 100)
         else:
@@ -182,7 +99,6 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
             eval_results = {"centri_score_weight": best_val_centri_score_weight, **eval_results}
 
         results = self.loss_module.get_config_dict()
-        results["loss"] = eval_loss / (num_batch + 1)
         results["scores"] = eval_results
 
         return result_mat, results
@@ -221,5 +137,5 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
             save_file(test_results, f"{output_path}/epoch={epoch}.step={steps}/test_results.json")
         self.loss_module.zero_grad()
         self.loss_module.train()
-        
+
         return val_results["scores"]["F1"]

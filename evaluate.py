@@ -42,25 +42,10 @@ def main(config_file: str, gpu_id: int):
             device=device,
         )
         manifold = get_circum_poincareball(model._first_module().get_word_embedding_dimension())
-
-        def hit_result_mat(examples):
-            child_embeds = model.encode(
-                [x.texts[0] for x in examples], config.eval_batch_size, False, convert_to_tensor=True
-            )
-            parent_embeds = model.encode(
-                [x.texts[1] for x in examples], config.eval_batch_size, False, convert_to_tensor=True
-            )
-            labels = torch.tensor([x.label for x in examples]).to(child_embeds.device)
-            dists = manifold.dist(child_embeds, parent_embeds)
-            child_norms = manifold.dist0(child_embeds)
-            parent_norms = manifold.dist0(parent_embeds)
-            return torch.stack([labels, dists, child_norms, parent_norms]).T
-            # return dists + centri_score_weight * (parent_norms - child_norms), labels
-
-        val_result_mat = hit_result_mat(val_examples)
+        val_result_mat = HierarchyRetrainedEvaluator.encode(model, manifold, val_examples, config.eval_batch_size)
         val_results = HierarchyRetrainedEvaluator.search_best_threshold(val_result_mat)
         save_file(val_results, f"{config.pretrained}/transfer_val_results.hard={config.apply_hard_negatives}.json")
-        test_result_mat = hit_result_mat(test_examples)
+        test_result_mat = HierarchyRetrainedEvaluator.encode(model, manifold, test_examples, config.eval_batch_size)
         test_scores = test_result_mat[:, 1] + val_results["centri_score_weight"] * (
             test_result_mat[:, 3] - test_result_mat[:, 2]
         )
@@ -98,9 +83,7 @@ def main(config_file: str, gpu_id: int):
         mask_filler = PretrainedMaskFillEvaluator(
             config.pretrained, device, config.train.eval_batch_size, val_examples, test_examples
         )
-        output_path = (
-            f"experiments/{config.pretrained}-hard={config.train.apply_hard_negatives}-maskfill"
-        )
+        output_path = f"experiments/{config.pretrained}-hard={config.train.apply_hard_negatives}-maskfill"
         create_path(output_path)
         mask_filler(output_path)
 
