@@ -20,11 +20,11 @@ class HierarchyDatasetConstructor:
         hard_negatives = set(siblings) - set([entity_id]) - set(ancestors)
         return list(hard_negatives)
 
-    def get_transitive_edges(self, base_edges: list):
+    def get_transitive_edges(self, edges: list):
         trans_edges = []
-        for child, _ in base_edges:
+        for child, _ in edges:
             trans_edges += [(child, parent) for parent in self.hierarchy.get_parents(child, True)]
-        return list(set(trans_edges) - set(base_edges))
+        return list(set(trans_edges) - set(edges))
 
     def save_entity_lexicon(self, output_dir: str):
         entity_lexicon = dict()
@@ -57,14 +57,15 @@ class HierarchyDatasetConstructor:
         for child, parent in tqdm(trans_edges, desc="trans"):
             trans_examples.append(self.construct_example(child, parent, num_negative))
 
-        trans_train_examples, trans_eval_examples = train_test_split(trans_examples, test_size=eval_size)
+        _, trans_eval_examples = train_test_split(trans_examples, test_size=eval_size)
         trans_val_examples, trans_test_examples = train_test_split(trans_eval_examples, test_size=0.5)
 
-        Path(f"{output_dir}/transitivity").mkdir(parents=True, exist_ok=True)
-        self.save_dataset(base_examples, f"{output_dir}/transitivity/train.jsonl")
-        self.save_dataset(trans_train_examples, f"{output_dir}/transitivity/trans_train.jsonl")
-        self.save_dataset(trans_val_examples, f"{output_dir}/transitivity/val.jsonl")
-        self.save_dataset(trans_test_examples, f"{output_dir}/transitivity/test.jsonl")
+        trans_task_name = "multi"
+        Path(f"{output_dir}/{trans_task_name}").mkdir(parents=True, exist_ok=True)
+        self.save_dataset(base_examples, f"{output_dir}/{trans_task_name}/train.jsonl")
+        # self.save_dataset(trans_train_examples, f"{output_dir}/transitivity/trans_train.jsonl")
+        self.save_dataset(trans_val_examples, f"{output_dir}/{trans_task_name}/val.jsonl")
+        self.save_dataset(trans_test_examples, f"{output_dir}/{trans_task_name}/test.jsonl")
         
         base_train_examples, base_eval_examples = train_test_split(base_examples, test_size=eval_size)
         base_val_examples, base_test_examples = train_test_split(base_eval_examples, test_size=0.5)
@@ -73,8 +74,9 @@ class HierarchyDatasetConstructor:
         # trans_base_train_examples = []
         # for child, parent in tqdm(trans_base_train_edges, desc="trans on base_train"):
         #     trans_base_train_examples.append(self.construct_example(child, parent, num_negative))
-        Path(f"{output_dir}/completion").mkdir(parents=True, exist_ok=True)
-        self.save_dataset(base_train_examples, f"{output_dir}/completion/train.jsonl")
+        pred_task_name = "mixed"
+        Path(f"{output_dir}/{pred_task_name}").mkdir(parents=True, exist_ok=True)
+        self.save_dataset(base_train_examples, f"{output_dir}/{pred_task_name}/train.jsonl")
         # self.save_dataset(trans_base_train_examples, f"{output_dir}/induc/trans_base_train.jsonl")
-        self.save_dataset(base_val_examples, f"{output_dir}/completion/val.jsonl")
-        self.save_dataset(base_test_examples, f"{output_dir}/completion/test.jsonl")
+        self.save_dataset(base_val_examples + trans_val_examples, f"{output_dir}/{pred_task_name}/val.jsonl")
+        self.save_dataset(base_test_examples + trans_test_examples, f"{output_dir}/{pred_task_name}/test.jsonl")

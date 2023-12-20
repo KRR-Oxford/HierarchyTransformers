@@ -207,6 +207,7 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
         val_result_mat, val_results = self.inference(model, self.val_examples)
         torch.save(val_result_mat, f"{output_path}/epoch={epoch}.step={steps}/val_result_mat.pt")
         save_file(val_results, f"{output_path}/epoch={epoch}.step={steps}/val_results.json")
+        self.loss_module.zero_grad()
 
         if self.test_examples:
             logger.info("Evaluate on test examples using best val threshold...")
@@ -218,7 +219,7 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
             )
             torch.save(test_result_mat, f"{output_path}/epoch={epoch}.step={steps}/test_result_mat.pt")
             save_file(test_results, f"{output_path}/epoch={epoch}.step={steps}/test_results.json")
-
-        self.loss_model.train()
+        self.loss_module.zero_grad()
+        self.loss_module.train()
         
         return val_results["scores"]["F1"]
