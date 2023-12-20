@@ -28,7 +28,8 @@ def main(config_file: str, gpu_id: int):
     config = CfgNode(load_file(config_file))
 
     data_path = config.data_path
-    dataset, entity_lexicon = load_hierarchy_dataset_for_testing(data_path)
+    dataset, entity_lexicon = load_hierarchy_dataset(data_path, eval_only=True)
+    dataset = dataset[config.task]
     prepare_func = prepare_hierarchy_examples
     if config.model_type == "finetune":
         prepare_func = prepare_hierarchy_examples_for_finetune

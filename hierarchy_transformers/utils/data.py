@@ -23,7 +23,11 @@ def load_hierarchy_dataset(data_path: str, eval_only: bool = False):
     }
     if eval_only:
         del trans_datafiles["train"]
-    trans_dataset = load_dataset("json", data_files=trans_datafiles)
+    try:
+        trans_dataset = load_dataset("json", data_files=trans_datafiles)
+    except:
+        trans_dataset = None
+        print("No Multi-hop Inference dataset available.")
 
     pred_task_name = "mixed"
     pred_datafiles = {
@@ -34,25 +38,16 @@ def load_hierarchy_dataset(data_path: str, eval_only: bool = False):
     if eval_only:
         del pred_datafiles["train"]
 
-    pred_dataset = load_dataset("json", data_files=pred_datafiles)
+    try:
+        pred_dataset = load_dataset("json", data_files=pred_datafiles)
+    except:
+        pred_dataset = None
+        print("No Mixed-hop Prediction dataset available.")
 
     with open(os.path.join(data_path, "entity_lexicon.json"), "r") as input:
         entity_lexicon = json.load(input)
 
     return {trans_task_name: trans_dataset, pred_task_name: pred_dataset}, entity_lexicon
-
-
-def load_hierarchy_dataset_for_testing(data_path: str, pred_task_name: str ="mixed"):
-    dataset = load_dataset(
-        "json",
-        data_files={
-            "val": os.path.join(data_path, pred_task_name, "val.jsonl"),
-            "test": os.path.join(data_path, pred_task_name, "test.jsonl"),
-        },
-    )
-    with open(os.path.join(data_path, "entity_lexicon.json"), "r") as input:
-        entity_lexicon = json.load(input)
-    return dataset, entity_lexicon
 
 
 def prepare_hierarchy_examples(
