@@ -29,34 +29,16 @@ def main(config_file: str):
     dataset, entity_lexicon = load_hierarchy_dataset(data_path)
     dataset = dataset[config.task]
 
-    # load examples from data splits
-    trans_train_examples = None
-    trans_train_portion = config.train.trans_train_portion
-    if config.task == "transitivity":
-        if trans_train_portion > 0.0:
-            logger.info(f"{trans_train_portion} transitivie edges used for training.")
-            trans_train_examples = prepare_hierarchy_examples_for_finetune(
-                entity_lexicon, dataset["trans_train"], config.train.apply_hard_negatives
-            )
-            num_trans_train_examples = int(trans_train_portion * len(trans_train_examples))
-            trans_train_examples = list(
-                np.random.choice(trans_train_examples, size=num_trans_train_examples, replace=False)
-            )
-        else:
-            logger.info("No transitivie edges used for training.")
-
     train_examples = prepare_hierarchy_examples_for_finetune(
-        entity_lexicon, dataset["train"], config.train.apply_hard_negatives
+        entity_lexicon, dataset["train"], config.apply_hard_negatives
     )
-    if trans_train_examples:
-        train_examples = train_examples + trans_train_examples
     train_examples = Dataset.from_list(train_examples)
 
     val_examples = Dataset.from_list(
-        prepare_hierarchy_examples_for_finetune(entity_lexicon, dataset["val"], config.train.apply_hard_negatives)
+        prepare_hierarchy_examples_for_finetune(entity_lexicon, dataset["val"], config.apply_hard_negatives)
     )
     test_examples = Dataset.from_list(
-        prepare_hierarchy_examples_for_finetune(entity_lexicon, dataset["test"], config.train.apply_hard_negatives)
+        prepare_hierarchy_examples_for_finetune(entity_lexicon, dataset["test"], config.apply_hard_negatives)
     )
 
     # tokenise dataset
@@ -68,15 +50,15 @@ def main(config_file: str):
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
     # load pretrained model and do fine-tuning
-    output_dir = f"experiments/{config.pretrained}-{config.task}-hard={config.train.apply_hard_negatives}-train={trans_train_portion}-finetune"
+    output_dir = f"experiments/{config.pretrained}-{config.task}-hard={config.apply_hard_negatives}-finetune"
     model = AutoModelForSequenceClassification.from_pretrained(config.pretrained, num_labels=2)
     train_args = TrainingArguments(
         output_dir=output_dir,
         do_train=True,
         do_eval=True,
-        per_device_train_batch_size=config.train.train_batch_size,
-        per_device_eval_batch_size=config.train.eval_batch_size,
-        num_train_epochs=config.train.num_epochs,
+        per_device_train_batch_size=config.train_batch_size,
+        per_device_eval_batch_size=config.eval_batch_size,
+        num_train_epochs=config.num_epochs,
         evaluation_strategy="steps", # "epoch",
         save_strategy="steps", # "epoch",
         eval_steps=500,

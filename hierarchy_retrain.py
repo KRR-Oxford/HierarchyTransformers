@@ -27,16 +27,12 @@ def main(config_file: str, gpu_id: int):
     dataset = dataset[config.task]
 
     train_examples = prepare_hierarchy_examples(
-        entity_lexicon, dataset["train"], config.train.apply_hard_negatives, config.train.apply_triplet_loss
+        entity_lexicon, dataset["train"], config.apply_hard_negatives, config.apply_triplet_loss
     )
-    train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=config.train.train_batch_size)
+    train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=config.train_batch_size)
 
-    val_examples = prepare_hierarchy_examples(
-        entity_lexicon, dataset["val"], config.train.apply_hard_negatives, config.train.apply_triplet_loss
-    )
-    test_examples = prepare_hierarchy_examples(
-        entity_lexicon, dataset["test"], config.train.apply_hard_negatives, config.train.apply_triplet_loss
-    )
+    val_examples = prepare_hierarchy_examples(entity_lexicon, dataset["val"], config.apply_hard_negatives)
+    test_examples = prepare_hierarchy_examples(entity_lexicon, dataset["test"], config.apply_hard_negatives)
 
     # load pre-trained model
     device = get_torch_device(gpu_id)
@@ -50,40 +46,40 @@ def main(config_file: str, gpu_id: int):
     # loss
     losses = []
 
-    if config.train.loss.cluster.weight > 0.0:
-        if config.train.apply_triplet_loss:
-            cluster_loss = ClusteringTripletLoss(manifold, config.train.loss.cluster.margin)
+    if config.loss.cluster.weight > 0.0:
+        if config.apply_triplet_loss:
+            cluster_loss = ClusteringTripletLoss(manifold, config.loss.cluster.margin)
         else:
             cluster_loss = ClusteringConstrastiveLoss(
-                manifold, config.train.loss.cluster.positive_margin, config.train.loss.cluster.margin
+                manifold, config.loss.cluster.positive_margin, config.loss.cluster.margin
             )
-        losses.append((config.train.loss.cluster.weight, cluster_loss))
+        losses.append((config.loss.cluster.weight, cluster_loss))
 
-    if config.train.loss.centri.weight > 0.0:
-        centri_loss_class = CentripetalTripletLoss if config.train.apply_triplet_loss else CentripetalContrastiveLoss
-        centri_loss = centri_loss_class(manifold, embed_dim, config.train.loss.centri.margin)
-        losses.append((config.train.loss.centri.weight, centri_loss))
+    if config.loss.centri.weight > 0.0:
+        centri_loss_class = CentripetalTripletLoss if config.apply_triplet_loss else CentripetalContrastiveLoss
+        centri_loss = centri_loss_class(manifold, embed_dim, config.loss.centri.margin)
+        losses.append((config.loss.centri.weight, centri_loss))
 
-    hyper_loss = HyperbolicLoss(model, config.train.apply_triplet_loss, *losses)
+    hyper_loss = HyperbolicLoss(model, config.apply_triplet_loss, *losses)
     print(hyper_loss.get_config_dict())
     hyper_loss.to(device)
     hit_evaluator = HierarchyRetrainedEvaluator(
         manifold=manifold,
         device=device,
-        eval_batch_size=config.train.eval_batch_size,
+        eval_batch_size=config.eval_batch_size,
         val_examples=val_examples,
         test_examples=test_examples,
-        train_examples=train_examples if config.train.eval_train else None,
+        train_examples=train_examples if config.eval_train else None,
     )
 
     model.fit(
         train_objectives=[(train_dataloader, hyper_loss)],
-        epochs=config.train.num_epochs,
-        optimizer_params={"lr": float(config.train.learning_rate)},  # defaults to 2e-5
-        # steps_per_epoch=20, # for testing use
-        warmup_steps=config.train.warmup_steps,
+        epochs=config.num_epochs,
+        optimizer_params={"lr": float(config.learning_rate)},  # defaults to 2e-5
+        # steps_per_epoch=20,  # for testing use
+        warmup_steps=config.warmup_steps,
         evaluator=hit_evaluator,
-        output_path=f"experiments/{config.pretrained}-{config.task}-hard={config.train.apply_hard_negatives}-triplet={config.train.apply_triplet_loss}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}",
+        output_path=f"experiments/{config.pretrained}-{config.task}-hard={config.apply_hard_negatives}-triplet={config.apply_triplet_loss}-cluster={list(config.loss.cluster.values())}-centri={list(config.loss.centri.values())}",
     )
 
 

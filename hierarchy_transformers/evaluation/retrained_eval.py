@@ -97,10 +97,7 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
             eval_results = self.evaluate_by_threshold(eval_scores, eval_labels, best_val_threshold)
             eval_results = {"centri_score_weight": best_val_centri_score_weight, **eval_results}
 
-        results = self.loss_module.get_config_dict()
-        results["scores"] = eval_results
-
-        return result_mat, results
+        return result_mat, eval_results
 
     def __call__(self, model, output_path: str = None, epoch: int = -1, steps: int = -1) -> float:
         """This is called during training to evaluate the model.
@@ -108,7 +105,6 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
         """
 
         # set to eval mode
-        self.loss_module.eval()
         Path(f"{output_path}/epoch={epoch}.step={steps}").mkdir(parents=True, exist_ok=True)
         # model.save(f"{output_path}/epoch={epoch}.step={steps}")
 
@@ -122,19 +118,16 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
         val_result_mat, val_results = self.inference(model, self.val_examples)
         torch.save(val_result_mat, f"{output_path}/epoch={epoch}.step={steps}/val_result_mat.pt")
         save_file(val_results, f"{output_path}/epoch={epoch}.step={steps}/val_results.json")
-        self.loss_module.zero_grad()
 
         if self.test_examples:
             logger.info("Evaluate on test examples using best val threshold...")
             test_result_mat, test_results = self.inference(
                 model,
                 self.test_examples,
-                val_results["scores"]["centri_score_weight"],
-                val_results["scores"]["threshold"],
+                val_results["centri_score_weight"],
+                val_results["threshold"],
             )
             torch.save(test_result_mat, f"{output_path}/epoch={epoch}.step={steps}/test_result_mat.pt")
             save_file(test_results, f"{output_path}/epoch={epoch}.step={steps}/test_results.json")
-        self.loss_module.zero_grad()
-        self.loss_module.train()
 
-        return val_results["scores"]["F1"]
+        return val_results["F1"]
