@@ -28,7 +28,7 @@ def main(config_file: str, gpu_id: int):
     config = CfgNode(load_file(config_file))
 
     data_path = config.data_path
-    dataset, entity_lexicon = load_hierarchy_dataset_for_transfer_testing(data_path)
+    dataset, entity_lexicon = load_hierarchy_dataset_for_testing(data_path)
     prepare_func = prepare_hierarchy_examples
     if config.model_type == "finetune":
         prepare_func = prepare_hierarchy_examples_for_finetune
@@ -89,7 +89,7 @@ def main(config_file: str, gpu_id: int):
         sim_eval = PretrainedSentenceSimilarityEvaluator(
             config.pretrained, device, config.eval_batch_size, val_examples, test_examples
         )
-        output_path = f"experiments/{config.pretrained}-{config.task}-hard={config.apply_hard_negatives}-simeval"
+        output_path = f"experiments/{config.pretrained}-hard={config.apply_hard_negatives}-simeval"
         create_path(output_path)
         sim_eval(output_path)
 
@@ -99,7 +99,7 @@ def main(config_file: str, gpu_id: int):
             config.pretrained, device, config.train.eval_batch_size, val_examples, test_examples
         )
         output_path = (
-            f"experiments/{config.pretrained}-{config.task}-hard={config.train.apply_hard_negatives}-maskfill"
+            f"experiments/{config.pretrained}-hard={config.train.apply_hard_negatives}-maskfill"
         )
         create_path(output_path)
         mask_filler(output_path)

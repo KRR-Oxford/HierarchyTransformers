@@ -42,8 +42,7 @@ def load_hierarchy_dataset(data_path: str, eval_only: bool = False):
     return {trans_task_name: trans_dataset, pred_task_name: pred_dataset}, entity_lexicon
 
 
-def load_hierarchy_dataset_for_transfer_testing(data_path: str):
-    pred_task_name = "mixed"
+def load_hierarchy_dataset_for_testing(data_path: str, pred_task_name: str ="mixed"):
     dataset = load_dataset(
         "json",
         data_files={
