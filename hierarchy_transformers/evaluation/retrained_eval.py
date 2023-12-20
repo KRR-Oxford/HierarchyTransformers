@@ -8,7 +8,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from ..losses import HyperbolicLoss
 from .hierarchy_eval import HierarchyEvaluator
 
 
