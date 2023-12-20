@@ -26,30 +26,9 @@ def main(config_file: str, gpu_id: int):
     dataset, entity_lexicon = load_hierarchy_dataset(data_path)
     dataset = dataset[config.task]
 
-    # load examples from data splits
-    trans_train_examples = None
-    trans_train_portion = config.train.trans_train_portion
-    if config.task == "transitivity":
-        if trans_train_portion > 0.0:
-            trans_train_examples = prepare_hierarchy_examples(
-                entity_lexicon,
-                dataset["trans_train"],
-                config.train.apply_hard_negatives,
-                config.train.apply_triplet_loss,
-            )
-            logger.info(f"{trans_train_portion} transitivie edges used for training.")
-            num_trans_train_examples = int(trans_train_portion * len(trans_train_examples))
-            trans_train_examples = list(
-                np.random.choice(trans_train_examples, size=num_trans_train_examples, replace=False)
-            )
-        else:
-            logger.info("No transitivie edges used for training.")
-            
     train_examples = prepare_hierarchy_examples(
         entity_lexicon, dataset["train"], config.train.apply_hard_negatives, config.train.apply_triplet_loss
     )
-    if trans_train_examples:
-        train_examples = train_examples + trans_train_examples
     train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=config.train.train_batch_size)
 
     val_examples = prepare_hierarchy_examples(
@@ -89,7 +68,6 @@ def main(config_file: str, gpu_id: int):
     print(hyper_loss.get_config_dict())
     hyper_loss.to(device)
     hit_evaluator = HierarchyRetrainedEvaluator(
-        loss_module=hyper_loss,
         manifold=manifold,
         device=device,
         eval_batch_size=config.train.eval_batch_size,
@@ -105,7 +83,7 @@ def main(config_file: str, gpu_id: int):
         # steps_per_epoch=20, # for testing use
         warmup_steps=config.train.warmup_steps,
         evaluator=hit_evaluator,
-        output_path=f"experiments/{config.pretrained}-{config.task}-hard={config.train.apply_hard_negatives}-triplet={config.train.apply_triplet_loss}-trans_train={trans_train_portion}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}",
+        output_path=f"experiments/{config.pretrained}-{config.task}-hard={config.train.apply_hard_negatives}-triplet={config.train.apply_triplet_loss}-cluster={list(config.train.loss.cluster.values())}-centri={list(config.train.loss.centri.values())}",
     )
 
 
