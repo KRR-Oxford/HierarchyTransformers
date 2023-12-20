@@ -79,7 +79,7 @@ def main(config_file: str, gpu_id: int):
         # steps_per_epoch=20,  # for testing use
         warmup_steps=config.warmup_steps,
         evaluator=hit_evaluator,
-        output_path=f"experiments/{config.pretrained}-{config.task}-hard={config.apply_hard_negatives}-triplet={config.apply_triplet_loss}-cluster={list(config.loss.cluster.values())}-centri={list(config.loss.centri.values())}",
+        output_path=f"experiments/HiT-{config.pretrained}-{config.task}-hard={config.apply_hard_negatives}-triplet={config.apply_triplet_loss}-cluster={list(config.loss.cluster.values())}-centri={list(config.loss.centri.values())}",
     )
 
 
