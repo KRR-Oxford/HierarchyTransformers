@@ -75,7 +75,7 @@ def main(config_file: str, gpu_id: int):
         sim_eval = PretrainedSentenceSimilarityEvaluator(
             config.pretrained, device, config.eval_batch_size, val_examples, test_examples
         )
-        output_path = f"experiments/SimEval-{config.pretrained}-hard={config.apply_hard_negatives}"
+        output_path = f"experiments/SimEval-{config.pretrained}-{config.task}-hard={config.apply_hard_negatives}"
         create_path(output_path)
         sim_eval(output_path)
 
@@ -84,7 +84,7 @@ def main(config_file: str, gpu_id: int):
         mask_filler = PretrainedMaskFillEvaluator(
             config.pretrained, device, config.train.eval_batch_size, val_examples, test_examples
         )
-        output_path = f"experiments/MaskFill-{config.pretrained}-hard={config.train.apply_hard_negatives}"
+        output_path = f"experiments/MaskFill-{config.pretrained}-{config.task}-hard={config.train.apply_hard_negatives}"
         create_path(output_path)
         mask_filler(output_path)
 

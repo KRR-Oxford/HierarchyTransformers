@@ -50,7 +50,8 @@ def main(config_file: str):
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
     # load pretrained model and do fine-tuning
-    output_dir = f"experiments/Finetune-{config.pretrained}-{config.task}-hard={config.apply_hard_negatives}"
+    model_string = config.pretrained.split("/")[-1]
+    output_dir = f"experiments/Finetune-{model_string}-{config.task}-hard={config.apply_hard_negatives}"
     model = AutoModelForSequenceClassification.from_pretrained(config.pretrained, num_labels=2)
     train_args = TrainingArguments(
         output_dir=output_dir,
