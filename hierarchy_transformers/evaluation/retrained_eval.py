@@ -36,13 +36,13 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
         self.train_examples = train_examples
 
     @staticmethod
-    def encode(model: HierarchyTransformer, manifold: PoincareBall, examples: list, eval_batch_size: int):
+    def encode(model: HierarchyTransformer, examples: list, eval_batch_size: int):
         child_embeds = model.encode([x.texts[0] for x in examples], eval_batch_size, convert_to_tensor=True)
         parent_embeds = model.encode([x.texts[1] for x in examples], eval_batch_size, convert_to_tensor=True)
         labels = torch.tensor([x.label for x in examples]).to(child_embeds.device)
-        dists = manifold.dist(child_embeds, parent_embeds)
-        child_norms = manifold.dist0(child_embeds)
-        parent_norms = manifold.dist0(parent_embeds)
+        dists = model.manifold.dist(child_embeds, parent_embeds)
+        child_norms = model.manifold.dist0(child_embeds)
+        parent_norms = model.manifold.dist0(parent_embeds)
         return torch.stack([labels, dists, child_norms, parent_norms]).T
 
     @classmethod
@@ -87,7 +87,7 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
         best_val_centri_score_weight: float = None,
         best_val_threshold: float = None,
     ):
-        result_mat = self.encode(model, model.manifold, examples, self.eval_batch_size)
+        result_mat = self.encode(model, examples, self.eval_batch_size)
         if not best_val_threshold or not best_val_centri_score_weight:
             eval_results = self.search_best_threshold(result_mat, 100)
         else:

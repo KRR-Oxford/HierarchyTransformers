@@ -58,7 +58,6 @@ def main(config_file: str, gpu_id: int):
     print(hyper_loss.get_config_dict())
     hyper_loss.to(device)
     hit_evaluator = HierarchyRetrainedEvaluator(
-        manifold=model.manifold,
         device=device,
         eval_batch_size=config.eval_batch_size,
         val_examples=val_examples,
