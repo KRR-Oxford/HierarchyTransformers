@@ -35,35 +35,30 @@ def main(config_file: str, gpu_id: int):
 
     # load pre-trained model
     device = get_torch_device(gpu_id)
-    model = load_pretrained(config.pretrained, device)
-
-    # manifold
-    embed_dim = model._first_module().get_word_embedding_dimension()
-    manifold = get_circum_poincareball(embed_dim)
-    # curvature = 1 / embed_dim if not config.apply_unit_ball_projection else 1.0
+    model = HierarchyTransformer.load_pretrained(config.pretrained, device)
 
     # loss
     losses = []
 
     if config.loss.cluster.weight > 0.0:
         if config.apply_triplet_loss:
-            cluster_loss = ClusteringTripletLoss(manifold, config.loss.cluster.margin)
+            cluster_loss = ClusteringTripletLoss(model.manifold, config.loss.cluster.margin)
         else:
             cluster_loss = ClusteringConstrastiveLoss(
-                manifold, config.loss.cluster.positive_margin, config.loss.cluster.margin
+                model.manifold, config.loss.cluster.positive_margin, config.loss.cluster.margin
             )
         losses.append((config.loss.cluster.weight, cluster_loss))
 
     if config.loss.centri.weight > 0.0:
         centri_loss_class = CentripetalTripletLoss if config.apply_triplet_loss else CentripetalContrastiveLoss
-        centri_loss = centri_loss_class(manifold, embed_dim, config.loss.centri.margin)
+        centri_loss = centri_loss_class(model.manifold, model.embed_dim, config.loss.centri.margin)
         losses.append((config.loss.centri.weight, centri_loss))
 
     hyper_loss = HyperbolicLoss(model, config.apply_triplet_loss, *losses)
     print(hyper_loss.get_config_dict())
     hyper_loss.to(device)
     hit_evaluator = HierarchyRetrainedEvaluator(
-        manifold=manifold,
+        manifold=model.manifold,
         device=device,
         eval_batch_size=config.eval_batch_size,
         val_examples=val_examples,

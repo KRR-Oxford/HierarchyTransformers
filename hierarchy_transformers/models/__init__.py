@@ -1,2 +1,2 @@
-from .hit import load_pretrained, get_circum_poincareball
+from .hit import HierarchyTransformer
 from .static import StaticPoincareEmbed, StaticPoincareEmbedTrainer
