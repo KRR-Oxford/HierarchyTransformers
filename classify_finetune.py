@@ -27,7 +27,6 @@ def main(config_file: str):
     # load dataset
     data_path = config.data_path
     dataset, entity_lexicon = load_hierarchy_dataset(data_path)
-    dataset = dataset[config.task]
 
     train_examples = prepare_hierarchy_examples_for_finetune(
         entity_lexicon, dataset["train"], config.apply_hard_negatives

@@ -7,47 +7,25 @@ from typing import Optional
 
 
 def load_hierarchy_dataset(data_path: str, eval_only: bool = False):
-    """Load hierarchy dataset and entity lexicon from:
+    """Load hierarchy dataset and entity lexicon."""
 
-    `data_dir`:
-        `entity_lexicon`
-        `transitivity`: `base.jsonl`, `train.jsonl`, `val.jsonl`, `test.jsonl`
-        `completion`: `train.jsonl`, `val.jsonl`, `test.jsonl`
-    """
-
-    trans_task_name = "multi"
-    trans_datafiles = {
-        "train": os.path.join(data_path, trans_task_name, "train.jsonl"),
-        "val": os.path.join(data_path, trans_task_name, "val.jsonl"),
-        "test": os.path.join(data_path, trans_task_name, "test.jsonl"),
+    datafiles = {
+        "train": os.path.join(data_path, "train.jsonl"),
+        "val": os.path.join(data_path, "val.jsonl"),
+        "test": os.path.join(data_path, "test.jsonl"),
     }
     if eval_only:
-        del trans_datafiles["train"]
+        del datafiles["train"]
     try:
-        trans_dataset = load_dataset("json", data_files=trans_datafiles)
+        dataset = load_dataset("json", data_files=datafiles)
     except:
-        trans_dataset = None
-        print("No Multi-hop Inference dataset available.")
-
-    pred_task_name = "mixed"
-    pred_datafiles = {
-        "train": os.path.join(data_path, pred_task_name, "train.jsonl"),
-        "val": os.path.join(data_path, pred_task_name, "val.jsonl"),
-        "test": os.path.join(data_path, pred_task_name, "test.jsonl"),
-    }
-    if eval_only:
-        del pred_datafiles["train"]
-
-    try:
-        pred_dataset = load_dataset("json", data_files=pred_datafiles)
-    except:
-        pred_dataset = None
-        print("No Mixed-hop Prediction dataset available.")
+        dataset = None
+        print(f"No dataset available found at: {data_path}")
 
     with open(os.path.join(data_path, "entity_lexicon.json"), "r") as input:
         entity_lexicon = json.load(input)
 
-    return {trans_task_name: trans_dataset, pred_task_name: pred_dataset}, entity_lexicon
+    return dataset, entity_lexicon
 
 
 def prepare_hierarchy_examples(
