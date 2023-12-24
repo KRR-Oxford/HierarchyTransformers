@@ -1,6 +1,7 @@
 import torch
 from geoopt.manifolds import PoincareBall
-from sentence_transformers import SentenceTransformer, models
+from sentence_transformers import SentenceTransformer
+from sentence_transformers.models import Pooling, Transformer
 import logging
 from typing import Union, Optional, Iterable
 
@@ -30,12 +31,12 @@ class HierarchyTransformer(SentenceTransformer):
             pretrained_model = SentenceTransformer(pretrained, device=device)
             transformer = pretrained_model._modules["0"]
             pooling = pretrained_model._modules["1"]
-            assert isinstance(pooling, models.Pooling)
+            assert isinstance(pooling, Pooling)
             logger.info(f"Load `{pretrained}` from `sentence-transformers` with existing pooling.")
         except:
             # Load from huggingface transformers library
-            transformer = models.Transformer(pretrained, max_seq_length=256)
-            pooling = models.Pooling(transformer.get_word_embedding_dimension())
+            transformer = Transformer(pretrained, max_seq_length=256)
+            pooling = Pooling(transformer.get_word_embedding_dimension())
             logger.info(f"Load `{pretrained}` from `huggingface-transformers` with new pooling.")
 
         return cls(modules=[transformer, pooling], device=device)

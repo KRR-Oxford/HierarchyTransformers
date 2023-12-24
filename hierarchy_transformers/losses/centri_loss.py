@@ -15,7 +15,7 @@ class CentripetalTripletLoss(torch.nn.Module):
     """
 
     def __init__(self, manifold: PoincareBall, embed_dim: int, margin: float):
-        super(CentripetalTripletLoss, self).__init__()
+        super().__init__()
         self.manifold = manifold
         self.margin = margin
         # self.manifold_origin = self.manifold.origin(embed_dim)
@@ -44,7 +44,7 @@ class CentripetalContrastiveLoss(torch.nn.Module):
     """
 
     def __init__(self, manifold: PoincareBall, embed_dim: int, margin: float):
-        super(CentripetalContrastiveLoss, self).__init__()
+        super().__init__()
         self.manifold = manifold
         self.margin = margin
         # self.manifold_origin = self.manifold.origin(embed_dim)

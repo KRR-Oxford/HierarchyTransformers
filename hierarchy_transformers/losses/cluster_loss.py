@@ -15,7 +15,7 @@ class ClusteringTripletLoss(torch.nn.Module):
     """
 
     def __init__(self, manifold: PoincareBall, margin: float):
-        super(ClusteringTripletLoss, self).__init__()
+        super().__init__()
         self.manifold = manifold
         self.margin = margin
 
@@ -45,7 +45,7 @@ class ClusteringConstrastiveLoss(torch.nn.Module):
     """
 
     def __init__(self, manifold: PoincareBall, positive_margin: float, negative_margin: float):
-        super(ClusteringConstrastiveLoss, self).__init__()
+        super().__init__()
         self.manifold = manifold
         self.positive_margin = positive_margin
         self.negative_margin = negative_margin

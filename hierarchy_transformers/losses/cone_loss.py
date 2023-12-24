@@ -15,7 +15,7 @@ class EntailmentConeTripletLoss(torch.nn.Module):
     """
 
     def __init__(self, manifold: PoincareBall, min_euclidean_norm: float, margin: float):
-        super(EntailmentConeTripletLoss, self).__init__()
+        super().__init__()
         self.manifold = manifold
         assert self.manifold.c == 1.0, f"Entailment cone loss is not defined for curvature: {manifold.c}."
         self.min_euclidean_norm = min_euclidean_norm
@@ -70,7 +70,7 @@ class EntailmentConeConstrastiveLoss(torch.nn.Module):
     """
 
     def __init__(self, manifold: PoincareBall, min_euclidean_norm: float, margin: float):
-        super(EntailmentConeConstrastiveLoss, self).__init__()
+        super().__init__()
         self.manifold = manifold
         assert self.manifold.c == 1.0, f"Entailment cone loss is not defined for curvature: {manifold.c}."
         self.min_euclidean_norm = min_euclidean_norm

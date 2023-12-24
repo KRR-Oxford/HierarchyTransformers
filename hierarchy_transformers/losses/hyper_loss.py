@@ -1,12 +1,11 @@
 from typing import Iterable, Dict, Union, Tuple
 import torch
-import torch.nn.functional as F
-from sentence_transformers.SentenceTransformer import SentenceTransformer
 import logging
 
 from .cluster_loss import *
 from .centri_loss import *
 from .cone_loss import *
+from ..models import HierarchyTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -16,13 +15,13 @@ class HyperbolicLoss(torch.nn.Module):
 
     def __init__(
         self,
-        model: SentenceTransformer,
+        model: HierarchyTransformer,
         apply_triplet_loss: bool = False,
         *weight_and_loss: Tuple[
             float, Union[ClusteringConstrastiveLoss, CentripetalContrastiveLoss, EntailmentConeConstrastiveLoss]
         ],
     ):
-        super(HyperbolicLoss, self).__init__()
+        super().__init__()
 
         self.model = model
         self.apply_triplet_loss = apply_triplet_loss
