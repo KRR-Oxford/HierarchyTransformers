@@ -14,10 +14,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from sentence_transformers import SentenceTransformer
+
 from hierarchy_transformers.utils import *
 from hierarchy_transformers.evaluation import *
-from hierarchy_transformers.models.hit import get_circum_poincareball
+from hierarchy_transformers.models.hit import HierarchyTransformer
 
 
 @click.command()
@@ -38,15 +38,14 @@ def main(config_file: str, gpu_id: int):
 
     if config.model_type == "hit":
         device = get_torch_device(gpu_id)
-        model = SentenceTransformer(
+        model = HierarchyTransformer(
             config.pretrained,
             device=device,
         )
-        manifold = get_circum_poincareball(model._first_module().get_word_embedding_dimension())
-        val_result_mat = HierarchyRetrainedEvaluator.encode(model, manifold, val_examples, config.eval_batch_size)
+        val_result_mat = HierarchyRetrainedEvaluator.encode(model, model.manifold, val_examples, config.eval_batch_size)
         val_results = HierarchyRetrainedEvaluator.search_best_threshold(val_result_mat)
         save_file(val_results, f"{config.pretrained}/transfer_val_results.hard={config.apply_hard_negatives}.json")
-        test_result_mat = HierarchyRetrainedEvaluator.encode(model, manifold, test_examples, config.eval_batch_size)
+        test_result_mat = HierarchyRetrainedEvaluator.encode(model, model.manifold, test_examples, config.eval_batch_size)
         test_scores = test_result_mat[:, 1] + val_results["centri_score_weight"] * (
             test_result_mat[:, 3] - test_result_mat[:, 2]
         )

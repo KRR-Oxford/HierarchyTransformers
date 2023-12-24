@@ -1,6 +1,5 @@
 from geoopt.manifolds import PoincareBall
 import torch
-from sentence_transformers import SentenceTransformer
 from deeponto.utils import save_file
 from pathlib import Path
 from typing import Optional
@@ -8,6 +7,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+from ..models import HierarchyTransformer
 from .hierarchy_eval import HierarchyEvaluator
 
 
@@ -21,7 +21,6 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
 
     def __init__(
         self,
-        manifold: PoincareBall,
         device: torch.device,
         eval_batch_size: int,
         val_examples: list,
@@ -30,7 +29,6 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
     ):
         super().__init__()
 
-        self.manifold = manifold
         self.device = device
         self.eval_batch_size = eval_batch_size
         self.val_examples = val_examples
@@ -38,7 +36,7 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
         self.train_examples = train_examples
 
     @staticmethod
-    def encode(model: SentenceTransformer, manifold: PoincareBall, examples: list, eval_batch_size: int):
+    def encode(model: HierarchyTransformer, manifold: PoincareBall, examples: list, eval_batch_size: int):
         child_embeds = model.encode([x.texts[0] for x in examples], eval_batch_size, convert_to_tensor=True)
         parent_embeds = model.encode([x.texts[1] for x in examples], eval_batch_size, convert_to_tensor=True)
         labels = torch.tensor([x.label for x in examples]).to(child_embeds.device)
@@ -84,12 +82,12 @@ class HierarchyRetrainedEvaluator(HierarchyEvaluator):
 
     def inference(
         self,
-        model: SentenceTransformer,
+        model: HierarchyTransformer,
         examples: list,
         best_val_centri_score_weight: float = None,
         best_val_threshold: float = None,
     ):
-        result_mat = self.encode(model, self.manifold, examples, self.eval_batch_size)
+        result_mat = self.encode(model, model.manifold, examples, self.eval_batch_size)
         if not best_val_threshold or not best_val_centri_score_weight:
             eval_results = self.search_best_threshold(result_mat, 100)
         else:

@@ -4,7 +4,7 @@ from deeponto.utils import save_file
 from tqdm.auto import tqdm
 from transformers import pipeline
 from .hierarchy_eval import HierarchyEvaluator
-from ..models import load_pretrained
+from ..models import HierarchyTransformer
 
 
 class PretrainedMaskFillEvaluator(HierarchyEvaluator):
@@ -91,7 +91,7 @@ class PretrainedSentenceSimilarityEvaluator(HierarchyEvaluator):
         test_examples: Optional[list] = None,
     ):
         self.device = device
-        self.model = load_pretrained(pretrained, device)
+        self.model = HierarchyTransformer.load_pretrained(pretrained, device)
         self.model.to(self.device)
         self.template = lambda child, parent: f"{child} is a {parent}."
         self.mask_token = self.model.tokenizer.mask_token
