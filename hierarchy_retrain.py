@@ -1,7 +1,7 @@
 from deeponto.utils import load_file, set_seed
 from torch.utils.data import DataLoader
 import logging
-import numpy as np
+import os
 import click
 from yacs.config import CfgNode
 
@@ -65,6 +65,7 @@ def main(config_file: str, gpu_id: int):
         train_examples=train_examples if config.eval_train else None,
     )
 
+    data_suffix = config.data_path.split(os.path.sep)[-1]
     model.fit(
         train_objectives=[(train_dataloader, hyper_loss)],
         epochs=config.num_epochs,
@@ -72,7 +73,7 @@ def main(config_file: str, gpu_id: int):
         # steps_per_epoch=20,  # for testing use
         warmup_steps=config.warmup_steps,
         evaluator=hit_evaluator,
-        output_path=f"experiments/HiT-{config.pretrained}-hard={config.apply_hard_negatives}-triplet={config.apply_triplet_loss}-cluster={list(config.loss.cluster.values())}-centri={list(config.loss.centri.values())}",
+        output_path=f"experiments/HiT-{config.pretrained}-{data_suffix}-hard={config.apply_hard_negatives}-triplet={config.apply_triplet_loss}-cluster={list(config.loss.cluster.values())}-centri={list(config.loss.centri.values())}",
     )
 
 

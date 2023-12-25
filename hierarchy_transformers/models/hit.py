@@ -18,8 +18,17 @@ class HierarchyTransformer(SentenceTransformer):
         use_auth_token: Union[bool, str, None] = None,
     ):
         super().__init__(model_name_or_path, modules, device, cache_folder, use_auth_token)
-        self.embed_dim = self._first_module().get_word_embedding_dimension()
-        self.manifold = self.get_circum_poincareball(self.embed_dim)
+        # PoincareBall in geoopt will be wrongly classified as a sub-module
+        # so we use a dictionary to store the manifold
+        self._register_buffer = {"manifold": self.get_circum_poincareball(self.embed_dim)}
+
+    @property
+    def embed_dim(self):
+        return self._first_module().get_word_embedding_dimension()
+
+    @property
+    def manifold(self):
+        return self._register_buffer["manifold"]
 
     @classmethod
     def load_pretrained(cls, pretrained: str, device: torch.device):
