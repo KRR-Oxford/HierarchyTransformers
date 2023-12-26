@@ -50,7 +50,8 @@ def main(config_file: str):
 
     # load pretrained model and do fine-tuning
     model_string = config.pretrained.split("/")[-1]
-    output_dir = f"experiments/Finetune-{model_string}-hard={config.apply_hard_negatives}"
+    data_suffix = config.data_path.split(os.path.sep)[-1]
+    output_dir = f"experiments/Finetune-{model_string}-{data_suffix}-hard={config.apply_hard_negatives}"
     model = AutoModelForSequenceClassification.from_pretrained(config.pretrained, num_labels=2)
     train_args = TrainingArguments(
         output_dir=output_dir,

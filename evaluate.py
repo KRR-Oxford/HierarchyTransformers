@@ -28,6 +28,7 @@ def main(config_file: str, gpu_id: int):
     config = CfgNode(load_file(config_file))
 
     data_path = config.data_path
+    data_suffix = config.data_path.split(os.path.sep)[-1]
     dataset, entity_lexicon = load_hierarchy_dataset(data_path, eval_only=True)
 
     prepare_func = prepare_hierarchy_examples
@@ -42,15 +43,15 @@ def main(config_file: str, gpu_id: int):
             config.pretrained,
             device=device,
         )
-        val_result_mat = HierarchyRetrainedEvaluator.encode(model, model.manifold, val_examples, config.eval_batch_size)
+        val_result_mat = HierarchyRetrainedEvaluator.encode(model, val_examples, config.eval_batch_size)
         val_results = HierarchyRetrainedEvaluator.search_best_threshold(val_result_mat)
-        save_file(val_results, f"{config.pretrained}/transfer_val_results.hard={config.apply_hard_negatives}.json")
-        test_result_mat = HierarchyRetrainedEvaluator.encode(model, model.manifold, test_examples, config.eval_batch_size)
+        save_file(val_results, f"{config.pretrained}/{data_suffix}-transfer_val_results.hard={config.apply_hard_negatives}.json")
+        test_result_mat = HierarchyRetrainedEvaluator.encode(model, test_examples, config.eval_batch_size)
         test_scores = test_result_mat[:, 1] + val_results["centri_score_weight"] * (
             test_result_mat[:, 3] - test_result_mat[:, 2]
         )
         test_results = evaluate_by_threshold(test_scores, test_result_mat[:, 0], val_results["threshold"])
-        save_file(test_results, f"{config.pretrained}/transfer_test_results.hard={config.apply_hard_negatives}.json")
+        save_file(test_results, f"{config.pretrained}/{data_suffix}-transfer_test_results.hard={config.apply_hard_negatives}.json")
 
     elif config.model_type == "finetune":
         model = AutoModelForSequenceClassification.from_pretrained(config.pretrained)
@@ -66,7 +67,7 @@ def main(config_file: str, gpu_id: int):
         test_labels = torch.tensor(test_preds.label_ids)
         test_results = evaluate_by_threshold(test_scores, test_labels, 0.0, False)
         save_file(
-            test_results, f"{config.pretrained}/../transfer_test_results.hard={config.apply_hard_negatives}.json"
+            test_results, f"{config.pretrained}/../{data_suffix}-transfer_test_results.hard={config.apply_hard_negatives}.json"
         )
 
     elif config.model_type == "simeval":
@@ -74,7 +75,7 @@ def main(config_file: str, gpu_id: int):
         sim_eval = PretrainedSentenceSimilarityEvaluator(
             config.pretrained, device, config.eval_batch_size, val_examples, test_examples
         )
-        output_path = f"experiments/SimEval-{config.pretrained}-{config.task}-hard={config.apply_hard_negatives}"
+        output_path = f"experiments/SimEval-{config.pretrained}-{data_suffix}-hard={config.apply_hard_negatives}"
         create_path(output_path)
         sim_eval(output_path)
 
@@ -83,7 +84,7 @@ def main(config_file: str, gpu_id: int):
         mask_filler = PretrainedMaskFillEvaluator(
             config.pretrained, device, config.train.eval_batch_size, val_examples, test_examples
         )
-        output_path = f"experiments/MaskFill-{config.pretrained}-{config.task}-hard={config.train.apply_hard_negatives}"
+        output_path = f"experiments/MaskFill-{config.pretrained}-{data_suffix}-hard={config.train.apply_hard_negatives}"
         create_path(output_path)
         mask_filler(output_path)
 
