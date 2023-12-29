@@ -7,7 +7,7 @@ from yacs.config import CfgNode
 
 from hierarchy_transformers.models import *
 from hierarchy_transformers.losses import *
-from hierarchy_transformers.evaluation import HierarchyRetrainedEvaluator
+from hierarchy_transformers.evaluation import HierarchyTransformerEvaluator
 from hierarchy_transformers.utils import prepare_hierarchy_examples, load_hierarchy_dataset, get_torch_device
 
 
@@ -57,7 +57,7 @@ def main(config_file: str, gpu_id: int):
     hyper_loss = HyperbolicLoss(model, config.apply_triplet_loss, *losses)
     print(hyper_loss.get_config_dict())
     hyper_loss.to(device)
-    hit_evaluator = HierarchyRetrainedEvaluator(
+    hit_evaluator = HierarchyTransformerEvaluator(
         device=device,
         eval_batch_size=config.eval_batch_size,
         val_examples=val_examples,

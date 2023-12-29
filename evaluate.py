@@ -43,10 +43,10 @@ def main(config_file: str, gpu_id: int):
             config.pretrained,
             device=device,
         )
-        val_result_mat = HierarchyRetrainedEvaluator.encode(model, val_examples, config.eval_batch_size)
-        val_results = HierarchyRetrainedEvaluator.search_best_threshold(val_result_mat)
+        val_result_mat = HierarchyTransformerEvaluator.encode(model, val_examples, config.eval_batch_size)
+        val_results = HierarchyTransformerEvaluator.search_best_threshold(val_result_mat)
         save_file(val_results, f"{config.pretrained}/{data_suffix}-transfer_val_results.hard={config.apply_hard_negatives}.json")
-        test_result_mat = HierarchyRetrainedEvaluator.encode(model, test_examples, config.eval_batch_size)
+        test_result_mat = HierarchyTransformerEvaluator.encode(model, test_examples, config.eval_batch_size)
         test_scores = test_result_mat[:, 1] + val_results["centri_score_weight"] * (
             test_result_mat[:, 3] - test_result_mat[:, 2]
         )

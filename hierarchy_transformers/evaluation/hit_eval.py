@@ -11,7 +11,7 @@ from ..models import HierarchyTransformer
 from .hierarchy_eval import HierarchyEvaluator
 
 
-class HierarchyRetrainedEvaluator(HierarchyEvaluator):
+class HierarchyTransformerEvaluator(HierarchyEvaluator):
     """Evaluator hierarchy re-trained language models (HiT).
 
     Hierarchy encoding is evaluated based on the hyperbolic distances between entity
