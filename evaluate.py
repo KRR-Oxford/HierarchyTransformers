@@ -45,13 +45,13 @@ def main(config_file: str, gpu_id: int):
         )
         val_result_mat = HierarchyTransformerEvaluator.encode(model, val_examples, config.eval_batch_size)
         val_results = HierarchyTransformerEvaluator.search_best_threshold(val_result_mat)
-        save_file(val_results, f"{config.pretrained}/{data_suffix}-transfer_val_results.hard={config.apply_hard_negatives}.json")
+        save_file(val_results, f"{config.pretrained}/{data_suffix}-val_results.hard={config.apply_hard_negatives}.json")
         test_result_mat = HierarchyTransformerEvaluator.encode(model, test_examples, config.eval_batch_size)
         test_scores = test_result_mat[:, 1] + val_results["centri_score_weight"] * (
             test_result_mat[:, 3] - test_result_mat[:, 2]
         )
         test_results = evaluate_by_threshold(test_scores, test_result_mat[:, 0], val_results["threshold"])
-        save_file(test_results, f"{config.pretrained}/{data_suffix}-transfer_test_results.hard={config.apply_hard_negatives}.json")
+        save_file(test_results, f"{config.pretrained}/{data_suffix}-test_results.hard={config.apply_hard_negatives}.json")
 
     elif config.model_type == "finetune":
         model = AutoModelForSequenceClassification.from_pretrained(config.pretrained)
@@ -67,7 +67,7 @@ def main(config_file: str, gpu_id: int):
         test_labels = torch.tensor(test_preds.label_ids)
         test_results = evaluate_by_threshold(test_scores, test_labels, 0.0, False)
         save_file(
-            test_results, f"{config.pretrained}/../{data_suffix}-transfer_test_results.hard={config.apply_hard_negatives}.json"
+            test_results, f"{config.pretrained}/../{data_suffix}-test_results.hard={config.apply_hard_negatives}.json"
         )
 
     elif config.model_type == "simeval":
