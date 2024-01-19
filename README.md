@@ -1,6 +1,6 @@
 # Hierarchy Transformer Encoder (HiT)
 
-Retraining language models as hierarchy encoders.
+Code repository for the paper: "Language Models as Hierarchy Encoders".
 
 
 ## Main Dependencies
@@ -12,3 +12,7 @@ Retraining language models as hierarchy encoders.
 ## Datasets
 
 - Zenodo (anonymised): <https://zenodo.org/doi/10.5281/zenodo.10511042>
+
+## Models
+
+Our HiT models will be released on the Huggingface Hub.
