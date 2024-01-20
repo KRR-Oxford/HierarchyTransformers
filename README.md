@@ -11,7 +11,7 @@ Code repository for the paper: "Language Models as Hierarchy Encoders".
 
 ## Datasets
 
-- Zenodo (anonymised): <https://zenodo.org/doi/10.5281/zenodo.10511042>
+- [Zenodo](https://zenodo.org/doi/10.5281/zenodo.10511042).
 
 ## Models
 
