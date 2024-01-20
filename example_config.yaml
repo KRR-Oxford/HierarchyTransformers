@@ -1,0 +1,24 @@
+# general arguments
+data_path: "data/wordnet"
+
+
+pretrained: "sentence-transformers/all-MiniLM-L12-v2"
+model_type: "hit"
+apply_hard_negatives: False
+num_epochs: 10
+train_batch_size: 256
+eval_batch_size: 512
+eval_train: False  # evaluate on training data or not
+
+# HiT arguments
+apply_triplet_loss: True
+learning_rate: 1e-5 
+warmup_steps: 500
+loss:
+  cluster:
+    weight: 1.0
+    margin: 5.0
+    # positive_margin: 1.0  # additional margin used when apply_triplet_loss is set to False
+  centri:
+    weight: 1.0
+    margin: 0.1
