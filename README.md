@@ -15,4 +15,4 @@ Code repository for the paper: "Language Models as Hierarchy Encoders".
 
 ## Models
 
-Our HiT models will be released on the Huggingface Hub.
+Our HiT models will be released on the [Huggingface Hub](https://huggingface.co/Hierarchy-Transformers): 
