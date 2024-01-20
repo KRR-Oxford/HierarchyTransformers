@@ -1,0 +1,9 @@
+datasets
+deeponto>=0.8.8
+geoopt==0.5.0
+scikit_learn
+seaborn
+sentence_transformers
+torch
+tqdm
+transformers
