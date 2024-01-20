@@ -31,7 +31,7 @@ class HierarchyTransformer(SentenceTransformer):
         return self._register_buffer["manifold"]
 
     @classmethod
-    def load_pretrained(cls, pretrained: str, device: torch.device):
+    def load_pretrained(cls, pretrained: str, device: Optional[torch.device] = None):
         """Load a sentence transformer from either the `sentence_transformers` library
         or `transformers` library.
         """
