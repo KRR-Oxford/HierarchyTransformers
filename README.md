@@ -58,6 +58,23 @@ entity_names = ["computer", "personal computer", "fruit", "berry"]
 entity_embeddings = model.encode(entity_names)
 ```
 
+Use the entity embeddings to predict the subsumption relationships between them.
+
+```python
+# suppose we want to compare "personal computer" and "computer", "berry" and "fruit"
+child_entity_embeddings = model.encode(["personal computer", "berry"], convert_to_tensor=True)
+parent_entity_embeddings = model.encode(["computer", "fruit"], convert_to_tensor=True)
+
+# compute the hyperbolic distances and norms of entity embeddings
+dists = model.manifold.dist(child_entity_embeddings, parent_entity_embeddings)
+child_norms = model.manifold.dist0(child_entity_embeddings)
+parent_norms = model.manifold.dist0(parent_entity_embeddings)
+
+# use the empirical function for subsumption prediction proposed in the paper
+# `centri_score_weight` and the overall threshold are determined on the validation set
+# see source code at `src/hierarchy_transformers/evaluation` for more details about our implementation for the hyperparameter tuning.
+subsumption_scores = dists + centri_score_weight * (parent_norms - child_norms)
+```
 
 ## Datasets
 
