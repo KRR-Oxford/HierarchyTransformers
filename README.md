@@ -38,7 +38,7 @@ pip install git+https://github.com/KRR-Oxford/HierarchyTransformers.git
 
 Our $\textsf{HiT}$ models are released on the [Huggingface Hub](https://huggingface.co/Hierarchy-Transformers).
 
-Use the following code to get started with {$\textsf{HiT}$}s:
+Use the following code to get started with $\textsf{HiT}s$:
 
 ```python
 from hierarchy_transformers import HierarchyTransformer
