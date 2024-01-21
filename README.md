@@ -2,10 +2,16 @@
 
 Code repository for the paper: "Language Models as Hierarchy Encoders".
 
+**News** :newspaper:
 
-## Main Dependencies
+- [ ] We will update detailed documentation of this work in [DeepOnto](https://krr-oxford.github.io/DeepOnto/). 
+- [X] Deploy initial release. (**v0.0.1**)
 
-This repository follows a similar layout as the `sentence_transformers` library. It mainly depends on the following libraries:
+## Installation
+
+### Main Dependencies
+
+This repository follows a similar layout as the [Sentence Transformers](https://www.sbert.net/index.html) library. It mainly depends on the following libraries:
 
 
 - [Sentence Transformers](https://www.sbert.net/index.html) for language models.
@@ -15,9 +21,43 @@ This repository follows a similar layout as the `sentence_transformers` library.
 - [Geoopt](https://geoopt.readthedocs.io/en/latest/index.html) for arithmetic in hyperbolic space.
 
 
+### Install from PyPI
+
+```bash
+# requiring Python>=3.8
+pip install hierarchy_transformers
+```
+
+### Install from GitHub
+
+```
+pip install git+https://github.com/KRR-Oxford/HierarchyTransformers.git
+```
+
 ## Models on Huggingface Hub
 
-Our HiT models will be released on the [Huggingface Hub](https://huggingface.co/Hierarchy-Transformers).
+Our HiT models are released on the [Huggingface Hub](https://huggingface.co/Hierarchy-Transformers).
+
+Use the following code to get started with HiTs:
+
+```python
+from hierarchy_transformers import HierarchyTransformer
+from hierarchy_transformers.utils import get_torch_device
+
+# set up the device (use cpu if no gpu found)
+gpu_id = 0
+device = get_torch_device(gpu_id)
+
+# load the model
+model = HierarchyTransformer.load_pretrained('Hierarchy-Transformers/HiT-MiniLM-L12-WordNet', device)
+
+# entity names to be encoded.
+entity_names = ["computer", "personal computer", "fruit", "berry"]
+
+# get the entity embeddings
+entity_embeddings = model.encode(entity_names)
+```
+
 
 ## Datasets
 
