@@ -36,9 +36,9 @@ pip install git+https://github.com/KRR-Oxford/HierarchyTransformers.git
 
 ## Models on Huggingface Hub
 
-Our $\textsc{HiT}$ models are released on the [Huggingface Hub](https://huggingface.co/Hierarchy-Transformers).
+Our $\textsf{HiT}$ models are released on the [Huggingface Hub](https://huggingface.co/Hierarchy-Transformers).
 
-Use the following code to get started with $\textsc{HiT}$s:
+Use the following code to get started with $\textsf{HiT}$s:
 
 ```python
 from hierarchy_transformers import HierarchyTransformer
@@ -78,7 +78,7 @@ subsumption_scores = dists + centri_score_weight * (parent_norms - child_norms)
 
 ## Datasets
 
-Datasets for HiTs are available at [Zenodo](https://zenodo.org/doi/10.5281/zenodo.10511042), including those constructed from:
+Datasets for $\textsf{HiT}$s are available at [Zenodo](https://zenodo.org/doi/10.5281/zenodo.10511042), including those constructed from:
 
 - WordNet  
 - SNOMED CT
