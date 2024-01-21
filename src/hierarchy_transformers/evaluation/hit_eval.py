@@ -16,7 +16,7 @@ class HierarchyTransformerEvaluator(HierarchyEvaluator):
 
     Hierarchy encoding is evaluated based on the hyperbolic distances between entity
     embeddings and hyperbolic norms of entity embeddings in the Poincare ball of
-    radius 1/sqrt(N) where N is the embedding dimension.
+    radius 1/sqrt(d) where d is the embedding dimension.
     """
 
     def __init__(
@@ -47,6 +47,12 @@ class HierarchyTransformerEvaluator(HierarchyEvaluator):
 
     @classmethod
     def score(cls, result_mat: torch.Tensor, centri_score_weight: float):
+        """The empirical scoring function for using HiT embeddings to predict subsumptions.
+       
+        The scores are "lower-the-better".
+        
+        NOTE: In the paper, the `-` operator is appended to this function to make it "higher-the-better".
+        """
         scores = result_mat[:, 1] + centri_score_weight * (result_mat[:, 3] - result_mat[:, 2])
         labels = result_mat[:, 0]
         return scores, labels
