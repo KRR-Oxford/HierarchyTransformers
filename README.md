@@ -36,9 +36,9 @@ pip install git+https://github.com/KRR-Oxford/HierarchyTransformers.git
 
 ## Models on Huggingface Hub
 
-Our HiT models are released on the [Huggingface Hub](https://huggingface.co/Hierarchy-Transformers).
+Our $\textsc{HiT}$ models are released on the [Huggingface Hub](https://huggingface.co/Hierarchy-Transformers).
 
-Use the following code to get started with HiTs:
+Use the following code to get started with $\textsc{HiT}$s:
 
 ```python
 from hierarchy_transformers import HierarchyTransformer
@@ -85,3 +85,31 @@ Datasets for HiTs are available at [Zenodo](https://zenodo.org/doi/10.5281/zenod
 - Schema.org 
 - FoodOn
 - DOID
+
+
+## License
+
+!!! license "License"
+
+    Copyright 2023 Yuan He.
+    All rights reserved.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at *<http://www.apache.org/licenses/LICENSE-2.0>*
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+## Citation
+
+<!-- The preprint of our paper for is currently available at [arxiv](...). -->
+
+<!-- *Yuan He, Jiaoyan Chen, Hang Dong, Ian Horrocks, Carlo Allocca, Taehun Kim, and Brahmananda Sapkota.* **DeepOnto: A Python Package for Ontology Engineering with Deep Learning.** arXiv preprint arXiv:2307.03067 (2023). -->
+
+```
+to-be-released
+```
