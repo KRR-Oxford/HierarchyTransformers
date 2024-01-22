@@ -26,12 +26,7 @@ class ClusteringTripletLoss(torch.nn.Module):
         }
         return config
 
-    def forward(
-        self,
-        rep_anchor: torch.Tensor,
-        rep_positive: torch.Tensor,
-        rep_negative: torch.Tensor,
-    ):
+    def forward(self, rep_anchor: torch.Tensor, rep_positive: torch.Tensor, rep_negative: torch.Tensor):
         distances_positive = self.manifold.dist(rep_anchor, rep_positive)
         distances_negative = self.manifold.dist(rep_anchor, rep_negative)
         cluster_triplet_loss = F.relu(distances_positive - distances_negative + self.margin)
