@@ -51,7 +51,9 @@ def main(config_file: str, gpu_id: int):
             test_result_mat[:, 3] - test_result_mat[:, 2]
         )
         test_results = evaluate_by_threshold(test_scores, test_result_mat[:, 0], val_results["threshold"])
-        save_file(test_results, f"{config.pretrained}/{data_suffix}-test_results.hard={config.apply_hard_negatives}.json")
+        save_file(
+            test_results, f"{config.pretrained}/{data_suffix}-test_results.hard={config.apply_hard_negatives}.json"
+        )
 
     elif config.model_type == "finetune":
         model = AutoModelForSequenceClassification.from_pretrained(config.pretrained)
@@ -87,9 +89,13 @@ def main(config_file: str, gpu_id: int):
         output_path = f"experiments/MaskFill-{config.pretrained}-{data_suffix}-hard={config.train.apply_hard_negatives}"
         create_path(output_path)
         mask_filler(output_path)
-        
+
     print(test_results)
-    print(" & ".join([str(round(test_results["P"], 3)), str(round(test_results["R"], 3)), str(round(test_results["F1"], 3))]))
+    print(
+        " & ".join(
+            [str(round(test_results["P"], 3)), str(round(test_results["R"], 3)), str(round(test_results["F1"], 3))]
+        )
+    )
 
 
 if __name__ == "__main__":
