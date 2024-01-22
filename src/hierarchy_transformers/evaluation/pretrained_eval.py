@@ -37,7 +37,8 @@ class PretrainedMaskFillEvaluator(HierarchyEvaluator):
 
         scores = []
         for result in tqdm(
-            self.pipeline(self.pipeline_data(examples), batch_size=self.eval_batch_size, top_k=10), total=len(examples)
+            self.pipeline(self.pipeline_data(examples), batch_size=self.eval_batch_size, top_k=10),
+            total=len(examples),
         ):
             pos_score = 0.0
             neg_score = 0.0

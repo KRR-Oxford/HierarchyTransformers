@@ -5,7 +5,7 @@ from geoopt.manifolds import PoincareBall
 
 class EntailmentConeTripletLoss(torch.nn.Module):
     """Hyperbolic loss that construct entailment cones for entities.
-    
+
     Essentially, this loss is expected to achieve:
     $$
         angle(child, parent_cone_axis) < angle(parent_cone)
@@ -60,7 +60,7 @@ class EntailmentConeTripletLoss(torch.nn.Module):
 
 class EntailmentConeConstrastiveLoss(torch.nn.Module):
     """Hyperbolic loss that construct entailment cones for entities.
-    
+
     Essentially, this loss is expected to achieve:
     $$
         angle(child, parent_cone_axis) < angle(parent_cone)

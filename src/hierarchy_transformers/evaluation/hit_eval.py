@@ -48,9 +48,9 @@ class HierarchyTransformerEvaluator(HierarchyEvaluator):
     @classmethod
     def score(cls, result_mat: torch.Tensor, centri_score_weight: float):
         """The empirical scoring function for using HiT embeddings to predict subsumptions.
-       
+
         The scores are "lower-the-better".
-        
+
         NOTE: In the paper, the `-` operator is appended to this function to make it "higher-the-better".
         """
         scores = result_mat[:, 1] + centri_score_weight * (result_mat[:, 3] - result_mat[:, 2])
@@ -99,7 +99,10 @@ class HierarchyTransformerEvaluator(HierarchyEvaluator):
         else:
             eval_scores, eval_labels = self.score(result_mat, best_val_centri_score_weight)
             eval_results = self.evaluate_by_threshold(eval_scores, eval_labels, best_val_threshold)
-            eval_results = {"centri_score_weight": best_val_centri_score_weight, **eval_results}
+            eval_results = {
+                "centri_score_weight": best_val_centri_score_weight,
+                **eval_results,
+            }
 
         return result_mat, eval_results
 
@@ -115,12 +118,21 @@ class HierarchyTransformerEvaluator(HierarchyEvaluator):
         if self.train_examples:
             logger.info("Evaluate on train examples...")
             train_result_mat, train_results = self.inference(model, self.train_examples)
-            torch.save(train_result_mat, f"{output_path}/epoch={epoch}.step={steps}/train_result_mat.pt")
-            save_file(train_results, f"{output_path}/epoch={epoch}.step={steps}/train_results.json")
+            torch.save(
+                train_result_mat,
+                f"{output_path}/epoch={epoch}.step={steps}/train_result_mat.pt",
+            )
+            save_file(
+                train_results,
+                f"{output_path}/epoch={epoch}.step={steps}/train_results.json",
+            )
 
         logger.info("Evaluate on val examples...")
         val_result_mat, val_results = self.inference(model, self.val_examples)
-        torch.save(val_result_mat, f"{output_path}/epoch={epoch}.step={steps}/val_result_mat.pt")
+        torch.save(
+            val_result_mat,
+            f"{output_path}/epoch={epoch}.step={steps}/val_result_mat.pt",
+        )
         save_file(val_results, f"{output_path}/epoch={epoch}.step={steps}/val_results.json")
 
         if self.test_examples:
@@ -131,7 +143,13 @@ class HierarchyTransformerEvaluator(HierarchyEvaluator):
                 val_results["centri_score_weight"],
                 val_results["threshold"],
             )
-            torch.save(test_result_mat, f"{output_path}/epoch={epoch}.step={steps}/test_result_mat.pt")
-            save_file(test_results, f"{output_path}/epoch={epoch}.step={steps}/test_results.json")
+            torch.save(
+                test_result_mat,
+                f"{output_path}/epoch={epoch}.step={steps}/test_result_mat.pt",
+            )
+            save_file(
+                test_results,
+                f"{output_path}/epoch={epoch}.step={steps}/test_results.json",
+            )
 
         return val_results["F1"]

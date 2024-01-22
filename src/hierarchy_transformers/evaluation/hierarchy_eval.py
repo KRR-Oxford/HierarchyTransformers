@@ -6,8 +6,8 @@ import math
 
 
 class HierarchyEvaluator:
-    """Base evaluator for evaluating hierarchy encoding in models.
-    """
+    """Base evaluator for evaluating hierarchy encoding in models."""
+
     def __init__(self):
         pass
 

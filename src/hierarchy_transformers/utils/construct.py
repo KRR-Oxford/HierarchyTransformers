@@ -66,7 +66,7 @@ class HierarchyDatasetConstructor:
         # self.save_dataset(trans_train_examples, f"{output_dir}/transitivity/trans_train.jsonl")
         self.save_dataset(trans_val_examples, f"{output_dir}/{trans_task_name}/val.jsonl")
         self.save_dataset(trans_test_examples, f"{output_dir}/{trans_task_name}/test.jsonl")
-        
+
         base_train_examples, base_eval_examples = train_test_split(base_examples, test_size=eval_size)
         base_val_examples, base_test_examples = train_test_split(base_eval_examples, test_size=0.5)
         # base_train_edges = [(x["child"], x["parent"]) for x in base_train_examples]

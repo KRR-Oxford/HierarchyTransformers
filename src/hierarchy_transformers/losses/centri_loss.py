@@ -5,7 +5,7 @@ from geoopt.manifolds import PoincareBall
 
 class CentripetalTripletLoss(torch.nn.Module):
     r"""Hyperbolic loss that regulates the norms of child and parent entities.
-    
+
     Essentially, this loss is expected to achieve:
     $$
         d(child, origin) > d(parent, origin)
@@ -21,10 +21,18 @@ class CentripetalTripletLoss(torch.nn.Module):
         # self.manifold_origin = self.manifold.origin(embed_dim)
 
     def get_config_dict(self):
-        config = {"distance_metric": f"PoincareBall(c={self.manifold.c}).dist(_, origin)", "margin": self.margin}
+        config = {
+            "distance_metric": f"PoincareBall(c={self.manifold.c}).dist(_, origin)",
+            "margin": self.margin,
+        }
         return config
 
-    def forward(self, rep_anchor: torch.Tensor, rep_positive: torch.Tensor, rep_negative: torch.Tensor):
+    def forward(
+        self,
+        rep_anchor: torch.Tensor,
+        rep_positive: torch.Tensor,
+        rep_negative: torch.Tensor,
+    ):
         rep_anchor_hyper_norms = self.manifold.dist0(rep_anchor)
         rep_positive_hyper_norms = self.manifold.dist0(rep_positive)
         # child further than parent w.r.t. origin
@@ -34,7 +42,7 @@ class CentripetalTripletLoss(torch.nn.Module):
 
 class CentripetalContrastiveLoss(torch.nn.Module):
     r"""Hyperbolic loss that regulates the norms of child and parent entities.
-    
+
     Essentially, this loss is expected to achieve:
     $$
         d(child, origin) > d(parent, origin)
@@ -50,7 +58,10 @@ class CentripetalContrastiveLoss(torch.nn.Module):
         # self.manifold_origin = self.manifold.origin(embed_dim)
 
     def get_config_dict(self):
-        config = {"distance_metric": f"PoincareBall(c={self.manifold.c}).dist(_, origin)", "margin": self.margin}
+        config = {
+            "distance_metric": f"PoincareBall(c={self.manifold.c}).dist(_, origin)",
+            "margin": self.margin,
+        }
         return config
 
     def forward(self, rep_anchor: torch.Tensor, rep_other: torch.Tensor, labels: torch.Tensor):

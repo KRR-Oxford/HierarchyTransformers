@@ -33,7 +33,12 @@ class StaticPoincareEvaluator(HierarchyEvaluator):
         self.test_examples = test_examples
         self.train_examples = train_examples
 
-    def score(self, subject: torch.Tensor, objects: torch.Tensor, norm_score_weight: float = 1000.0):
+    def score(
+        self,
+        subject: torch.Tensor,
+        objects: torch.Tensor,
+        norm_score_weight: float = 1000.0,
+    ):
         dists = self.model.manifold.dist(subject, objects)
         subject_norms = subject.norm(dim=-1)
         objects_norms = objects.norm(dim=-1)
@@ -45,7 +50,11 @@ class StaticPoincareEvaluator(HierarchyEvaluator):
         self.model.eval()
         num_negatives = len(examples[0]) - 2  # each example is formatted as [child, parent, *negatives]
         eval_scores = []
-        dataloader = DataLoader(torch.tensor(examples).to(self.device), shuffle=False, batch_size=self.eval_batch_size)
+        dataloader = DataLoader(
+            torch.tensor(examples).to(self.device),
+            shuffle=False,
+            batch_size=self.eval_batch_size,
+        )
         with torch.no_grad():
             for batch in dataloader:
                 subject, objects = self.model(batch)
@@ -63,7 +72,7 @@ class StaticPoincareEvaluator(HierarchyEvaluator):
             train_scores, train_labels = self.inference(self.train_examples)
             best_train_results = self.search_best_threshold(train_scores, train_labels, threshold_granularity=1)
             save_file(best_train_results, f"{output_path}/train_results.json")
-        
+
         val_scores, val_labels = self.inference(self.val_examples)
         best_val_results = self.search_best_threshold(val_scores, val_labels, threshold_granularity=1)
         save_file(best_val_results, f"{output_path}/val_results.json")
@@ -72,4 +81,3 @@ class StaticPoincareEvaluator(HierarchyEvaluator):
             test_scores, test_labels = self.inference(self.test_examples)
             test_results = self.evaluate_by_threshold(test_scores, test_labels, best_val_results["threshold"])
             save_file(test_results, f"{output_path}/test_results.json")
-        

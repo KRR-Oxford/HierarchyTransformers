@@ -5,7 +5,7 @@ from geoopt.manifolds import PoincareBall
 
 class ClusteringTripletLoss(torch.nn.Module):
     """Hyperbolic loss that clusters entities in subsumptions.
-    
+
     Essentially, this loss is expected to achieve:
     $$
         d(child, parent) < d(child, non-parent)
@@ -26,7 +26,12 @@ class ClusteringTripletLoss(torch.nn.Module):
         }
         return config
 
-    def forward(self, rep_anchor: torch.Tensor, rep_positive: torch.Tensor, rep_negative: torch.Tensor):
+    def forward(
+        self,
+        rep_anchor: torch.Tensor,
+        rep_positive: torch.Tensor,
+        rep_negative: torch.Tensor,
+    ):
         distances_positive = self.manifold.dist(rep_anchor, rep_positive)
         distances_negative = self.manifold.dist(rep_anchor, rep_negative)
         cluster_triplet_loss = F.relu(distances_positive - distances_negative + self.margin)
@@ -35,7 +40,7 @@ class ClusteringTripletLoss(torch.nn.Module):
 
 class ClusteringConstrastiveLoss(torch.nn.Module):
     """Hyperbolic loss that clusters entities in subsumptions.
-    
+
     Essentially, this loss is expected to achieve:
     $$
         d(child, parent) < d(child, non-parent)
