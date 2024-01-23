@@ -73,7 +73,7 @@ parent_norms = model.manifold.dist0(parent_entity_embeddings)
 # use the empirical function for subsumption prediction proposed in the paper
 # `centri_score_weight` and the overall threshold are determined on the validation set
 # see source code at `src/hierarchy_transformers/evaluation` for more details about our implementation for the hyperparameter tuning.
-subsumption_scores = dists + centri_score_weight * (parent_norms - child_norms)
+subsumption_scores = - (dists + centri_score_weight * (parent_norms - child_norms))
 ```
 
 ## Datasets
