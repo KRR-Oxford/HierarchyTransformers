@@ -1,6 +1,6 @@
 # Hierarchy Transformers (HiTs)
 
-Code repository for the paper: "Language Models as Hierarchy Encoders".
+Code repository for the paper: ["Language Models as Hierarchy Encoders"](https://arxiv.org/abs/2401.11374).
 
 **News** :newspaper:
 
@@ -106,10 +106,15 @@ Datasets for training and evaluating $\textsf{HiT}$ models are available at [Zen
 
 ## Citation
 
-<!-- The preprint of our paper for is currently available at [arxiv](...). -->
+The preprint of our paper for is currently available at [arxiv](https://arxiv.org/abs/2401.11374).
 
-<!-- *Yuan He, Jiaoyan Chen, Hang Dong, Ian Horrocks, Carlo Allocca, Taehun Kim, and Brahmananda Sapkota.* **DeepOnto: A Python Package for Ontology Engineering with Deep Learning.** arXiv preprint arXiv:2307.03067 (2023). -->
+*Yuan He, Zhangdie Yuan, Jiaoyan Chen, Ian Horrocks.* **Language Models as Hierarchy Encoders.** arXiv preprint arXiv:2401.11374 (2024).
 
 ```
-to-be-released
+@article{he2024language,
+  title={Language Models as Hierarchy Encoders},
+  author={He, Yuan and Yuan, Zhangdie and Chen, Jiaoyan and and Horrocks, Ian},
+  journal={arXiv preprint arXiv:2401.11374},
+  year={2024}
+}
 ```
