@@ -13,13 +13,11 @@ Code repository for the paper: ["Language Models as Hierarchy Encoders"](https:/
 
 This repository follows a similar layout as the [Sentence Transformers](https://www.sbert.net/index.html) library. It mainly depends on the following libraries:
 
-
 - [Sentence Transformers](https://www.sbert.net/index.html) for language models.
 
 - [DeepOnto](https://krr-oxford.github.io/DeepOnto/) for processing hierarchies and constructing datasets from hierarchies.
 
 - [Geoopt](https://geoopt.readthedocs.io/en/latest/index.html) for arithmetic in hyperbolic space.
-
 
 ### Install from PyPI
 
@@ -30,15 +28,17 @@ pip install hierarchy_transformers
 
 ### Install from GitHub
 
-```
+```bash
 pip install git+https://github.com/KRR-Oxford/HierarchyTransformers.git
 ```
 
 ## Models on Huggingface Hub
 
-Our $\textsf{HiT}$ models are released on the [Huggingface Hub](https://huggingface.co/Hierarchy-Transformers).
+Our HiT models are released on the [Huggingface Hub](https://huggingface.co/Hierarchy-Transformers).
 
-Use the following code to get started with $\textsf{HiT}$ models:
+### Get Started
+
+Use the following code to get started with HiTs:
 
 ```python
 from hierarchy_transformers import HierarchyTransformer
@@ -57,6 +57,8 @@ entity_names = ["computer", "personal computer", "fruit", "berry"]
 # get the entity embeddings
 entity_embeddings = model.encode(entity_names)
 ```
+
+### Default Probing for Subsumption Prediction
 
 Use the entity embeddings to predict the subsumption relationships between them.
 
@@ -78,14 +80,13 @@ subsumption_scores = - (dists + centri_score_weight * (parent_norms - child_norm
 
 ## Datasets
 
-Datasets for training and evaluating $\textsf{HiT}$ models are available at [Zenodo](https://zenodo.org/doi/10.5281/zenodo.10511042), including those constructed from:
+Datasets for training and evaluating HiTs are available at [Zenodo](https://zenodo.org/doi/10.5281/zenodo.10511042), including those constructed from:
 
 - WordNet  
 - SNOMED CT
-- Schema.org 
+- Schema.org
 - FoodOn
 - DOID
-
 
 ## License
 
