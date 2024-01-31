@@ -114,7 +114,7 @@ The preprint of our paper for is currently available at [arxiv](https://arxiv.or
 ```
 @article{he2024language,
   title={Language Models as Hierarchy Encoders},
-  author={He, Yuan and Yuan, Zhangdie and Chen, Jiaoyan and and Horrocks, Ian},
+  author={He, Yuan and Yuan, Zhangdie and Chen, Jiaoyan and Horrocks, Ian},
   journal={arXiv preprint arXiv:2401.11374},
   year={2024}
 }
