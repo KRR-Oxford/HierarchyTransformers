@@ -112,3 +112,5 @@ site
 
 # notebook for learning
 *.ipynb
+
+temp*
