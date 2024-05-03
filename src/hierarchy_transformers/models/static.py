@@ -23,6 +23,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+from ..losses.hyper_loss import EntailmentConeConstrastiveLoss
+
 
 class StaticPoincareEmbed(torch.nn.Module):
     r"""Basline model reproducing the static embedding model proposed in
@@ -69,6 +71,7 @@ class StaticPoincareEmbedTrainer:
         learning_rate: float = 0.01,
         num_epochs: int = 200,
         num_warmup_epochs: int = 10,
+        apply_entailment_cone: bool = False,
     ):
         self.model = model
         self.device = device
@@ -89,6 +92,12 @@ class StaticPoincareEmbedTrainer:
             num_training_steps=self.num_training_steps,
         )
 
+        if apply_entailment_cone:
+            self.eloss = EntailmentConeConstrastiveLoss(self.model.manifold, 0.1, 0.1)
+            self.loss_func = self.entailment_cone_loss
+        else:
+            self.loss_func = self.dist_loss
+
     @property
     def lr(self):
         for g in self.optimizer.param_groups:
@@ -100,11 +109,16 @@ class StaticPoincareEmbedTrainer:
         correct_object_indices = torch.tensor([0] * len(pred_dists)).to(pred_dists.device)
         return self.cross_entropy(-pred_dists, correct_object_indices)
 
+    def entailment_cone_loss(self, subject: torch.Tensor, objects: torch.Tensor):
+        # first object is always the correct one
+        labels = torch.tensor([1] + [0] * (len(objects) - 1)).to(objects.device)
+        return self.eloss(subject, objects, labels)
+
     def training_step(self, batch):
         batch = batch.to(self.device)
         self.optimizer.zero_grad(set_to_none=True)
         subject, objects = self.model(batch)
-        loss = self.dist_loss(subject, objects)
+        loss = self.loss_func(subject, objects)
         loss.backward()
         self.optimizer.step()
         self.scheduler.step()

@@ -59,8 +59,9 @@ def main(config_file: str, gpu_id: int):
         learning_rate=float(config.learning_rate),
         num_epochs=config.num_epochs,
         num_warmup_epochs=config.warmup_epochs,
+        apply_entailment_cone=config.entailment_cone,
     )
-    output_path = f"experiments/static_poincare-hard={config.apply_hard_negatives}"
+    output_path = f"experiments/static_poincare-hard={config.apply_hard_negatives}-cone={config.entailment_cone}"
     create_path(output_path)
     static_trainer.run(output_path)
 
