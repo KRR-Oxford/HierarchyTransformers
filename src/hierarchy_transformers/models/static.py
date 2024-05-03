@@ -113,7 +113,9 @@ class StaticPoincareEmbedTrainer:
     def entailment_cone_loss(self, subject: torch.Tensor, objects: torch.Tensor):
         # first object is always the correct one
         energy = self.eloss.energy(objects, subject)
-        return (energy[:, 0] + F.relu(self.eloss.margin - energy[:, 1:]).sum(dim=-1)).mean()
+        print(energy.shape)
+        print(energy)
+        return energy[:, 0] + F.relu(self.eloss.margin - energy[:, 1:])
 
     def training_step(self, batch):
         batch = batch.to(self.device)
