@@ -19,6 +19,7 @@ from geoopt import ManifoldParameter
 from tqdm import tqdm
 from transformers import get_linear_schedule_with_warmup
 from geoopt.optim import RiemannianAdam
+import torch.nn.functional as F
 import logging
 
 logger = logging.getLogger(__name__)
@@ -111,8 +112,10 @@ class StaticPoincareEmbedTrainer:
 
     def entailment_cone_loss(self, subject: torch.Tensor, objects: torch.Tensor):
         # first object is always the correct one
-        labels = torch.tensor([1] + [0] * (len(objects) - 1)).to(objects.device)
-        return self.eloss(subject, objects, labels)
+        energy = self.eloss.energy(objects, subject)
+        print(energy.shape)
+        print(energy)
+        return energy[:, 0] + F.relu(self.eloss.margin - energy[:, 1:])
 
     def training_step(self, batch):
         batch = batch.to(self.device)
