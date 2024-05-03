@@ -18,7 +18,6 @@ from torch.utils.data import DataLoader
 from deeponto.utils import save_file
 
 from .hierarchy_eval import HierarchyEvaluator
-from ..losses.hyper_loss import EntailmentConeConstrastiveLoss
 
 
 class StaticPoincareEvaluator(HierarchyEvaluator):
@@ -36,7 +35,6 @@ class StaticPoincareEvaluator(HierarchyEvaluator):
         eval_batch_size: int,
         test_examples: Optional[list] = None,
         train_examples: Optional[list] = None,
-        apply_entailment_cone: bool = False,
     ):
         super().__init__()
 
@@ -49,20 +47,16 @@ class StaticPoincareEvaluator(HierarchyEvaluator):
         self.test_examples = test_examples
         self.train_examples = train_examples
 
-        if apply_entailment_cone:
-            self.eloss = EntailmentConeConstrastiveLoss(self.model.manifold, 0.1, 0.1)
-            self.score = self.entailment_cone_score
-        else:
-            self.score = self.dist_score
-
-    def dist_score(self, subject: torch.Tensor, objects: torch.Tensor, norm_score_weight: float = 1000.0):
+    def score(
+        self,
+        subject: torch.Tensor,
+        objects: torch.Tensor,
+        norm_score_weight: float = 1000.0,
+    ):
         dists = self.model.manifold.dist(subject, objects)
         subject_norms = subject.norm(dim=-1)
         objects_norms = objects.norm(dim=-1)
         return (1 + norm_score_weight * (objects_norms - subject_norms)) * dists
-
-    def entailment_cone_score(self, subject: torch.Tensor, objects: torch.Tensor):
-        return self.eloss.cone_angle_at_u(objects, subject) - self.eloss.half_cone_aperture(objects)
 
     def inference(self, examples: list):
         """WARNING: this function is highly customised to our hierarchy datasets
