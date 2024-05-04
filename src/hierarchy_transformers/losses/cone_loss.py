@@ -45,21 +45,30 @@ class EntailmentConeTripletLoss(torch.nn.Module):
         where x is the cone tip.
         """
         # cone tip means the point x is the tip of the hyperbolic cone
-        norm_tip = cone_tip.norm(dim=-1).clamp(min=self.min_euclidean_norm + self.eps)  # to prevent undefined aperture
-        return torch.arcsin(self.min_euclidean_norm * (1 - (norm_tip**2)) / norm_tip).clamp(min=-1 + self.eps, max=1 - self.eps)
+        # norm_tip = cone_tip.norm(dim=-1).clamp(min=self.min_euclidean_norm)  # to prevent undefined aperture
+        sq_norm_tip = cone_tip.pow(2).sum(dim=-1).clamp(min=self.min_euclidean_norm+self.eps, max=1-self.eps)
+        return torch.arcsin(self.min_euclidean_norm * (1 - sq_norm_tip) / torch.sqrt(sq_norm_tip)).clamp(min=-1 + self.eps, max=1 - self.eps)
 
     def cone_angle_at_u(self, cone_tip: torch.Tensor, u: torch.Tensor):
         """Angle between the axis [0, x] and the line [x, u]. This angle should be smaller than the
         half cone aperture at x for real children.
         """
         # parent point is treated as the cone tip
-        norm_tip = cone_tip.norm(dim=-1)
-        norm_child = u.norm(dim=-1)
+        norm_tip = cone_tip.norm(2, dim=-1)
+        norm_child = u.norm(2, dim=-1)
         dot_prod = (cone_tip * u).sum(dim=-1)
-        edist = (cone_tip - u).norm(dim=-1)  # euclidean distance
+        edist = (cone_tip - u).norm(2, dim=-1)  # euclidean distance
         numerator = dot_prod * (1 + norm_tip**2) - norm_tip**2 * (1 + norm_child**2)
-        denominator = norm_tip * edist * torch.sqrt(1 + (norm_child**2) * (norm_tip**2) - 2 * dot_prod).clamp(min=self.eps)
-        return torch.arccos(numerator / denominator).clamp(min=-1 + self.eps, max=1 - self.eps)
+        denominator = norm_tip * edist * torch.sqrt(1 + (norm_child**2) * (norm_tip**2) - 2 * dot_prod)
+            
+        angle = torch.arccos((numerator / denominator.clamp(min=self.eps)).clamp(min=-1 + self.eps, max=1 - self.eps))
+        # Debugging step
+        if torch.isnan(angle).any():
+            print("Numerator:", numerator)
+            print("Denominator:", denominator)
+            print("Angle calculation resulted in NaNs")
+        
+        return angle
 
     def energy(self, cone_tip: torch.Tensor, u: torch.Tensor):
         """Enery function defined as: max(0, cone_angle(u) - half_cone_aperture) given a cone tip."""
@@ -101,21 +110,30 @@ class EntailmentConeConstrastiveLoss(torch.nn.Module):
         where x is the cone tip.
         """
         # cone tip means the point x is the tip of the hyperbolic cone
-        norm_tip = cone_tip.norm(dim=-1).clamp(min=self.min_euclidean_norm + self.eps)  # to prevent undefined aperture
-        return torch.arcsin(self.min_euclidean_norm * (1 - (norm_tip**2)) / norm_tip).clamp(min=-1 + self.eps, max=1 - self.eps)
+        # norm_tip = cone_tip.norm(dim=-1).clamp(min=self.min_euclidean_norm)  # to prevent undefined aperture
+        sq_norm_tip = cone_tip.pow(2).sum(dim=-1).clamp(min=self.min_euclidean_norm+self.eps, max=1-self.eps)
+        return torch.arcsin(self.min_euclidean_norm * (1 - sq_norm_tip) / torch.sqrt(sq_norm_tip)).clamp(min=-1 + self.eps, max=1 - self.eps)
 
     def cone_angle_at_u(self, cone_tip: torch.Tensor, u: torch.Tensor):
         """Angle between the axis [0, x] and the line [x, u]. This angle should be smaller than the
         half cone aperture at x for real children.
         """
         # parent point is treated as the cone tip
-        norm_tip = cone_tip.norm(dim=-1)
-        norm_child = u.norm(dim=-1)
+        norm_tip = cone_tip.norm(2, dim=-1)
+        norm_child = u.norm(2, dim=-1)
         dot_prod = (cone_tip * u).sum(dim=-1)
-        edist = (cone_tip - u).norm(dim=-1)  # euclidean distance
+        edist = (cone_tip - u).norm(2, dim=-1)  # euclidean distance
         numerator = dot_prod * (1 + norm_tip**2) - norm_tip**2 * (1 + norm_child**2)
-        denominator = norm_tip * edist * torch.sqrt(1 + (norm_child**2) * (norm_tip**2) - 2 * dot_prod).clamp(min=self.eps)
-        return torch.arccos(numerator / denominator).clamp(min=-1 + self.eps, max=1 - self.eps)
+        denominator = norm_tip * edist * torch.sqrt(1 + (norm_child**2) * (norm_tip**2) - 2 * dot_prod)
+            
+        angle = torch.arccos((numerator / denominator.clamp(min=self.eps)).clamp(min=-1 + self.eps, max=1 - self.eps))
+        # Debugging step
+        if torch.isnan(angle).any():
+            print("Numerator:", numerator)
+            print("Denominator:", denominator)
+            print("Angle calculation resulted in NaNs")
+        
+        return angle
 
     def energy(self, cone_tip: torch.Tensor, u: torch.Tensor):
         """Enery function defined as: max(0, cone_angle(u) - half_cone_aperture) given a cone tip."""
