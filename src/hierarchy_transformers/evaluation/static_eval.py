@@ -18,6 +18,7 @@ from torch.utils.data import DataLoader
 from deeponto.utils import save_file
 
 from .hierarchy_eval import HierarchyEvaluator
+from ..losses import EntailmentConeConstrastiveLoss
 
 
 class StaticPoincareEvaluator(HierarchyEvaluator):
@@ -35,6 +36,7 @@ class StaticPoincareEvaluator(HierarchyEvaluator):
         eval_batch_size: int,
         test_examples: Optional[list] = None,
         train_examples: Optional[list] = None,
+        apply_entailment_cone: bool = False,
     ):
         super().__init__()
 
@@ -47,16 +49,20 @@ class StaticPoincareEvaluator(HierarchyEvaluator):
         self.test_examples = test_examples
         self.train_examples = train_examples
 
-    def score(
-        self,
-        subject: torch.Tensor,
-        objects: torch.Tensor,
-        norm_score_weight: float = 1000.0,
-    ):
+        self.score = self.dist_score
+        self.apply_entailment_cone = apply_entailment_cone
+        if self.apply_entailment_cone:
+            self.eloss = EntailmentConeConstrastiveLoss(self.model.manifold)
+            self.score = self.cone_score
+
+    def dist_score(self, subject: torch.Tensor, objects: torch.Tensor, norm_score_weight: float = 1000.0):
         dists = self.model.manifold.dist(subject, objects)
         subject_norms = subject.norm(dim=-1)
         objects_norms = objects.norm(dim=-1)
         return (1 + norm_score_weight * (objects_norms - subject_norms)) * dists
+
+    def cone_score(self, subject: torch.Tensor, objects: torch.Tensor):
+        return self.eloss.energy(objects, subject)
 
     def inference(self, examples: list):
         """WARNING: this function is highly customised to our hierarchy datasets
@@ -82,13 +88,18 @@ class StaticPoincareEvaluator(HierarchyEvaluator):
         return eval_scores, eval_labels
 
     def __call__(self, output_path: str):
+        
+        threshold_granularity = 1
+        if self.apply_entailment_cone:
+            threshold_granularity = 100
+        
         if self.train_examples:
             train_scores, train_labels = self.inference(self.train_examples)
-            best_train_results = self.search_best_threshold(train_scores, train_labels, threshold_granularity=1)
+            best_train_results = self.search_best_threshold(train_scores, train_labels, threshold_granularity=threshold_granularity)
             save_file(best_train_results, f"{output_path}/train_results.json")
 
         val_scores, val_labels = self.inference(self.val_examples)
-        best_val_results = self.search_best_threshold(val_scores, val_labels, threshold_granularity=1)
+        best_val_results = self.search_best_threshold(val_scores, val_labels, threshold_granularity=threshold_granularity)
         save_file(best_val_results, f"{output_path}/val_results.json")
 
         if self.test_examples:

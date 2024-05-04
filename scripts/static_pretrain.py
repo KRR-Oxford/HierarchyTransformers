@@ -77,6 +77,7 @@ def main(config_file: str, gpu_id: int):
         test_examples=test_examples,
         eval_batch_size=config.eval_batch_size,
         train_examples=train_examples,
+        apply_entailment_cone=config.apply_cone_loss,
     )
     static_eval(output_path)
 
