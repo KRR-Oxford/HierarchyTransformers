@@ -13,12 +13,14 @@
 # limitations under the License.
 
 import torch
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from geoopt.manifolds import PoincareBall
 from geoopt import ManifoldParameter
 from tqdm import tqdm
 from transformers import get_linear_schedule_with_warmup
 from geoopt.optim import RiemannianAdam
+from ..losses import EntailmentConeConstrastiveLoss
 import logging
 
 logger = logging.getLogger(__name__)
@@ -69,6 +71,7 @@ class StaticPoincareEmbedTrainer:
         learning_rate: float = 0.01,
         num_epochs: int = 200,
         num_warmup_epochs: int = 10,
+        apply_cone_loss: bool = False, # cone loss should be used after training Poincare embed
     ):
         self.model = model
         self.device = device
@@ -88,6 +91,16 @@ class StaticPoincareEmbedTrainer:
             num_warmup_steps=self.warmup_epochs * self.num_epoch_steps,  # one epoch warming-up
             num_training_steps=self.num_training_steps,
         )
+        
+        self.loss_func = self.dist_loss
+        if apply_cone_loss:
+            eloss = EntailmentConeConstrastiveLoss(self.model.manifold, 0.1, 0.1, 1e-5)
+            def rewrite_forward(self, subject: torch.Tensor, objects: torch.Tensor):
+                energy = self.energy(objects, subject)
+                return (energy[:, 0].sum() + F.relu(self.margin - energy[:, 1:]).sum()) / torch.numel(energy)
+            eloss.forward = rewrite_forward
+            self.loss_func = self.eloss
+            
 
     @property
     def lr(self):
@@ -104,7 +117,7 @@ class StaticPoincareEmbedTrainer:
         batch = batch.to(self.device)
         self.optimizer.zero_grad(set_to_none=True)
         subject, objects = self.model(batch)
-        loss = self.dist_loss(subject, objects)
+        loss = self.loss_func(subject, objects)
         loss.backward()
         self.optimizer.step()
         self.scheduler.step()
