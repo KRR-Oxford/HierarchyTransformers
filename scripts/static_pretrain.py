@@ -52,22 +52,22 @@ def main(config_file: str, gpu_id: int):
     print(model)
     ent2idx = model.ent2idx
 
-    train_examples = prepare_hierarchy_examples_for_static(ent2idx, dataset["train"], config.apply_hard_negatives)
-    train_dataloader = DataLoader(torch.tensor(train_examples), shuffle=True, batch_size=config.train_batch_size)
+    # train_examples = prepare_hierarchy_examples_for_static(ent2idx, dataset["train"], config.apply_hard_negatives)
+    # train_dataloader = DataLoader(torch.tensor(train_examples), shuffle=True, batch_size=config.train_batch_size)
 
     device = get_torch_device(gpu_id)
-    static_trainer = StaticPoincareEmbedTrainer(
-        model=model,
-        device=device,
-        train_dataloader=train_dataloader,
-        learning_rate=float(config.learning_rate),
-        num_epochs=config.num_epochs,
-        num_warmup_epochs=config.warmup_epochs,
-        apply_cone_loss=config.apply_cone_loss,
-    )
+    # static_trainer = StaticPoincareEmbedTrainer(
+    #     model=model,
+    #     device=device,
+    #     train_dataloader=train_dataloader,
+    #     learning_rate=float(config.learning_rate),
+    #     num_epochs=config.num_epochs,
+    #     num_warmup_epochs=config.warmup_epochs,
+    #     apply_cone_loss=config.apply_cone_loss,
+    # )
     output_path = f"experiments/static_poincare-hard={config.apply_hard_negatives}-cone={config.apply_cone_loss}"
     create_path(output_path)
-    static_trainer.run(output_path)
+    # static_trainer.run(output_path)
 
     val_examples = prepare_hierarchy_examples_for_static(ent2idx, dataset["val"], config.apply_hard_negatives)
     test_examples = prepare_hierarchy_examples_for_static(ent2idx, dataset["test"], config.apply_hard_negatives)
@@ -77,7 +77,7 @@ def main(config_file: str, gpu_id: int):
         val_examples=val_examples,
         test_examples=test_examples,
         eval_batch_size=config.eval_batch_size,
-        train_examples=train_examples,
+        # train_examples=train_examples,
         apply_entailment_cone=config.apply_cone_loss,
     )
     static_eval(output_path)

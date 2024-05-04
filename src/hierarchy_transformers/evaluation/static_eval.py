@@ -87,15 +87,15 @@ class StaticPoincareEvaluator(HierarchyEvaluator):
         assert len(eval_labels) == len(eval_scores)
         return eval_scores, eval_labels
 
-    def __call__(self, output_path: str):
+    def __call__(self, output_path: str, threshold_granularity: int = 1):
 
         if self.train_examples:
             train_scores, train_labels = self.inference(self.train_examples)
-            best_train_results = self.search_best_threshold(train_scores, train_labels, threshold_granularity=1)
+            best_train_results = self.search_best_threshold(train_scores, train_labels, threshold_granularity=threshold_granularity)
             save_file(best_train_results, f"{output_path}/train_results.json")
 
         val_scores, val_labels = self.inference(self.val_examples)
-        best_val_results = self.search_best_threshold(val_scores, val_labels, threshold_granularity=1)
+        best_val_results = self.search_best_threshold(val_scores, val_labels, threshold_granularity=threshold_granularity)
         save_file(best_val_results, f"{output_path}/val_results.json")
 
         if self.test_examples:
