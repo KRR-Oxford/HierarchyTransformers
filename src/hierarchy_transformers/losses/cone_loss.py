@@ -28,12 +28,13 @@ class EntailmentConeTripletLoss(torch.nn.Module):
     Inputs are presented in `(rep_anchor, rep_positive, rep_negative)`.
     """
 
-    def __init__(self, manifold: PoincareBall, min_euclidean_norm: float, margin: float):
+    def __init__(self, manifold: PoincareBall, min_euclidean_norm: float = 0.1, margin: float = 0.1, eps: float = 1e-5):
         super().__init__()
         self.manifold = manifold
         assert self.manifold.c == 1.0, f"Entailment cone loss is not defined for curvature: {manifold.c}."
         self.min_euclidean_norm = min_euclidean_norm
         self.margin = margin
+        self.eps = eps
 
     def get_config_dict(self):
         config = {"distance_metric": "PoincareBall(c=1.0).cone_angle", "margin": self.margin}
@@ -44,8 +45,8 @@ class EntailmentConeTripletLoss(torch.nn.Module):
         where x is the cone tip.
         """
         # cone tip means the point x is the tip of the hyperbolic cone
-        norm_tip = cone_tip.norm(dim=-1).clamp(min=self.min_euclidean_norm)  # to prevent undefined aperture
-        return torch.arcsin(self.min_euclidean_norm * (1 - (norm_tip**2)) / norm_tip)
+        norm_tip = cone_tip.norm(dim=-1).clamp(min=self.min_euclidean_norm + self.eps)  # to prevent undefined aperture
+        return torch.arcsin(self.min_euclidean_norm * (1 - (norm_tip**2)) / norm_tip).clamp(min=-1 + self.eps, max=1 - self.eps)
 
     def cone_angle_at_u(self, cone_tip: torch.Tensor, u: torch.Tensor):
         """Angle between the axis [0, x] and the line [x, u]. This angle should be smaller than the
@@ -57,8 +58,8 @@ class EntailmentConeTripletLoss(torch.nn.Module):
         dot_prod = (cone_tip * u).sum(dim=-1)
         edist = (cone_tip - u).norm(dim=-1)  # euclidean distance
         numerator = dot_prod * (1 + norm_tip**2) - norm_tip**2 * (1 + norm_child**2)
-        denomenator = norm_tip * edist * torch.sqrt(1 + (norm_child**2) * (norm_tip**2) - 2 * dot_prod)
-        return torch.arccos(numerator / denomenator)
+        denominator = norm_tip * edist * torch.sqrt(1 + (norm_child**2) * (norm_tip**2) - 2 * dot_prod).clamp(min=self.eps)
+        return torch.arccos(numerator / denominator).clamp(min=-1 + self.eps, max=1 - self.eps)
 
     def energy(self, cone_tip: torch.Tensor, u: torch.Tensor):
         """Enery function defined as: max(0, cone_angle(u) - half_cone_aperture) given a cone tip."""
@@ -83,12 +84,13 @@ class EntailmentConeConstrastiveLoss(torch.nn.Module):
     Inputs are presented in `(rep_anchor, rep_other, label)`.
     """
 
-    def __init__(self, manifold: PoincareBall, min_euclidean_norm: float, margin: float):
+    def __init__(self, manifold: PoincareBall, min_euclidean_norm: float = 0.1, margin: float = 0.1, eps: float = 1e-5):
         super().__init__()
         self.manifold = manifold
         assert self.manifold.c == 1.0, f"Entailment cone loss is not defined for curvature: {manifold.c}."
         self.min_euclidean_norm = min_euclidean_norm
         self.margin = margin
+        self.eps = eps
 
     def get_config_dict(self):
         config = {"distance_metric": "PoincareBall(c=1.0).cone_angle", "margin": self.margin}
@@ -99,8 +101,8 @@ class EntailmentConeConstrastiveLoss(torch.nn.Module):
         where x is the cone tip.
         """
         # cone tip means the point x is the tip of the hyperbolic cone
-        norm_tip = cone_tip.norm(dim=-1).clamp(min=self.min_euclidean_norm)  # to prevent undefined aperture
-        return torch.arcsin(self.min_euclidean_norm * (1 - (norm_tip**2)) / norm_tip)
+        norm_tip = cone_tip.norm(dim=-1).clamp(min=self.min_euclidean_norm + self.eps)  # to prevent undefined aperture
+        return torch.arcsin(self.min_euclidean_norm * (1 - (norm_tip**2)) / norm_tip).clamp(min=-1 + self.eps, max=1 - self.eps)
 
     def cone_angle_at_u(self, cone_tip: torch.Tensor, u: torch.Tensor):
         """Angle between the axis [0, x] and the line [x, u]. This angle should be smaller than the
@@ -112,8 +114,8 @@ class EntailmentConeConstrastiveLoss(torch.nn.Module):
         dot_prod = (cone_tip * u).sum(dim=-1)
         edist = (cone_tip - u).norm(dim=-1)  # euclidean distance
         numerator = dot_prod * (1 + norm_tip**2) - norm_tip**2 * (1 + norm_child**2)
-        denomenator = norm_tip * edist * torch.sqrt(1 + (norm_child**2) * (norm_tip**2) - 2 * dot_prod)
-        return torch.arccos(numerator / denomenator)
+        denominator = norm_tip * edist * torch.sqrt(1 + (norm_child**2) * (norm_tip**2) - 2 * dot_prod).clamp(min=self.eps)
+        return torch.arccos(numerator / denominator).clamp(min=-1 + self.eps, max=1 - self.eps)
 
     def energy(self, cone_tip: torch.Tensor, u: torch.Tensor):
         """Enery function defined as: max(0, cone_angle(u) - half_cone_aperture) given a cone tip."""
