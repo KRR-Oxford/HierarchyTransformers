@@ -47,8 +47,9 @@ def main(config_file: str, gpu_id: int):
     if not config.pretrained:
         model = torch.load(config.pretrained)
     else:
+        print(f"Load pre-trained from {config.pretrained}")
         model = StaticPoincareEmbed(list(entity_lexicon.keys()), embed_dim=config.embed_dim)
-        print(model)
+    print(model)
     ent2idx = model.ent2idx
 
     train_examples = prepare_hierarchy_examples_for_static(ent2idx, dataset["train"], config.apply_hard_negatives)
