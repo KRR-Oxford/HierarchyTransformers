@@ -71,13 +71,14 @@ class StaticPoincareEmbedTrainer:
         learning_rate: float = 0.01,
         num_epochs: int = 200,
         num_warmup_epochs: int = 10,
-        apply_cone_loss: bool = False, # cone loss should be used after training Poincare embed
+        apply_cone_loss: bool = False,  # cone loss should be used after training Poincare embed
     ):
         self.model = model
         self.device = device
         self.model.to(device)
         self.train_dataloader = train_dataloader
         self.cross_entropy = torch.nn.CrossEntropyLoss()
+        self.eloss = EntailmentConeConstrastiveLoss(self.model.manifold, 0.1, 0.1, 1e-5)
 
         self.learning_rate = learning_rate
         self.optimizer = RiemannianAdam(self.model.parameters(), lr=self.learning_rate)
@@ -91,16 +92,10 @@ class StaticPoincareEmbedTrainer:
             num_warmup_steps=self.warmup_epochs * self.num_epoch_steps,  # one epoch warming-up
             num_training_steps=self.num_training_steps,
         )
-        
+
         self.loss_func = self.dist_loss
         if apply_cone_loss:
-            eloss = EntailmentConeConstrastiveLoss(self.model.manifold, 0.1, 0.1, 1e-5)
-            def rewrite_forward(self, subject: torch.Tensor, objects: torch.Tensor):
-                energy = self.energy(objects, subject)
-                return (energy[:, 0].sum() + F.relu(self.margin - energy[:, 1:]).sum()) / torch.numel(energy)
-            eloss.forward = rewrite_forward
-            self.loss_func = self.eloss
-            
+            self.loss_func = self.cone_loss
 
     @property
     def lr(self):
@@ -112,6 +107,10 @@ class StaticPoincareEmbedTrainer:
         pred_dists = self.model.manifold.dist(subject, objects)
         correct_object_indices = torch.tensor([0] * len(pred_dists)).to(pred_dists.device)
         return self.cross_entropy(-pred_dists, correct_object_indices)
+
+    def cone_loss(self, subject: torch.Tensor, objects: torch.Tensor):
+        energy = self.eloss.energy(objects, subject)
+        return (energy[:, 0].sum() + F.relu(self.eloss.margin - energy[:, 1:]).sum()) / torch.numel(energy)
 
     def training_step(self, batch):
         batch = batch.to(self.device)

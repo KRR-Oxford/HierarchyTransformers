@@ -44,8 +44,11 @@ def main(config_file: str, gpu_id: int):
     dataset, entity_lexicon = load_hierarchy_dataset(data_path)
 
     # init static poincare embedding
-    model = StaticPoincareEmbed(list(entity_lexicon.keys()), embed_dim=config.embed_dim)
-    print(model)
+    if not config.pretrained:
+        model = torch.load(config.pretrained)
+    else:
+        model = StaticPoincareEmbed(list(entity_lexicon.keys()), embed_dim=config.embed_dim)
+        print(model)
     ent2idx = model.ent2idx
 
     train_examples = prepare_hierarchy_examples_for_static(ent2idx, dataset["train"], config.apply_hard_negatives)
@@ -59,8 +62,9 @@ def main(config_file: str, gpu_id: int):
         learning_rate=float(config.learning_rate),
         num_epochs=config.num_epochs,
         num_warmup_epochs=config.warmup_epochs,
+        apply_cone_loss=config.apply_cone_loss,
     )
-    output_path = f"experiments/static_poincare-hard={config.apply_hard_negatives}"
+    output_path = f"experiments/static_poincare-hard={config.apply_hard_negatives}-cone={config.apply_cone_loss}"
     create_path(output_path)
     static_trainer.run(output_path)
 
