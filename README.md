@@ -2,10 +2,10 @@
 
 Code repository for the paper: ["Language Models as Hierarchy Encoders"](https://arxiv.org/abs/2401.11374).
 
-**News** :newspaper:
+<!-- **News** :newspaper:
 
 - [ ] We will update detailed documentation of this work in [DeepOnto](https://krr-oxford.github.io/DeepOnto/). 
-- [X] Deploy initial release. (**v0.0.1**)
+- [X] Deploy initial release. (**v0.0.1**) -->
 
 ## Installation
 
