@@ -2,10 +2,7 @@
 
 Code repository for the paper: ["Language Models as Hierarchy Encoders"](https://arxiv.org/abs/2401.11374).
 
-<!-- **News** :newspaper:
-
-- Thrilled to announce that our work has been accepted to NeurIPS 2024!
-- [X] Deploy initial release. (**v0.0.1**) -->
+Thrilled to announce that our work has been accepted to **NeurIPS 2024**!
 
 ## Installation
 
