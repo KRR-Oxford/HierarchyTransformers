@@ -4,7 +4,7 @@ Code repository for the paper: ["Language Models as Hierarchy Encoders"](https:/
 
 <!-- **News** :newspaper:
 
-- [ ] We will update detailed documentation of this work in [DeepOnto](https://krr-oxford.github.io/DeepOnto/). 
+- Thrilled to announce that our work has been accepted to NeurIPS 2024!
 - [X] Deploy initial release. (**v0.0.1**) -->
 
 ## Installation
