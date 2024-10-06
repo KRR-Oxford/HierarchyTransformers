@@ -1,8 +1,14 @@
 # Hierarchy Transformers (HiTs)
 
-Code repository for the paper: ["Language Models as Hierarchy Encoders"](https://arxiv.org/abs/2401.11374).
+## About
+
+Embedding hierarchies with transformer encoders.
 
 Thrilled to announce that our work has been accepted to **NeurIPS 2024**!
+
+- **Huggingface Page**: *<https://huggingface.co/Hierarchy-Transformers/>*.
+- **Github Repository**: *<https://github.com/KRR-Oxford/HierarchyTransformers>*. 
+- **PyPI**: *<https://pypi.org/project/hierarchy_transformers/>*. 
 
 ## Installation
 
