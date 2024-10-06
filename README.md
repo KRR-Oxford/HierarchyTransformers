@@ -1,7 +1,5 @@
 # Hierarchy Transformers (HiTs)
 
-## About
-
 Embedding hierarchies with transformer encoders.
 
 Thrilled to announce that our work has been accepted to **NeurIPS 2024**!
