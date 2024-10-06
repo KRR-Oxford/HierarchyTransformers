@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 class HierarchyTransformer(SentenceTransformer):
     r"""`HierarchyTransformer` is a subclass of `SentenceTransformer` that extends its functionality
-    to support hierarchy encoding using the Poincar\'eBall manifold.
+    to support hierarchy encoding using the Poincaré Ball manifold.
     """
 
     def __init__(
