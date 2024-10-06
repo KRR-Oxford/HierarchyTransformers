@@ -21,9 +21,8 @@ class CentripetalTripletLoss(torch.nn.Module):
     r"""Hyperbolic loss that regulates the norms of child and parent entities.
 
     Essentially, this loss is expected to achieve:
-    $$
-        d(child, origin) > d(parent, origin)
-    $$
+    
+    $$d(child, origin) > d(parent, origin)$$
 
     Inputs are presented in `(rep_anchor, rep_positive, rep_negative)` but only `(rep_anchor, rep_positive)` pairs are involved in this loss.
     """
@@ -42,6 +41,13 @@ class CentripetalTripletLoss(torch.nn.Module):
         return config
 
     def forward(self, rep_anchor: torch.Tensor, rep_positive: torch.Tensor, rep_negative: torch.Tensor):
+        """Forward propagation.
+
+        Args:
+            rep_anchor (torch.Tensor): The input tensor for child entities.
+            rep_positive (torch.Tensor): The input tensor for parent entities.
+            rep_negative (torch.Tensor): The input tensor for negative parent entities (actually not required in this loss).
+        """
         rep_anchor_hyper_norms = self.manifold.dist0(rep_anchor)
         rep_positive_hyper_norms = self.manifold.dist0(rep_positive)
         # child further than parent w.r.t. origin
@@ -53,9 +59,8 @@ class CentripetalContrastiveLoss(torch.nn.Module):
     r"""Hyperbolic loss that regulates the norms of child and parent entities.
 
     Essentially, this loss is expected to achieve:
-    $$
-        d(child, origin) > d(parent, origin)
-    $$
+    
+    $$d(child, origin) > d(parent, origin)$$
 
     Inputs are presented in `(rep_anchor, rep_other, label)` but only `label==1` ones are involved in this loss.
     """
@@ -74,6 +79,14 @@ class CentripetalContrastiveLoss(torch.nn.Module):
         return config
 
     def forward(self, rep_anchor: torch.Tensor, rep_other: torch.Tensor, labels: torch.Tensor):
+        """Forward propagation.
+
+        Args:
+            rep_anchor (torch.Tensor): The input tensor for child entities.
+            rep_other (torch.Tensor): The input tensor for parent and negative parent entities.
+            labels (torch.Tensor): Labels indicating whether each `(anchor, other)` pair is a positive subsumption or a negative one (only `label=1` pairs will take an effect in this loss).
+        """
+
         rep_anchor_hyper_norms = self.manifold.dist0(rep_anchor)
         rep_other_hyper_norms = self.manifold.dist0(rep_other)
         # child further than parent w.r.t. origin

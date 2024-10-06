@@ -25,7 +25,7 @@ class PretrainedMaskFillEvaluator(HierarchyEvaluator):
     """Evaluator for pre-trained language models.
 
     Hierarchy encoding is evaluated based on the mask filling scores on
-    the binary ("yes", "no") question answering template.
+    the binary `("yes", "no")` question answering template.
     """
 
     def __init__(
@@ -116,6 +116,9 @@ class PretrainedSentenceSimilarityEvaluator(HierarchyEvaluator):
         self.test_examples = test_examples
 
     def inference(self, examples):
+        """
+        Inference function.
+        """
         eval_scores = []
         eval_labels = []
         for batch in tqdm(list(self.get_batches(examples, self.eval_batch_size)), desc="Inference"):

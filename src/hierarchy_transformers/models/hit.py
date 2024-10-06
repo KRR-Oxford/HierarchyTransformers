@@ -23,8 +23,12 @@ logger = logging.getLogger(__name__)
 
 
 class HierarchyTransformer(SentenceTransformer):
-    r"""`HierarchyTransformer` is a subclass of `SentenceTransformer` that extends its functionality
-    to support hierarchy encoding using the Poincaré Ball manifold.
+    r"""
+    Class for Hierarchy Transformer encoder (HiT), extending from [`SentenceTransformer`](https://www.sbert.net/)
+        
+    Attributes:
+        embed_dim (int): The embedding dimension of this model.
+        manifold (geoopt.manifolds.PoincareBall): The hyperbolic manifold (Poincaré Ball) of this model.
     """
 
     def __init__(
@@ -50,7 +54,8 @@ class HierarchyTransformer(SentenceTransformer):
 
     @classmethod
     def load_pretrained(cls, pretrained: str, device: Optional[torch.device] = None):
-        """Load a sentence transformer from either the `sentence_transformers` library
+        """
+        Load an instance of `SentenceTransformer` from either the `sentence_transformers` library
         or `transformers` library.
         """
         try:
@@ -70,6 +75,9 @@ class HierarchyTransformer(SentenceTransformer):
 
     @staticmethod
     def get_circum_poincareball(embed_dim: int) -> PoincareBall:
+        """
+        Get a Poincaré Ball with a curvature adapted to a given embedding dimension.
+        """
         curvature = 1 / embed_dim
         manifold = PoincareBall(c=curvature)
         logging.info(f"Poincare ball curvature: {manifold.c}")

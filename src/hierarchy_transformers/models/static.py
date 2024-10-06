@@ -27,8 +27,19 @@ logger = logging.getLogger(__name__)
 
 
 class StaticPoincareEmbed(torch.nn.Module):
-    r"""Basline model reproducing the static embedding model proposed in
-    [Nickel et al., 2017](https://arxiv.org/abs/1705.08039).
+    r"""
+    Class for the static hyperbolic embedding models:
+    
+    1. Poincaré Embedding by [Nickel et al., NeurIPS 2017](https://arxiv.org/abs/1705.08039).
+    2. Hyperbolic Entailment Cone by [Ganea et al., ICML 2018](https://arxiv.org/abs/1804.01882).
+    
+    Attributes:
+        entities (list): The list of input entity IDs (fixed).
+        idx2ent (dict): A dictionary that stores the `(index, entity_id)` pairs.
+        ent2idx (dict): A dictionary that stores the `(entity_id, index)` pairs.
+        embed_dim (int): The embedding dimension of this model.
+        manifold (geoopt.manifolds.PoincareBall): The hyperbolic manifold (Poincaré Ball) of this model.
+        embed (torch.nn.Embedding): The static hyperbolic embeddings for entities.
     """
 
     def __init__(self, entity_ids: list, embed_dim: int):
@@ -43,6 +54,9 @@ class StaticPoincareEmbed(torch.nn.Module):
         self.embed = self.init_static_graph_embedding(len(self.idx2ent), self.embed_dim, 1e-3)
 
     def init_static_graph_embedding(self, static_entity_size: int, embed_dim: int, init_weights: float):
+        """
+        Initialise the static hyperbolic embeddings for entities.
+        """
         # init embedding weights to somewhere near the origin
         static_embedding = torch.nn.Embedding(static_entity_size, embed_dim, sparse=False, max_norm=1.0)
         static_embedding.weight.data.uniform_(-init_weights, init_weights)
@@ -50,9 +64,9 @@ class StaticPoincareEmbed(torch.nn.Module):
         return static_embedding
 
     def forward(self, inputs: torch.Tensor):
-        """Split input tensor into subject and objects
-
-        NOTE: the first object is the related one and the rest are negative samples.
+        """
+        !!! note
+            The inputs are organised as `(batch_size, num_entities, embed_dim)` where `dim=` includes `(child, parent, negative_parents*)`.
         """
         input_embeds = self.embed(
             inputs
@@ -63,6 +77,12 @@ class StaticPoincareEmbed(torch.nn.Module):
 
 
 class StaticPoincareEmbedTrainer:
+    r"""
+    Class for training the static hyperbolic embedding models:
+    
+    1. Poincaré Embedding by [Nickel et al., NeurIPS 2017](https://arxiv.org/abs/1705.08039).
+    2. Hyperbolic Entailment Cone by [Ganea et al., ICML 2018](https://arxiv.org/abs/1804.01882).
+    """
     def __init__(
         self,
         model: StaticPoincareEmbed,
@@ -103,12 +123,18 @@ class StaticPoincareEmbedTrainer:
             return g["lr"]
 
     def dist_loss(self, subject: torch.Tensor, objects: torch.Tensor):
+        """
+        Hyperbolic distance loss function proposed in [Nickel et al., NeurIPS 2017](https://arxiv.org/abs/1705.08039).
+        """
         # first object is always the correct one
         pred_dists = self.model.manifold.dist(subject, objects)
         correct_object_indices = torch.tensor([0] * len(pred_dists)).to(pred_dists.device)
         return self.cross_entropy(-pred_dists, correct_object_indices)
 
     def cone_loss(self, subject: torch.Tensor, objects: torch.Tensor):
+        """
+        Hyperbolic Cone Loss proposed in [Ganea et al., ICML 2018](https://arxiv.org/abs/1804.01882).
+        """
         energy = self.eloss.energy(objects, subject)
         return (energy[:, 0].sum() + F.relu(self.eloss.margin - energy[:, 1:]).sum()) / torch.numel(energy)
 
@@ -123,6 +149,9 @@ class StaticPoincareEmbedTrainer:
         return loss
 
     def run(self, output_path: str):
+        """
+        Run the training procedure this model.
+        """
         for _ in range(self.num_epochs):
             epoch_bar = tqdm(
                 range(self.num_epoch_steps), desc=f"Epoch {self.current_epoch + 1}", leave=True, unit="batch"

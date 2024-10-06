@@ -26,6 +26,9 @@ class HierarchyEvaluator:
         pass
 
     def inference(self):
+        """
+        Inference function to be implemented.
+        """
         raise NotImplementedError
 
     @staticmethod
@@ -36,7 +39,8 @@ class HierarchyEvaluator:
         smaller_scores_better: bool = True,
         truth_label: int = 1,
     ):
-        r"""Evaluate Precision, Recall, F1, and Accurarcy based on the threshold.
+        r"""
+        Evaluate Precision, Recall, F1, and Accurarcy based on the threshold.
 
         Args:
             scores (torch.Tensor): resulting scores.
@@ -78,6 +82,9 @@ class HierarchyEvaluator:
         best_determined_metric_value: Optional[float] = None,
         preformatted_best_results: dict = {},
     ):
+        """
+        Grid search the best scoring threshold.
+        """
         if not best_determined_metric_value:
             best_determined_metric_value = -math.inf
 

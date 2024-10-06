@@ -25,7 +25,8 @@ logger = logging.getLogger(__name__)
 
 
 class HyperbolicLoss(torch.nn.Module):
-    """Hyperbolic loss that combines defined individual losses and applies weights."""
+    """
+    Hyperbolic loss that combines defined individual losses and applies weights."""
 
     def __init__(
         self,
@@ -49,6 +50,9 @@ class HyperbolicLoss(torch.nn.Module):
         return config
 
     def forward(self, sentence_features: Iterable[Dict[str, torch.Tensor]], labels: torch.Tensor):
+        """
+        Forward propagation that extends from [`sentence_transformers.losses`](https://github.com/UKPLab/sentence-transformers/tree/master/sentence_transformers/losses).
+        """
         reps = [self.model(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features]
 
         if not self.apply_triplet_loss:

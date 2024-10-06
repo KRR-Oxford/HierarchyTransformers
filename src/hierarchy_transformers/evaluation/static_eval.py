@@ -22,10 +22,10 @@ from ..losses import EntailmentConeConstrastiveLoss
 
 
 class StaticPoincareEvaluator(HierarchyEvaluator):
-    """Evaluator for the static Poincare embedding model.
+    """Evaluator for the static Poincaré embedding model.
 
     Hierarchy encoding is evaluated based on hyperbolic distances between
-    entity embeddings in the unit Poincare ball.
+    entity embeddings in the unit Poincaré ball.
     """
 
     def __init__(
@@ -65,8 +65,12 @@ class StaticPoincareEvaluator(HierarchyEvaluator):
         return self.eloss.energy(objects, subject)
 
     def inference(self, examples: list):
-        """WARNING: this function is highly customised to our hierarchy datasets
-        where 1 positive sample corresponds to 10 negatives."""
+        """
+        Inference function.
+        
+        !!! warning
+            This function is highly customised to our hierarchy datasets where `1` positive sample corresponds to `10` negatives.
+        """
         self.model.eval()
         num_negatives = len(examples[0]) - 2  # each example is formatted as [child, parent, *negatives]
         eval_scores = []

@@ -21,7 +21,9 @@ from typing import Optional
 
 
 def load_hierarchy_dataset(data_path: str, eval_only: bool = False):
-    """Load hierarchy dataset and entity lexicon."""
+    """
+    Load hierarchy dataset and entity lexicon.
+    """
 
     datafiles = {
         "train": os.path.join(data_path, "train.jsonl"),
@@ -45,7 +47,8 @@ def load_hierarchy_dataset(data_path: str, eval_only: bool = False):
 def prepare_hierarchy_examples(
     entity_lexicon: dict, dataset: Dataset, apply_hard_negatives: bool = False, in_triplets: bool = False
 ):
-    """Prepare examples in different formats.
+    """
+    Prepare examples in different formats.
 
     Args:
         entity_lexicon (dict): A lexicon that can provide names for entities.
@@ -74,6 +77,9 @@ def prepare_hierarchy_examples(
 def prepare_hierarchy_examples_for_static(
     ent2idx: dict, dataset: Dataset, apply_hard_negatives: bool = False, **kwargs
 ):
+    """
+    Prepare examples for static hyperbolic embedding models.
+    """
     examples = []
     for sample in tqdm(dataset, leave=True, desc=f"Prepare examples from {dataset.split._name}"):
         negative_parents = sample["random_negatives"]

@@ -26,7 +26,8 @@ from .hierarchy_eval import HierarchyEvaluator
 
 
 class HierarchyTransformerEvaluator(HierarchyEvaluator):
-    """Evaluator hierarchy re-trained language models (HiT).
+    """
+    Evaluator for hierarchy transformer encoders (HiTs).
 
     Hierarchy encoding is evaluated based on the hyperbolic distances between entity
     embeddings and hyperbolic norms of entity embeddings in the Poincare ball of
@@ -51,6 +52,9 @@ class HierarchyTransformerEvaluator(HierarchyEvaluator):
 
     @staticmethod
     def encode(model: HierarchyTransformer, examples: list, eval_batch_size: int):
+        """
+        Encode input examples with a given HiT model.
+        """
         child_embeds = model.encode([x.texts[0] for x in examples], eval_batch_size, convert_to_tensor=True)
         parent_embeds = model.encode([x.texts[1] for x in examples], eval_batch_size, convert_to_tensor=True)
         labels = torch.tensor([x.label for x in examples]).to(child_embeds.device)
@@ -61,11 +65,12 @@ class HierarchyTransformerEvaluator(HierarchyEvaluator):
 
     @classmethod
     def score(cls, result_mat: torch.Tensor, centri_score_weight: float):
-        """The empirical scoring function for using HiT embeddings to predict subsumptions.
+        """
+        The empirical scoring function for using HiT embeddings to predict subsumptions.
 
         The scores are "lower-the-better".
 
-        NOTE: In the paper, the `-` operator is appended to this function to make it "higher-the-better".
+        NOTE: In the [paper](https://arxiv.org/abs/2401.11374), the `-` operator is appended to this function to make it "higher-the-better".
         """
         scores = result_mat[:, 1] + centri_score_weight * (result_mat[:, 3] - result_mat[:, 2])
         labels = result_mat[:, 0]
@@ -73,6 +78,9 @@ class HierarchyTransformerEvaluator(HierarchyEvaluator):
 
     @classmethod
     def search_best_threshold(cls, result_mat: torch.Tensor, threshold_granularity: int = 100):
+        """
+        Grid search the best scoring threshold.
+        """
         best_f1 = -1.0
         best_results = None
         is_updated = True
@@ -107,6 +115,9 @@ class HierarchyTransformerEvaluator(HierarchyEvaluator):
         best_val_centri_score_weight: float = None,
         best_val_threshold: float = None,
     ):
+        """
+        Inference function.
+        """
         result_mat = self.encode(model, examples, self.eval_batch_size)
         if not best_val_threshold or not best_val_centri_score_weight:
             eval_results = self.search_best_threshold(result_mat, 100)
@@ -121,8 +132,8 @@ class HierarchyTransformerEvaluator(HierarchyEvaluator):
         return result_mat, eval_results
 
     def __call__(self, model, output_path: str = None, epoch: int = -1, steps: int = -1) -> float:
-        """This is called during training to evaluate the model.
-        It returns a score for the evaluation with a higher score indicating a better result.
+        """
+        This is called to evaluate the model during the training procedure. It returns a score for the evaluation with a higher score indicating a better result.
         """
 
         # set to eval mode

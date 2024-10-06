@@ -21,9 +21,8 @@ class ClusteringTripletLoss(torch.nn.Module):
     """Hyperbolic loss that clusters entities in subsumptions.
 
     Essentially, this loss is expected to achieve:
-    $$
-        d(child, parent) < d(child, non-parent)
-    $$
+    
+    $$d(child, parent) < d(child, non-parent)$$
 
     Inputs are presented in `(rep_anchor, rep_positive, rep_negative)`.
     """
@@ -41,6 +40,13 @@ class ClusteringTripletLoss(torch.nn.Module):
         return config
 
     def forward(self, rep_anchor: torch.Tensor, rep_positive: torch.Tensor, rep_negative: torch.Tensor):
+        """Forward propagation.
+
+        Args:
+            rep_anchor (torch.Tensor): The input tensor for child entities.
+            rep_positive (torch.Tensor): The input tensor for parent entities.
+            rep_negative (torch.Tensor): The input tensor for negative parent entities.
+        """
         distances_positive = self.manifold.dist(rep_anchor, rep_positive)
         distances_negative = self.manifold.dist(rep_anchor, rep_negative)
         cluster_triplet_loss = F.relu(distances_positive - distances_negative + self.margin)
@@ -51,9 +57,8 @@ class ClusteringConstrastiveLoss(torch.nn.Module):
     """Hyperbolic loss that clusters entities in subsumptions.
 
     Essentially, this loss is expected to achieve:
-    $$
-        d(child, parent) < d(child, non-parent)
-    $$
+    
+    $$d(child, parent) < d(child, non-parent)$$
 
     Inputs are presented in `(rep_anchor, rep_other, label)`.
     """
@@ -73,6 +78,13 @@ class ClusteringConstrastiveLoss(torch.nn.Module):
         return config
 
     def forward(self, rep_anchor: torch.Tensor, rep_other: torch.Tensor, labels: torch.Tensor):
+        """Forward propagation.
+
+        Args:
+            rep_anchor (torch.Tensor): The input tensor for child entities.
+            rep_other (torch.Tensor): The input tensor for parent and negative parent entities.
+            labels (torch.Tensor): Labels indicating whether each `(anchor, other)` pair is a positive subsumption or a negative one.
+        """
         # self.dist = lambda u, v: torch.acosh(1 + 2 * (u - v).norm(dim=-1).pow(2) / (1 - u.norm(dim=-1).pow(2)) * (1 - v.norm(dim=-1).pow(2)))
         distances = self.manifold.dist(rep_anchor, rep_other)
         positive_loss = labels.float() * F.relu(distances - self.positive_margin)
