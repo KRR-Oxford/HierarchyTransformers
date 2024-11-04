@@ -76,7 +76,7 @@ class HierarchyDatasetConstructor:
 
     def construct(self, output_dir: str, num_negative: int = 10, eval_size=0.1):
         """
-        Construct the dataset.
+        Construct the multi-hop and mixed-hop datasets.
         """
         Path(output_dir).mkdir(parents=True, exist_ok=True)
 
@@ -101,6 +101,7 @@ class HierarchyDatasetConstructor:
         # self.save_dataset(trans_train_examples, f"{output_dir}/transitivity/trans_train.jsonl")
         self.save_dataset(trans_val_examples, f"{output_dir}/{trans_task_name}/val.jsonl")
         self.save_dataset(trans_test_examples, f"{output_dir}/{trans_task_name}/test.jsonl")
+        self.save_entity_lexicon(f"{output_dir}/{trans_task_name}")
 
         base_train_examples, base_eval_examples = train_test_split(base_examples, test_size=eval_size)
         base_val_examples, base_test_examples = train_test_split(base_eval_examples, test_size=0.5)
@@ -115,3 +116,4 @@ class HierarchyDatasetConstructor:
         # self.save_dataset(trans_base_train_examples, f"{output_dir}/induc/trans_base_train.jsonl")
         self.save_dataset(base_val_examples + trans_val_examples, f"{output_dir}/{pred_task_name}/val.jsonl")
         self.save_dataset(base_test_examples + trans_test_examples, f"{output_dir}/{pred_task_name}/test.jsonl")
+        self.save_entity_lexicon(f"{output_dir}/{pred_task_name}")
