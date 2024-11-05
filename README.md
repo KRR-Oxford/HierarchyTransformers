@@ -1,8 +1,13 @@
 # Hierarchy Transformers (HiTs)
 
-Embedding hierarchies with transformer encoders.
+**News** :newspaper:
 
-Thrilled to announce that our work has been accepted to **NeurIPS 2024**!
+- [X] Code refinement (in particular, `load_pretrained` is changed to `from_pretrained` to align with huggingface's naming) and model tagging. (**v0.0.4**)
+- [X] Initial release and bug fix. (**v0.0.3**)
+
+## About
+
+Embedding hierarchies in hyperbolic space with transformer encoder-based language models.
 
 - **Huggingface Page**: *<https://huggingface.co/Hierarchy-Transformers/>*.
 - **Github Repository**: *<https://github.com/KRR-Oxford/HierarchyTransformers>*. 
@@ -12,13 +17,7 @@ Thrilled to announce that our work has been accepted to **NeurIPS 2024**!
 
 ### Main Dependencies
 
-This repository follows a similar layout as the [Sentence Transformers](https://www.sbert.net/index.html) library. It mainly depends on the following libraries:
-
-- [Sentence Transformers](https://www.sbert.net/index.html) for language models.
-
-- [DeepOnto](https://krr-oxford.github.io/DeepOnto/) for processing hierarchies and constructing datasets from hierarchies.
-
-- [Geoopt](https://geoopt.readthedocs.io/en/latest/index.html) for arithmetic in hyperbolic space.
+This repository follows a similar layout as the [`sentence-transformers`](https://www.sbert.net/index.html) library. The main model directly extends the sentence transformer architecture. We also utilise [`deeponto`](https://krr-oxford.github.io/DeepOnto/) for extracting hierarchies from source data and constructing datasets from hierarchies, and [`geoopt`](https://geoopt.readthedocs.io/en/latest/index.html) for arithmetic in hyperbolic space.
 
 ### Install from PyPI
 
@@ -50,7 +49,7 @@ gpu_id = 0
 device = get_torch_device(gpu_id)
 
 # load the model
-model = HierarchyTransformer.load_pretrained('Hierarchy-Transformers/HiT-MiniLM-L12-WordNet', device)
+model = HierarchyTransformer.from_pretrained('Hierarchy-Transformers/HiT-MiniLM-L12-WordNet', device)
 
 # entity names to be encoded.
 entity_names = ["computer", "personal computer", "fruit", "berry"]
@@ -81,13 +80,7 @@ subsumption_scores = - (dists + centri_score_weight * (parent_norms - child_norm
 
 ## Datasets
 
-Datasets for training and evaluating HiTs are available at [Zenodo](https://zenodo.org/doi/10.5281/zenodo.10511042), including those constructed from:
-
-- WordNet  
-- SNOMED CT
-- Schema.org
-- FoodOn
-- DOID
+Datasets for training and evaluating HiTs are available at [Zenodo](https://zenodo.org/doi/10.5281/zenodo.10511042).
 
 ## License
 
@@ -108,9 +101,9 @@ Datasets for training and evaluating HiTs are available at [Zenodo](https://zeno
 
 ## Citation
 
-The preprint of our paper for is currently available at [arxiv](https://arxiv.org/abs/2401.11374).
+If you find this repository or the released models useful, please cite our publication:
 
-*Yuan He, Zhangdie Yuan, Jiaoyan Chen, Ian Horrocks.* **Language Models as Hierarchy Encoders.** arXiv preprint arXiv:2401.11374 (2024).
+- *Yuan He, Zhangdie Yuan, Jiaoyan Chen, Ian Horrocks.* **Language Models as Hierarchy Encoders.** To appear at NeurIPS 2024. /[arxiv](https://arxiv.org/abs/2401.11374)/
 
 ```
 @article{he2024language,
