@@ -1,13 +1,50 @@
-# Hierarchy Transformers (HiTs)
+<!---
+Copyright 2023 Yuan He. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<p align="center">
+  <a href="https://krr-oxford.github.io/DeepOnto/">
+    <img alt="deeponto" src="https://raw.githubusercontent.com/KRR-Oxford/HierarchyTransformers/main/docs/images/hit_logo.png" style="height: 6em;">
+  </a>
+</p>
+
+
+<p align="center">
+    <a href="https://github.com/KRR-Oxford/HierarchyTransformers/blob/main/LICENSE">
+        <img alt="license" src="https://img.shields.io/github/license/KRR-Oxford/HierarchyTransformers">
+    </a>
+    <a href="https://huggingface.co/Hierarchy-Transformers">
+        <img alt="docs" src="https://img.shields.io/badge/website-online-informational">
+    </a>
+    <a href="https://pypi.org/project/hierarchy_transformers/">
+        <img alt="pypi" src="https://img.shields.io/pypi/v/deeponto">
+    </a>
+</p>
+
+<p align="center">
+  Embedding hierarchies with language models.
+</p>
 
 **News** :newspaper:
 
-- [X] Code refinement (in particular, `load_pretrained` is changed to `from_pretrained` to align with huggingface's naming) and model tagging. (**v0.0.4**)
+- [ ] Code refinement (in particular, `load_pretrained` is changed to `from_pretrained` to align with huggingface's naming) and model tagging. (**v0.0.4**)
 - [X] Initial release and bug fix. (**v0.0.3**)
 
 ## About
 
-Embedding hierarchies in hyperbolic space with transformer encoder-based language models.
+The hierarchy transformer (HiT) framework aims to provide universal hierarchy embedding in hyperbolic space with transformer encoder-based language models.
 
 - **Huggingface Page**: *<https://huggingface.co/Hierarchy-Transformers/>*.
 - **Github Repository**: *<https://github.com/KRR-Oxford/HierarchyTransformers>*. 
@@ -80,11 +117,11 @@ subsumption_scores = - (dists + centri_score_weight * (parent_norms - child_norm
 
 ## Datasets
 
-Datasets for training and evaluating HiTs are available at [Zenodo](https://zenodo.org/doi/10.5281/zenodo.10511042).
+The datasets for training and evaluating HiTs are available at [Zenodo](https://zenodo.org/doi/10.5281/zenodo.10511042).
 
 ## License
 
-!!! license "License"
+
 
     Copyright 2023 Yuan He.
     All rights reserved.
@@ -103,7 +140,7 @@ Datasets for training and evaluating HiTs are available at [Zenodo](https://zeno
 
 If you find this repository or the released models useful, please cite our publication:
 
-- *Yuan He, Zhangdie Yuan, Jiaoyan Chen, Ian Horrocks.* **Language Models as Hierarchy Encoders.** To appear at NeurIPS 2024. /[arxiv](https://arxiv.org/abs/2401.11374)/
+*Yuan He, Zhangdie Yuan, Jiaoyan Chen, Ian Horrocks.* **Language Models as Hierarchy Encoders.** To appear at NeurIPS 2024. [[arxiv](https://arxiv.org/abs/2401.11374)] [[neurips-to-upload](to-upload)]
 
 ```
 @article{he2024language,
