@@ -30,6 +30,7 @@ from hierarchy_transformers.evaluation import evaluate_by_threshold
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 @click.command()

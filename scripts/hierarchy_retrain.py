@@ -26,6 +26,7 @@ from hierarchy_transformers.utils import prepare_hierarchy_examples, load_hierar
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 @click.command()

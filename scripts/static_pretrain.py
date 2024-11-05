@@ -30,6 +30,7 @@ from hierarchy_transformers.evaluation import StaticPoincareEvaluator
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 @click.command()

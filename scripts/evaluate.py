@@ -27,6 +27,7 @@ from deeponto.utils import load_file, save_file, create_path
 import logging
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 from hierarchy_transformers.utils import *
