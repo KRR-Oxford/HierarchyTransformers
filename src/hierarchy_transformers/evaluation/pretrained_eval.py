@@ -106,7 +106,7 @@ class PretrainedSentenceSimilarityEvaluator(HierarchyEvaluator):
         test_examples: Optional[list] = None,
     ):
         self.device = device
-        self.model = HierarchyTransformer.load_pretrained(pretrained, device)
+        self.model = HierarchyTransformer.from_pretrained(pretrained, device)
         self.model.to(self.device)
         self.template = lambda child, parent: f"{child} is a {parent}."
         self.mask_token = self.model.tokenizer.mask_token

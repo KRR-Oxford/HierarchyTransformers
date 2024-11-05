@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class HierarchyTransformer(SentenceTransformer):
     r"""
     Class for Hierarchy Transformer encoder (HiT), extending from [`SentenceTransformer`](https://www.sbert.net/)
-        
+
     Attributes:
         embed_dim (int): The embedding dimension of this model.
         manifold (geoopt.manifolds.PoincareBall): The hyperbolic manifold (Poincaré Ball) of this model.
@@ -53,23 +53,29 @@ class HierarchyTransformer(SentenceTransformer):
         return self._register_buffer["manifold"]
 
     @classmethod
-    def load_pretrained(cls, pretrained: str, device: Optional[torch.device] = None):
+    def from_pretrained(
+        cls, model_name_or_path: str, pooling_mode: Optional[str] = "mean", device: Optional[torch.device] = None
+    ):
         """
         Load an instance of `SentenceTransformer` from either the `sentence_transformers` library
         or `transformers` library.
         """
         try:
             # Load from sentence_transformers library
-            pretrained_model = SentenceTransformer(pretrained, device=device)
+            pretrained_model = SentenceTransformer(model_name_or_path, device=device)
             transformer = pretrained_model._modules["0"]
             pooling = pretrained_model._modules["1"]
             assert isinstance(pooling, Pooling)
-            logger.info(f"Load `{pretrained}` from `sentence-transformers` with existing pooling.")
+            logger.info(
+                f"Load `{model_name_or_path}` from `sentence-transformers` with existing pooling (discard the normalising layer if any)."
+            )
         except:
             # Load from huggingface transformers library
-            transformer = Transformer(pretrained, max_seq_length=256)
-            pooling = Pooling(transformer.get_word_embedding_dimension())
-            logger.info(f"Load `{pretrained}` from `huggingface-transformers` with new pooling.")
+            transformer = Transformer(model_name_or_path, max_seq_length=256)
+            pooling = Pooling(
+                word_embedding_dimension=transformer.get_word_embedding_dimension(), pooling_mode=pooling_mode
+            )
+            logger.info(f"Load `{model_name_or_path}` from `huggingface-transformers` with '{pooling_mode}' pooling.")
 
         return cls(modules=[transformer, pooling], device=device)
 
