@@ -75,8 +75,6 @@ Our HiT models are released on the [Huggingface Hub](https://huggingface.co/Hier
 
 ### Get Started
 
-Use the following code to get started with HiTs:
-
 ```python
 from hierarchy_transformers import HierarchyTransformer
 from hierarchy_transformers.utils import get_torch_device
@@ -86,7 +84,12 @@ gpu_id = 0
 device = get_torch_device(gpu_id)
 
 # load the model
-model = HierarchyTransformer.from_pretrained('Hierarchy-Transformers/HiT-MiniLM-L12-WordNet', device)
+revision = "main"  # change for a different version
+model = HierarchyTransformer.from_pretrained(
+  model_name_or_path='Hierarchy-Transformers/HiT-MiniLM-L12-WordNetNoun',
+  revision=revision
+  device=device
+)
 
 # entity names to be encoded.
 entity_names = ["computer", "personal computer", "fruit", "berry"]
@@ -111,9 +114,12 @@ parent_norms = model.manifold.dist0(parent_entity_embeddings)
 
 # use the empirical function for subsumption prediction proposed in the paper
 # `centri_score_weight` and the overall threshold are determined on the validation set
-# see source code at `src/hierarchy_transformers/evaluation` for more details about our implementation for the hyperparameter tuning.
 subsumption_scores = - (dists + centri_score_weight * (parent_norms - child_norms))
 ```
+
+Training and evaluation scripts are available at [GitHub](https://github.com/KRR-Oxford/HierarchyTransformers/tree/main/scripts). See `scripts/evaluate.py` for how we determine the hyperparameters on the validation set for subsumption prediction.
+
+Technical details are presented in the [paper](https://arxiv.org/abs/2401.11374).
 
 ## Datasets
 
