@@ -132,8 +132,8 @@ class PretrainedSentenceSimilarityEvaluator(HierarchyEvaluator):
                 labels.append(example.label)
             labels = torch.tensor(labels).to(self.device)
 
-            masked_embeds = self.model.encode(masked_texts, convert_to_tensor=True, show_progress_bar=False)
-            ref_embeds = self.model.encode(ref_texts, convert_to_tensor=True, show_progress_bar=False)
+            masked_embeds = self.model.encode(sentences=masked_texts, convert_to_tensor=True, show_progress_bar=False)
+            ref_embeds = self.model.encode(sentences=ref_texts, convert_to_tensor=True, show_progress_bar=False)
             scores = torch.cosine_similarity(masked_embeds, ref_embeds)
 
             eval_scores.append(scores)

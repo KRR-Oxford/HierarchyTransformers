@@ -55,8 +55,16 @@ class HierarchyTransformerEvaluator(HierarchyEvaluator):
         """
         Encode input examples with a given HiT model.
         """
-        child_embeds = model.encode([x.texts[0] for x in examples], eval_batch_size, convert_to_tensor=True)
-        parent_embeds = model.encode([x.texts[1] for x in examples], eval_batch_size, convert_to_tensor=True)
+        child_embeds = model.encode(
+            sentences=[x.texts[0] for x in examples], 
+            batch_size=eval_batch_size, 
+            convert_to_tensor=True,
+        )
+        parent_embeds = model.encode(
+            sentences=[x.texts[1] for x in examples], 
+            batch_size=eval_batch_size, 
+            convert_to_tensor=True
+        )
         labels = torch.tensor([x.label for x in examples]).to(child_embeds.device)
         dists = model.manifold.dist(child_embeds, parent_embeds)
         child_norms = model.manifold.dist0(child_embeds)

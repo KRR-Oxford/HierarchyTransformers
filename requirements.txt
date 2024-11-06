@@ -3,7 +3,7 @@ deeponto>=0.8.8
 geoopt==0.5.0
 scikit_learn
 seaborn
-sentence_transformers
+sentence_transformers==3.2.1
 torch
 tqdm
 transformers[torch]
