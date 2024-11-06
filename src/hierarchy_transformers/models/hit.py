@@ -36,10 +36,9 @@ class HierarchyTransformer(SentenceTransformer):
         model_name_or_path: Optional[str] = None,
         modules: Optional[Iterable[torch.nn.Module]] = None,
         device: Optional[str] = None,
-        cache_folder: Optional[str] = None,
-        use_auth_token: Union[bool, str, None] = None,
+        revision: Optional[str] = None,
     ):
-        super().__init__(model_name_or_path, modules, device, cache_folder, use_auth_token)
+        super().__init__(model_name_or_path=model_name_or_path, modules=modules, device=device, revision=revision)
         # PoincareBall in geoopt will be wrongly classified as a sub-module
         # so we use a dictionary to store the manifold
         self._register_buffer = {"manifold": self.get_circum_poincareball(self.embed_dim)}
@@ -54,7 +53,11 @@ class HierarchyTransformer(SentenceTransformer):
 
     @classmethod
     def from_pretrained(
-        cls, model_name_or_path: str, pooling_mode: Optional[str] = "mean", device: Optional[torch.device] = None
+        cls,
+        model_name_or_path: str,
+        revision: Optional[str] = None,
+        pooling_mode: Optional[str] = "mean",
+        device: Optional[torch.device] = None,
     ):
         """
         Load an instance of `SentenceTransformer` from either the `sentence_transformers` library
@@ -62,7 +65,7 @@ class HierarchyTransformer(SentenceTransformer):
         """
         try:
             # Load from sentence_transformers library
-            pretrained_model = SentenceTransformer(model_name_or_path, device=device)
+            pretrained_model = SentenceTransformer(model_name_or_path, device=device, revision=revision)
             transformer = pretrained_model._modules["0"]
             pooling = pretrained_model._modules["1"]
             assert isinstance(pooling, Pooling)
@@ -71,7 +74,7 @@ class HierarchyTransformer(SentenceTransformer):
             )
         except:
             # Load from huggingface transformers library
-            transformer = Transformer(model_name_or_path, max_seq_length=256)
+            transformer = Transformer(model_name_or_path, max_seq_length=256, model_args={"revision": revision})
             pooling = Pooling(
                 word_embedding_dimension=transformer.get_word_embedding_dimension(), pooling_mode=pooling_mode
             )

@@ -39,7 +39,7 @@ limitations under the License.
 
 **News** :newspaper:
 
-- [ ] Code refinement (in particular, `load_pretrained` is changed to `from_pretrained` to align with huggingface's naming) and model tagging. (**v0.0.4**)
+- [ ] Code refinement to align with `sentence-transformers` v3.2.1 and add model versioning on Huggingface Hub. (**v0.0.4**)
 - [X] Initial release and bug fix. (**v0.0.3**)
 
 ## About
