@@ -20,7 +20,7 @@ from geoopt import ManifoldParameter
 from tqdm import tqdm
 from transformers import get_linear_schedule_with_warmup
 from geoopt.optim import RiemannianAdam
-from ..losses import EntailmentConeConstrastiveLoss
+from ..losses import HyperbolicEntailmentConeLoss
 import logging
 
 logger = logging.getLogger(__name__)
@@ -29,10 +29,10 @@ logger = logging.getLogger(__name__)
 class StaticPoincareEmbed(torch.nn.Module):
     r"""
     Class for the static hyperbolic embedding models:
-    
+
     1. Poincaré Embedding by [Nickel et al., NeurIPS 2017](https://arxiv.org/abs/1705.08039).
     2. Hyperbolic Entailment Cone by [Ganea et al., ICML 2018](https://arxiv.org/abs/1804.01882).
-    
+
     Attributes:
         entities (list): The list of input entity IDs (fixed).
         idx2ent (dict): A dictionary that stores the `(index, entity_id)` pairs.
@@ -79,10 +79,11 @@ class StaticPoincareEmbed(torch.nn.Module):
 class StaticPoincareEmbedTrainer:
     r"""
     Class for training the static hyperbolic embedding models:
-    
+
     1. Poincaré Embedding by [Nickel et al., NeurIPS 2017](https://arxiv.org/abs/1705.08039).
     2. Hyperbolic Entailment Cone by [Ganea et al., ICML 2018](https://arxiv.org/abs/1804.01882).
     """
+
     def __init__(
         self,
         model: StaticPoincareEmbed,
@@ -98,7 +99,7 @@ class StaticPoincareEmbedTrainer:
         self.model.to(device)
         self.train_dataloader = train_dataloader
         self.cross_entropy = torch.nn.CrossEntropyLoss()
-        self.eloss = EntailmentConeConstrastiveLoss(self.model.manifold, 0.1, 0.1, 1e-5)
+        self.eloss = HyperbolicEntailmentConeLoss(self.model.manifold, 0.1, 0.1, 1e-5)
 
         self.learning_rate = learning_rate
         self.optimizer = RiemannianAdam(self.model.parameters(), lr=self.learning_rate)
