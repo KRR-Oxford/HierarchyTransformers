@@ -27,7 +27,7 @@ def project_onto_subspace(manifold: PoincareBall, point: torch.Tensor, normal: t
         normal (torch.Tensor): The normal vector of the subspace.
     """
     reflection = reflect_about_subspace(point, normal)
-    midpoint = manifold.weighted_midpoint(torch.tensor([point, reflection]))
+    midpoint = manifold.weighted_midpoint(torch.vstack((point, reflection)))
     return midpoint
 
 
