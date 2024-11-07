@@ -29,7 +29,7 @@ limitations under the License.
         <img alt="docs" src="https://img.shields.io/badge/website-online-informational">
     </a>
     <a href="https://pypi.org/project/hierarchy_transformers/">
-        <img alt="pypi" src="https://img.shields.io/pypi/v/deeponto">
+        <img alt="pypi" src="https://img.shields.io/pypi/v/hierarchy_transformers">
     </a>
 </p>
 
