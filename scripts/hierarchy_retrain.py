@@ -50,7 +50,7 @@ def main(config_file: str, gpu_id: int):
 
     # load pre-trained model
     device = get_torch_device(gpu_id)
-    model = HierarchyTransformer.from_pretrained(config.pretrained, device)
+    model = HierarchyTransformer.from_pretrained(model_name_or_path=config.pretrained, device=device)
 
     # loss
     losses = []
