@@ -76,19 +76,9 @@ Our HiT models are released on the [Huggingface Hub](https://huggingface.co/Hier
 
 ```python
 from hierarchy_transformers import HierarchyTransformer
-from hierarchy_transformers.utils import get_torch_device
-
-# set up the device (use cpu if no gpu found)
-gpu_id = 0
-device = get_torch_device(gpu_id)
 
 # load the model
-revision = "main"  # change for a different version
-model = HierarchyTransformer.from_pretrained(
-  model_name_or_path='Hierarchy-Transformers/HiT-MiniLM-L12-WordNetNoun',
-  revision=revision
-  device=device
-)
+model = HierarchyTransformer.from_pretrained('Hierarchy-Transformers/HiT-MiniLM-L12-WordNetNoun')
 
 # entity names to be encoded.
 entity_names = ["computer", "personal computer", "fruit", "berry"]
