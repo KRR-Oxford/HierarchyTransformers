@@ -1,9 +1,5 @@
-datasets
+sentence_transformers[train]==3.2.1
 deeponto>=0.8.8
 geoopt==0.5.0
-scikit_learn
+scipy==1.13.1
 seaborn
-sentence_transformers==3.2.1
-torch
-tqdm
-transformers[torch]
