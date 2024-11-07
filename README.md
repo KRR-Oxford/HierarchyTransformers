@@ -15,9 +15,7 @@ limitations under the License.
 -->
 
 <p align="center">
-  <a href="https://krr-oxford.github.io/DeepOnto/">
-    <img alt="deeponto" src="https://raw.githubusercontent.com/KRR-Oxford/HierarchyTransformers/main/docs/images/hit_logo.png" style="height: 6em;">
-  </a>
+    <img alt="hit-logo" src="https://raw.githubusercontent.com/KRR-Oxford/HierarchyTransformers/main/docs/images/hit_logo.png" style="height: 6em;">
 </p>
 
 
