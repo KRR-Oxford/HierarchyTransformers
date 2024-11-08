@@ -37,9 +37,9 @@ limitations under the License.
 
 **News** :newspaper:
 
-- [ ] Under significant development to align with `sentence-transformers` v3.0+.
+- [ ] Under significant development to align with `sentence-transformers>=3.0.0`.
 - [X] Model versioning on Huggingface Hub. (no release)
-- [X] Initial release (should work with `sentence-transformers<=3.0.0` ) and bug fix. (**v0.0.3**)
+- [X] Initial release (should work with `sentence-transformers<3.0.0` ) and bug fix. (**v0.0.3**)
 
 ## About
 
