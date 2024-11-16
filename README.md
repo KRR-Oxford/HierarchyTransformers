@@ -15,7 +15,7 @@ limitations under the License.
 -->
 
 <p align="center">
-    <img alt="hit-logo" src="https://raw.githubusercontent.com/KRR-Oxford/HierarchyTransformers/main/docs/images/hit_logo.png" style="height: 6em;">
+    <img alt="hit-logo" src="https://raw.githubusercontent.com/KRR-Oxford/HierarchyTransformers/main/docs/assets/images/hit_logo.png" style="height: 6em;">
 </p>
 
 
