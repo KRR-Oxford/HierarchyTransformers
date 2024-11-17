@@ -114,7 +114,7 @@ parent_norms = model.manifold.dist0(parent_entity_embeddings)
 subsumption_scores = - (dists + centri_score_weight * (parent_norms - child_norms))
 ```
 
-Training and evaluation scripts are available at [GitHub](https://github.com/KRR-Oxford/HierarchyTransformers/tree/main/scripts). See `scripts/evaluate.py` for how we determine the hyperparameters on the validation set for subsumption prediction.
+Training and evaluation scripts are available at [here](https://github.com/KRR-Oxford/HierarchyTransformers/tree/main/scripts). See `scripts/evaluate.py` for how we determine the hyperparameters on the validation set for subsumption prediction.
 
 Technical details are presented in the [paper](https://arxiv.org/abs/2401.11374).
 
