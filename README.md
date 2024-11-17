@@ -75,9 +75,9 @@ pip install hierarchy_transformers
 pip install git+https://github.com/KRR-Oxford/HierarchyTransformers.git
 ```
 
-## Models on Huggingface Hub
+## Huggingface Hub
 
-Our HiT models are released on the [Huggingface Hub](https://huggingface.co/Hierarchy-Transformers).
+Our HiT models and datasets are released on the [HuggingFace Hub](https://huggingface.co/Hierarchy-Transformers). 
 
 ### Get Started
 
@@ -116,10 +116,6 @@ subsumption_scores = - (dists + centri_score_weight * (parent_norms - child_norm
 Training and evaluation scripts are available at [GitHub](https://github.com/KRR-Oxford/HierarchyTransformers/tree/main/scripts). See `scripts/evaluate.py` for how we determine the hyperparameters on the validation set for subsumption prediction.
 
 Technical details are presented in the [paper](https://arxiv.org/abs/2401.11374).
-
-## Datasets
-
-The datasets for training and evaluating HiTs are available at [Zenodo](https://zenodo.org/doi/10.5281/zenodo.10511042).
 
 ## License
 
