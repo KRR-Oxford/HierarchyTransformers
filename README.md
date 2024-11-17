@@ -48,6 +48,7 @@ limitations under the License.
 **News** :newspaper:
 
 - [ ] Under significant development to align with `sentence-transformers>=3.0.0`.
+- [X] Initialise project page ([click](https://krr-oxford.github.io/HierarchyTransformers/)). (no release) 
 - [X] Model versioning on Huggingface Hub. (no release)
 - [X] Initial release (should work with `sentence-transformers<3.0.0` ) and bug fix. (**v0.0.3**)
 
