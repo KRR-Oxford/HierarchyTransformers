@@ -15,7 +15,7 @@ limitations under the License.
 -->
 
 <p align="center">
-    <img alt="hit-logo" src="https://raw.githubusercontent.com/KRR-Oxford/HierarchyTransformers/main/docs/assets/images/hit_logo.png" style="height: 6em;">
+    <img alt="hit-logo" src="https://raw.githubusercontent.com/KRR-Oxford/HierarchyTransformers/main/docs/assets/images/hit_logo_and_title.png" style="height: 6em;">
 </p>
 
 
@@ -43,7 +43,7 @@ limitations under the License.
 
 ## About
 
-The hierarchy transformer (HiT) framework aims to provide universal hierarchy embedding in hyperbolic space with transformer encoder-based language models.
+Hierarchy Transformer (HiT) is a framework aimed to provide universal hierarchy embedding in hyperbolic space with transformer encoder-based language models.
 
 - **Huggingface Page**: *<https://huggingface.co/Hierarchy-Transformers/>*.
 - **Github Repository**: *<https://github.com/KRR-Oxford/HierarchyTransformers>*. 

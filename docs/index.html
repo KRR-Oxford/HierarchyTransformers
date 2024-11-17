@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <!-- Meta tags for social media banners, these should be filled in appropriatly as they are your "business card" -->
+  <!-- Replace the content tag with appropriate information -->
+  <meta name="description" content="DESCRIPTION META TAG" />
+  <meta property="og:title" content="SOCIAL MEDIA TITLE TAG" />
+  <meta property="og:description" content="SOCIAL MEDIA DESCRIPTION TAG TAG" />
+  <meta property="og:url" content="URL OF THE WEBSITE" />
+  <!-- Path to banner image, should be in the path listed below. Optimal dimenssions are 1200X630-->
+  <meta property="og:image" content="static/image/your_banner_image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <meta name="twitter:title" content="TWITTER BANNER TITLE META TAG" />
+  <meta name="twitter:description" content="TWITTER BANNER DESCRIPTION META TAG" />
+  <!-- Path to banner image, should be in the path listed below. Optimal dimenssions are 1200X600-->
+  <meta name="twitter:image" content="assets/images/your_twitter_banner_image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <!-- Keywords for your paper to be indexed by-->
+  <meta name="keywords" content="KEYWORDS SHOULD BE PLACED HERE" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Hierarchy Transformers</title>
+  <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico" />
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet" />
+
+  <link rel="stylesheet" href="static/css/bulma.min.css" />
+  <link rel="stylesheet" href="static/css/bulma-carousel.min.css" />
+  <link rel="stylesheet" href="static/css/bulma-slider.min.css" />
+  <link rel="stylesheet" href="static/css/fontawesome.all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" />
+  <link rel="stylesheet" href="static/css/index.css" />
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://documentcloud.adobe.com/view-sdk/main.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script src="static/js/bulma-carousel.min.js"></script>
+  <script src="static/js/bulma-slider.min.js"></script>
+  <script src="static/js/index.js"></script>
+
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [
+          ["$", "$"],
+          ["\\(", "\\)"],
+        ],
+      },
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+
+<body>
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title" style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  flex-wrap: wrap;
+                ">
+              <span>
+                <img alt="hit-logo" src="assets/images/hit_logo.png"
+                  style="height: 1.7em; margin-right: 20px; margin-top: 20px" class="hit-logo" />
+              </span>
+              Hierarchy Transformers (HiTs)
+            </h1>
+
+            <div class="column has-text-centered">
+              <div class="publication-links">
+                <!-- Github link -->
+                <span class="link-block">
+                  <a href="https://github.com/KRR-Oxford/HierarchyTransformers" target="_blank"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fab fa-github"></i>
+                    </span>
+                    <span>GitHub</span>
+                  </a>
+                </span>
+
+                <!-- Huggingface link -->
+                <span class="link-block">
+                  <a href="https://huggingface.co/Hierarchy-Transformers" target="_blank"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="huggingface-icon"></span>
+                    <span>HuggingFace</span>
+                  </a>
+                </span>
+
+                <!-- Arxiv PDF link -->
+                <!-- <span class="link-block">
+                    <a
+                      href="https://arxiv.org/pdf/<ARXIV PAPER ID>.pdf"
+                      target="_blank"
+                      class="external-link button is-normal is-rounded is-dark"
+                    >
+                      <span class="icon">
+                        <i class="fas fa-file-pdf"></i>
+                      </span>
+                      <span>Paper</span>
+                    </a>
+                  </span> -->
+
+                <!-- ArXiv abstract Link -->
+                <span class="link-block">
+                  <a href="https://arxiv.org/abs/2401.11374" target="_blank"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                    </span>
+                    <span>arXiv</span>
+                  </a>
+                </span>
+
+                <!-- conference Link -->
+                <span class="link-block">
+                  <a href="https://neurips.cc/virtual/2024/poster/95913" target="_blank"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="neurips-icon"></span>
+                    <span>NeurIPS</span>
+                  </a>
+                </span>
+              </div>
+              <div class="title is-size-4 publication-title" style="margin-top: 30px; margin-bottom: 10px">
+                Language Models as Hierarchy Encoders
+              </div>
+              <div class="is-size-5 publication-authors">
+                <!-- Paper authors -->
+                <!-- <sup>*</sup> for superscript-->
+                <span class="author-block">
+                  <a href="FIRST AUTHOR PERSONAL LINK" target="_blank">Yuan
+                    He</a><sup><small><small>1</small></small></sup>,
+                </span>
+                <span class="author-block">
+                  <a href="SECOND AUTHOR PERSONAL LINK" target="_blank">Zhangdie
+                    Yuan</a><sup><small><small>2</small></small></sup>,
+                </span>
+                <span class="author-block">
+                  <a href="THIRD AUTHOR PERSONAL LINK" target="_blank">Jiaoyan
+                    Chen</a><sup><small><small>3,1</small></small></sup>,
+                </span>
+                <span class="author-block">
+                  <a href="THIRD AUTHOR PERSONAL LINK" target="_blank">Ian
+                    Horrocks</a><sup><small><small>1</small></small></sup>
+                </span>
+              </div>
+
+              <div class="is-size-5 publication-authors">
+                <span class="author-block">
+                  <sup><small><small>1</small></small></sup>University of Oxford,
+                  <sup><small><small>2</small></small></sup>University of Cambridge,
+                  <sup><small><small>3</small></small></sup>University of Manchester<br />
+                  NeurIPS 2024
+                </span>
+                <!-- <span class="eql-cntrb"><small><br><sup>*</sup>Indicates Equal Contribution</small></span> -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hero teaser">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div id="results-carousel" class="carousel results-carousel">
+          <div class="item">
+            <!-- Your image here -->
+            <div class="is-flex is-justify-content-center">
+              <img class="image" width="600px" src="assets/images/hit_illustration.png" alt="hit_illustration">
+            </div>
+            <h2 class="subtitle">
+              <small>
+                <small>
+                  Figure 1: Illustration of how hierarchies are explicitly
+                  encoded in HiTs. The square ($d$-dimensional hyper-cube)
+                  refers to the output embedding space of transformer
+                  encoder-based LMs whose final activation function is typically
+                  $\tanh$, and the circumscribed circle ($d$-dimensional
+                  hyper-sphere) refers to the Poincaré ball of radius $d$. The
+                  distance and norm metrics involved in our hyperbolic losses
+                  are defined w.r.t. this manifold.
+                </small>
+              </small>
+            </h2>
+          </div>
+          <div class="item">
+            <!-- Your image here -->
+            <div class="is-flex is-justify-content-center">
+              <img class="image" width="600px" src="assets/images/hit_loss.png" alt="hit_loss">
+            </div>
+            <h2 class="subtitle">
+              <small>
+                <small>
+                  Figure 2: Illustration of the impact of the loss function of
+                  HiTs during training. In Euclidean space, it seems
+                  contradictory that both "phone" and "computer" are pulled
+                  towards "e-device" but are also pushed away from each other.
+                  However, in principle, this is not a problem in hyperbolic
+                  space, where distances increase exponentially relative to
+                  Euclidean distances as one moves from the origin to the
+                  boundary of the manifold.
+                </small>
+              </small>
+            </h2>
+          </div>
+        </div>
+      </div>
+  </section>
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <h2 class="title is-3">About</h2>
+        <div class="columns is-centered">
+          <div class="column is-full">
+            <p>
+              <b>Hierarchy Transformer (HiT)</b> is a framework that enables transformer encoder-based language models
+              (LMs) to learn hierarchical structures in hyperbolic space.
+
+              The main idea is to construct a Poincaré ball that
+              directly circumscribes the output embedding space of LMs,leveraging the exponential expansion of
+              hyperbolic space to organise entity embeddings hierarchically.
+
+              In addition to presenting this framework (see code on <a
+                href="https://github.com/KRR-Oxford/HierarchyTransformers">GitHub</a>), we are committed to training and
+              releasing HiT models across various hierachiies. The models and datasets will be accessible on <a
+                href="https://huggingface.co/Hierarchy-Transformers">HuggingFace</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Paper abstract -->
+  <!-- <section class="section hero is-light">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered has-text-centered">
+          <div class="column is-four-fifths">
+            <h2 class="title is-3">About</h2>
+            <div class="content has-text-justified">
+              <p>
+                Hierarchy Transformer (HiT) is a framework aimed to provide
+                universal hierarchy embedding in hyperbolic space with
+                transformer encoder-based language models.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section> -->
+  <!-- End paper abstract -->
+
+  <!-- Youtube video -->
+  <!-- <section class="hero">
+    <div class="hero-body">
+      <div class="container">
+        <h2 class="title is-3">Video Presentation</h2>
+        <div class="columns is-centered has-text-centered">
+          <div class="column is-four-fifths">
+            <div class="publication-video">
+              <iframe src="https://www.youtube.com/embed/JkaxUblCGz0" frameborder="0" allow="autoplay; encrypted-media"
+                allowfullscreen></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section> -->
+  <!-- End youtube video -->
+
+  <!-- Paper poster -->
+  <!-- <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <h2 class="title is-3">Poster</h2>
+        <div class="columns is-centered">
+          <div class="column is-full">
+            <iframe src="assets/pdfs/HiT_neurips2024_poster.pdf" width="100%" height="550">
+            </iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section> -->
+  <!--End paper poster -->
+
+  <!--BibTex citation -->
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <h2 class="title">Citation</h2>
+      <p>Our paper has been accepted at NeurIPS 2024 (to appear).</p>
+      <pre><code>@article{he2024language,
+        title={Language Models as Hierarchy Encoders},
+        author={He, Yuan and Yuan, Zhangdie and Chen, Jiaoyan and Horrocks, Ian},
+        journal={arXiv preprint arXiv:2401.11374},
+        year={2024}
+}</code></pre>
+    </div>
+  </section>
+  <!--End BibTex citation -->
+
+  <!-- @article{he2024language,
+    title={Language Models as Hierarchy Encoders},
+    author={He, Yuan and Yuan, Zhangdie and Chen, Jiaoyan and Horrocks, Ian},
+    journal={arXiv preprint arXiv:2401.11374},
+    year={2024}}
+} -->
+
+  <footer class="footer">
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-8">
+          <div class="content">
+            <p>
+              Copyright © 2024 Yuan He.
+            </p>
+            <p>
+              This page was built using the
+              <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project
+                Page Template</a>
+              which was adopted from the <a href="https://nerfies.github.io" target="_blank">Nerfies</a> project page,
+              licensed under a
+              <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative Commons
+                Attribution-ShareAlike 4.0 International
+                License</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Statcounter tracking code -->
+
+  <!-- You can add a tracker to track page visits by creating an account at statcounter.com -->
+
+  <!-- End of Statcounter Code -->
+</body>
+
+</html>
