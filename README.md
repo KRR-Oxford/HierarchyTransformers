@@ -14,9 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<p align="center">
-    <img alt="hit-logo" src="https://raw.githubusercontent.com/KRR-Oxford/HierarchyTransformers/main/docs/assets/images/hit_logo_and_title.png" style="height: 6em;">
-</p>
+
+<h1 class="title is-1 publication-title" style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+    ">
+    <span>
+    <img alt="hit-logo" src="docs/assets/images/hit_logo.png"
+        style="height: 1.7em; margin-right: 20px; margin-top: 20px" class="hit-logo" />
+    </span>
+    Hierarchy Transformers (HiTs)
+</h1>
 
 
 <p align="center">
@@ -43,11 +53,7 @@ limitations under the License.
 
 ## About
 
-Hierarchy Transformer (HiT) is a framework aimed to provide universal hierarchy embedding in hyperbolic space with transformer encoder-based language models.
-
-- **Huggingface Page**: *<https://huggingface.co/Hierarchy-Transformers/>*.
-- **Github Repository**: *<https://github.com/KRR-Oxford/HierarchyTransformers>*. 
-- **PyPI**: *<https://pypi.org/project/hierarchy_transformers/>*. 
+Hierarchy Transformer (HiT) is a framework that enables transformer encoder-based language models (LMs) to learn hierarchical structures in hyperbolic space. The main idea is to construct a Poincaré ball that directly circumscribes the output embedding space of LMs,leveraging the exponential expansion of hyperbolic space to organise entity embeddings hierarchically. In addition to presenting this framework (see code on [GitHub](https://github.com/KRR-Oxford/HierarchyTransformers)), we are committed to training and releasing HiT models across various hierachiies. The models and datasets will be accessible on [HuggingFace](https://huggingface.co/Hierarchy-Transformers/).
 
 ## Installation
 
