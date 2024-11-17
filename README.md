@@ -21,7 +21,6 @@ limitations under the License.
     </a>
 </p>
 
-
 <p align="center">
     <a href="https://github.com/KRR-Oxford/HierarchyTransformers/blob/main/LICENSE">
         <img alt="license" src="https://img.shields.io/github/license/KRR-Oxford/HierarchyTransformers">
@@ -34,9 +33,17 @@ limitations under the License.
     </a>
 </p>
 
-<p align="center">
-  Embedding hierarchies with language models.
-</p>
+<h4 align="center">
+    <p>
+        <a href="https://krr-oxford.github.io/HierarchyTransformers/">Project</a> |
+        <a href="https://huggingface.co/Hierarchy-Transformers">HuggingFace</a> |
+        <a href="https://arxiv.org/abs/2401.11374">arXiv</a> 
+    </p>
+</h4>
+
+<h3 align="center">
+    <p>Embedding hierarchies with language models.</p>
+</h3>
 
 **News** :newspaper:
 
