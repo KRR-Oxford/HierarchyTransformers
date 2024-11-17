@@ -129,25 +129,3 @@ body {
   background-repeat: no-repeat;
   margin-right: 8px; /* Space between the icon and the text */
 }
-
-.center-image {
-  display: block;
-  margin: 0 auto;
-}
-
-/* Mobile Adapation */
-@media (max-width: 768px) {
-  .hit-logo {
-    height: 1.5em; /* Adjust logo size */
-    margin-right: 10px; /* Reduce space between logo and text */
-    margin-top: 10px; /* Reduce top margin */
-  }
-}
-
-*,
-*:after,
-*:before {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
