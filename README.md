@@ -33,17 +33,17 @@ limitations under the License.
     </a>
 </p>
 
-<h4 align="center">
+<h5 align="center">
     <p>
         <a href="https://krr-oxford.github.io/HierarchyTransformers/">Project</a> |
         <a href="https://huggingface.co/Hierarchy-Transformers">HuggingFace</a> |
         <a href="https://arxiv.org/abs/2401.11374">arXiv</a> 
     </p>
-</h4>
+</h5>
 
-<h3 align="center">
+<h4 align="center">
     <p>Embedding hierarchies with language models.</p>
-</h3>
+</h4>
 
 **News** :newspaper:
 
