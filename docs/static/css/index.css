@@ -120,6 +120,16 @@ body {
   margin-right: 8px; /* Space between the icon and the text */
 }
 
+.zenodo-icon {
+  display: inline-block;
+  width: 16px; /* Adjust width as needed */
+  height: 16px; /* Adjust height as needed */
+  background-image: url("https://zenodo.org/static/favicon.ico");
+  background-size: contain;
+  background-repeat: no-repeat;
+  margin-right: 8px; /* Space between the icon and the text */
+}
+
 .neurips-icon {
   display: inline-block;
   width: 16px; /* Adjust width as needed */
@@ -128,4 +138,36 @@ body {
   background-size: contain;
   background-repeat: no-repeat;
   margin-right: 8px; /* Space between the icon and the text */
+}
+
+/* Style for the outer container */
+.box {
+  margin: 20px;
+  border-radius: 8px;
+  background-color: #f6f8fa; /* Light gray background */
+  padding: 12px; /* Reduced padding for a tighter look */
+  overflow: auto; /* Add scroll if the content is too wide */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15); /* Subtle shadow for depth */
+}
+code {
+  background-color: #f6f8fa !important; /* Light gray background */
+  color: #333 !important; /* Override the default theme text color */
+}
+pre {
+  margin: 0; /* Remove default margin */
+  padding: 12px; /* Add padding to the pre element instead */
+  font-family: "Fira Code", "Courier New", Courier, monospace; /* Improved font stack */
+  font-size: 14px;
+  line-height: 1.5; /* Adjusted line height for better readability */
+  background-color: #f6f8fa !important; /* Light gray background */
+  border-radius: 8px; /* Match the border radius */
+  color: #333 !important; /* Override the default theme text color */
+}
+/* GitHub-style inline code */
+code.inline {
+  font-family: "Fira Code", "Courier New", Courier, monospace; /* Improved font stack */
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 90%; /* Slightly smaller than regular text */
+  background-color: #f6f8fa !important; /* Light gray background */
 }

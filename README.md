@@ -37,7 +37,8 @@ limitations under the License.
     <p>
         <a href="https://krr-oxford.github.io/HierarchyTransformers/">Project</a> |
         <a href="https://huggingface.co/Hierarchy-Transformers">HuggingFace</a> |
-        <a href="https://arxiv.org/abs/2401.11374">arXiv</a> 
+        <a href="https://arxiv.org/abs/2401.11374">arXiv</a> |
+        <a href="https://doi.org/10.5281/zenodo.10511042">Zenodo</a>
     </p>
 </h4>
 

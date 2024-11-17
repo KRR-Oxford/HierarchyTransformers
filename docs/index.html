@@ -52,6 +52,12 @@
     };
   </script>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css">
+  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css"> -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+
 </head>
 
 <body>
@@ -120,6 +126,15 @@
                   </a>
                 </span>
 
+                <!-- zenodo Link -->
+                <span class="link-block">
+                  <a href="https://doi.org/10.5281/zenodo.10511042" target="_blank"
+                    class="external-link button is-normal is-rounded is-dark">
+                    <span class="zenodo-icon"></span>
+                    <span>Zenodo</span>
+                  </a>
+                </span>
+
                 <!-- conference Link -->
                 <span class="link-block">
                   <a href="https://neurips.cc/virtual/2024/poster/95913" target="_blank"
@@ -176,7 +191,7 @@
           <div class="item">
             <!-- Your image here -->
             <div class="is-flex is-justify-content-center">
-              <img class="image" width="600px" src="assets/images/hit_illustration.png" alt="hit_illustration">
+              <img class="image" width="520px" src="assets/images/hit_illustration.png" alt="hit_illustration">
             </div>
             <h2 class="subtitle">
               <small>
@@ -196,7 +211,7 @@
           <div class="item">
             <!-- Your image here -->
             <div class="is-flex is-justify-content-center">
-              <img class="image" width="600px" src="assets/images/hit_loss.png" alt="hit_loss">
+              <img class="image" width="470px" src="assets/images/hit_loss.png" alt="hit_loss">
             </div>
             <h2 class="subtitle">
               <small>
@@ -241,6 +256,87 @@
       </div>
     </div>
   </section>
+
+  <section class="section" id="getstarted">
+    <div class="container is-max-desktop content">
+      <h2 class="title">Get Started</h2>
+      <p>
+        The code repository of <a href="https://github.com/KRR-Oxford/HierarchyTransformers/">Hierarchy Transformers</a>
+        primarily extends from <a href="https://github.com/UKPLab/sentence-transformers">Sentence Transformers</a>, the
+        main
+        HiT model class <code class="inline">HierarchyTransformer</code> inherits <code
+          class="inline">SentenceTransformer</code>. It can be loaded
+        with the following code:
+      </p>
+      <div class="box">
+        <pre><code class="language-python"><!--
+-->from hierarchy_transformers import HierarchyTransformer
+
+# load the model
+model = HierarchyTransformer.from_pretrained('Hierarchy-Transformers/HiT-MiniLM-L12-WordNetNoun')
+<!--
+--></code></pre>
+      </div>
+      <p>
+        It is possible to load to different model variant with the <code class="inline">revision</code> parameter. For
+        example:
+      </p>
+      <div class="box">
+        <pre><code class="language-python"><!--
+--># load the model with a particular revision
+model = HierarchyTransformer.from_pretrained('Hierarchy-Transformers/HiT-MiniLM-L12-WordNetNoun', revision="v1-hard-negatives")
+<!--
+  --></code></pre>
+      </div>
+      <p>
+        To batch encode a list of entity names:
+      </p>
+      <div class="box">
+        <pre><code class="language-python"><!--
+--># entity names to be encoded.
+entity_names = ["computer", "personal computer", "fruit", "berry"]
+
+# get the entity embeddings
+entity_embeddings = model.encode(entity_names)
+<!--
+  --></code></pre>
+      </div>
+      <p>
+        Use the entity embeddings to predict the subsumption relationships between them:
+      </p>
+      <div class="box">
+        <pre><code class="language-python"><!--
+--># suppose we want to compare "personal computer" and "computer", "berry" and "fruit"
+child_entity_embeddings = model.encode(["personal computer", "berry"], convert_to_tensor=True)
+parent_entity_embeddings = model.encode(["computer", "fruit"], convert_to_tensor=True)
+
+# compute the hyperbolic distances and norms of entity embeddings
+dists = model.manifold.dist(child_entity_embeddings, parent_entity_embeddings)
+child_norms = model.manifold.dist0(child_entity_embeddings)
+parent_norms = model.manifold.dist0(parent_entity_embeddings)
+
+# use the empirical function for subsumption prediction proposed in the paper
+# `centri_score_weight` and the overall threshold are determined on the validation set
+subsumption_scores = - (dists + centri_score_weight * (parent_norms - child_norms))
+<!--
+  --></code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <h2 class="title is-3">Models and Datasets</h2>
+        <div class="columns is-centered">
+          <div class="column is-full">
+            <p>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section> -->
 
   <!-- Paper abstract -->
   <!-- <section class="section hero is-light">
@@ -296,16 +392,21 @@
   <!--End paper poster -->
 
   <!--BibTex citation -->
-  <section class="section" id="BibTeX">
+  <section class="section" id="citation">
     <div class="container is-max-desktop content">
       <h2 class="title">Citation</h2>
       <p>Our paper has been accepted at NeurIPS 2024 (to appear).</p>
-      <pre><code>@article{he2024language,
-        title={Language Models as Hierarchy Encoders},
-        author={He, Yuan and Yuan, Zhangdie and Chen, Jiaoyan and Horrocks, Ian},
-        journal={arXiv preprint arXiv:2401.11374},
-        year={2024}
-}</code></pre>
+      <div class="box">
+        <pre><code class="language-bash"><!--
+-->@article{he2024language,
+  title={Language Models as Hierarchy Encoders},
+  author={He, Yuan and Yuan, Zhangdie and Chen, Jiaoyan and Horrocks, Ian},
+  journal={arXiv preprint arXiv:2401.11374},
+  year={2024}
+}
+<!--
+--></code></pre>
+      </div>
     </div>
   </section>
   <!--End BibTex citation -->
