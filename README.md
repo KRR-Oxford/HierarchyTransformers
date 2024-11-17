@@ -15,12 +15,11 @@ limitations under the License.
 -->
 
 
-<table align="center">
-  <tr>
-    <td><img alt="hit-logo" src="docs/assets/images/hit_logo.png" style="height: 6em; vertical-align: middle;" /></td>
-    <td style="vertical-align: middle; font-size: 2em;"><h1>Hierarchy Transformers (HiTs)</h1></td>
-  </tr>
-</table>
+<p align="center">
+    <a href="https://krr-oxford.github.io/HierarchyTransformers/">
+        <img alt="license" src="docs/assets/images/hit_logo+title.png">
+    </a>
+</p>
 
 
 <p align="center">
