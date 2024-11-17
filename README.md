@@ -15,18 +15,12 @@ limitations under the License.
 -->
 
 
-<h1 class="title is-1 publication-title" style="
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-wrap: wrap;
-    ">
-    <span>
-    <img alt="hit-logo" src="docs/assets/images/hit_logo.png"
-        style="height: 1.7em; margin-right: 20px; margin-top: 20px" class="hit-logo" />
-    </span>
-    Hierarchy Transformers (HiTs)
-</h1>
+<table align="center">
+  <tr>
+    <td><img alt="hit-logo" src="docs/assets/images/hit_logo.png" style="height: 6em; vertical-align: middle;" /></td>
+    <td style="vertical-align: middle; font-size: 2em;"><h1>Hierarchy Transformers (HiTs)</h1></td>
+  </tr>
+</table>
 
 
 <p align="center">
