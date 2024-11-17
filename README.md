@@ -142,7 +142,7 @@ The datasets for training and evaluating HiTs are available at [Zenodo](https://
 
 If you find this repository or the released models useful, please cite our publication:
 
-*Yuan He, Zhangdie Yuan, Jiaoyan Chen, Ian Horrocks.* **Language Models as Hierarchy Encoders.** To appear at NeurIPS 2024. [[arxiv](https://arxiv.org/abs/2401.11374)] [[neurips-to-upload](to-upload)]
+*Yuan He, Zhangdie Yuan, Jiaoyan Chen, Ian Horrocks.* **Language Models as Hierarchy Encoders.** To appear at NeurIPS 2024. /[arxiv](https://arxiv.org/abs/2401.11374)/ /[neurips](https://neurips.cc/virtual/2024/poster/95913)/
 
 ```
 @article{he2024language,
