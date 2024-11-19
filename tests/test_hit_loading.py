@@ -13,13 +13,18 @@
 # limitations under the License.
 
 import pytest
+import os
 import torch
 from hierarchy_transformers.models import HierarchyTransformer
 
-@pytest.fixture
-def model_name():
-    # Return the path to your model file or configuration
-    return "Hierarchy-Transformers/HiT-MiniLM-L12-WordNetNoun"
+
+@pytest.fixture(params=os.getenv("MODEL_NAMES", "").split(","))
+def model_name(request):
+    # Ensure there are valid model names
+    if not request.param:
+        pytest.fail("No valid model names found in the MODEL_NAMES environment variable")
+    return request.param.strip()  # Strip any extra spaces
+
 
 def test_hierarchy_transformer_loading(model_name):
     try:
@@ -34,6 +39,7 @@ def test_hierarchy_transformer_loading(model_name):
     assert hasattr(model, "manifold"), "Model does not have a 'manifold' attribute"
     # Check that the manifold is an instance of PoincareBall
     from geoopt.manifolds import PoincareBall
+
     assert isinstance(model.manifold, PoincareBall), "Manifold is not an instance of PoincareBall"
 
     # Perform a basic check on the embedding dimension
