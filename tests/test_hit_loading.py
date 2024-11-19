@@ -20,6 +20,7 @@ from hierarchy_transformers.models import HierarchyTransformer
 
 @pytest.fixture(params=os.getenv("MODEL_NAMES", "").split(","))
 def model_name(request):
+    print("MODEL_NAMES:", os.getenv("MODEL_NAMES"))
     # Ensure there are valid model names
     if not request.param:
         pytest.fail("No valid model names found in the MODEL_NAMES environment variable")
