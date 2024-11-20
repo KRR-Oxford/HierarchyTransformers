@@ -14,6 +14,7 @@ Significant development to align with `sentence-transformers>=3.0.0`.
 ### Added
 
 - [ ] Add `hierarchy_transformers.datasets` to supercede `hierarchy_transformers.utils.data` and `h ierarchy_transformers.utils.construct`.
+- [ ] Upload HiT datasets to HuggingFace.
 - [X] Add pytest modules for testing.
 - [X] Project page at https://krr-oxford.github.io/HierarchyTransformers/
 - [X] Model versioning (add random and hard negatives as a choice of `revision`) on HuggingFace.

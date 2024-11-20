@@ -46,14 +46,12 @@ limitations under the License.
     <p>Embedding hierarchies with language models.</p>
 </h3>
 
-**News** :newspaper:
+**News** ([changelog](docs/changelog.md)) :newspaper:
 
 - [ ] Under significant development to align with `sentence-transformers>=3.0.0`.
-- [X] Initialise project page ([click](https://krr-oxford.github.io/HierarchyTransformers/)). (no release) 
-- [X] Model versioning on Huggingface Hub. (no release)
+- [X] Project page is now available ([click](https://krr-oxford.github.io/HierarchyTransformers/)).
 - [X] Initial release (should work with `sentence-transformers<3.0.0` ) and bug fix. (**v0.0.3**)
 
-Complete changelog is available at [here](docs/changelog.md).
 
 ## About
 
