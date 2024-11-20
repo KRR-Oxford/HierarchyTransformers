@@ -25,7 +25,7 @@ import numpy as np
 import click
 from yacs.config import CfgNode
 
-from hierarchy_transformers.utils import *
+from hierarchy_transformers.models.utils import *
 from hierarchy_transformers.evaluation import evaluate_by_threshold
 
 

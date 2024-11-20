@@ -22,7 +22,7 @@ from yacs.config import CfgNode
 from hierarchy_transformers.models import *
 from hierarchy_transformers.losses import *
 from hierarchy_transformers.evaluation import HierarchyTransformerEvaluator
-from hierarchy_transformers.utils import prepare_hierarchy_examples, load_hierarchy_dataset, get_torch_device
+from hierarchy_transformers.models.utils import prepare_hierarchy_examples, load_hierarchy_dataset, get_torch_device
 
 
 logger = logging.getLogger(__name__)

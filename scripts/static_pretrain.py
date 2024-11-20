@@ -21,7 +21,7 @@ from yacs.config import CfgNode
 from deeponto.utils import load_file, set_seed, create_path
 
 from hierarchy_transformers.models import StaticPoincareEmbed, StaticPoincareEmbedTrainer
-from hierarchy_transformers.utils import (
+from hierarchy_transformers.models.utils import (
     prepare_hierarchy_examples_for_static,
     load_hierarchy_dataset,
     get_torch_device,

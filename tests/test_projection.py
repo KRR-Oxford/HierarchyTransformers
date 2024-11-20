@@ -15,7 +15,7 @@
 import pytest
 import torch
 from geoopt.manifolds import PoincareBall
-from hierarchy_transformers.utils.arithmetic import project_onto_subspace, reflect_about_subspace
+from hierarchy_transformers.models.arithmetic import project_onto_subspace, reflect_about_subspace
 
 @pytest.fixture
 def manifold():

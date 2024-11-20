@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-from hierarchy_transformers.utils import *
+from hierarchy_transformers.models.utils import *
 from hierarchy_transformers.evaluation import *
 from hierarchy_transformers.models.hit import HierarchyTransformer
 
