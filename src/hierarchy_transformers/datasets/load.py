@@ -87,7 +87,11 @@ def load_zenodo_dataset(
         entity_lexicon = entity_to_index
 
     for split in dataset.keys():
-        dataset[split] = dataset[split].map(lambda example: transform(example, negative_type, entity_lexicon))
+        dataset[split] = [
+            transformed
+            for example in tqdm(dataset[split], desc=f"Map ({split}):", unit="example", leave=True)
+            for transformed in transform(example, negative_type, entity_lexicon)
+        ]
 
     return dataset, entity_lexicon if return_entity_lexicon else dataset
 
@@ -100,7 +104,7 @@ def zenodo_example_to_triplets(example: dict, negative_type: str, entity_lexicon
     parent = entity_lexicon[example["parent"]]["name"]
     negative_type = f"{negative_type}_negatives"
     negative_parents = [entity_lexicon[neg]["name"] for neg in example[negative_type]]
-    return [(child, parent, neg) for neg in negative_parents]
+    return [{"child": child, "parent": parent, "negative": neg} for neg in negative_parents]
 
 
 def zenodo_example_to_pairs(example: dict, negative_type: str, entity_lexicon: dict):
@@ -111,7 +115,7 @@ def zenodo_example_to_pairs(example: dict, negative_type: str, entity_lexicon: d
     parent = entity_lexicon[example["parent"]]["name"]
     negative_type = f"{negative_type}_negatives"
     negative_parents = [entity_lexicon[neg]["name"] for neg in example[negative_type]]
-    return [(child, parent, 1.0)] + [(child, neg, 0.0) for neg in negative_parents]
+    return [{"child": child, "parent": parent, "label": 1}] + [{"child": child, "parent": neg, "label": 0} for neg in negative_parents]
 
 
 def zenodo_example_to_idxs(example: dict, negative_type: str, entity_to_indices: dict):
