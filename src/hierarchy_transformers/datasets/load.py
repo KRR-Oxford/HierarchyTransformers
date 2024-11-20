@@ -15,7 +15,7 @@
 import os
 import json
 from typing import Optional
-from datasets import load_dataset
+from datasets import load_dataset, Dataset
 import logging
 from tqdm import tqdm
 
@@ -88,11 +88,13 @@ def load_zenodo_dataset(
 
     for split, examples in dataset.items():
         # list comprehension is faster than nested for-loop due to C implementation
-        dataset[split] = [
-            transformed
-            for example in tqdm(examples, desc=f"Map ({split})", unit="example", leave=True)
-            for transformed in transform(example, negative_type, entity_lexicon)
-        ]
+        dataset[split] = Dataset.from_list(
+            [
+                transformed
+                for example in tqdm(examples, desc=f"Map ({split})", leave=True)
+                for transformed in transform(example, negative_type, entity_lexicon)
+            ]
+        )
 
     if return_entity_lexicon:
         return dataset, entity_lexicon
@@ -119,7 +121,9 @@ def zenodo_example_to_pairs(example: dict, negative_type: str, entity_lexicon: d
     parent = entity_lexicon[example["parent"]]["name"]
     negative_type = f"{negative_type}_negatives"
     negative_parents = [entity_lexicon[neg]["name"] for neg in example[negative_type]]
-    return [{"child": child, "parent": parent, "label": 1}] + [{"child": child, "parent": neg, "label": 0} for neg in negative_parents]
+    return [{"child": child, "parent": parent, "label": 1}] + [
+        {"child": child, "parent": neg, "label": 0} for neg in negative_parents
+    ]
 
 
 def zenodo_example_to_idxs(example: dict, negative_type: str, entity_to_indices: dict):
