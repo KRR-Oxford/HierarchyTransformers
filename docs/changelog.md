@@ -21,7 +21,12 @@ Significant development to align with `sentence-transformers>=3.0.0`.
 
 ### Changed
 
+- [X] Move several utility functions to `hierarchy_transformers.models`.
 - [X] Rewrite the `hierarchy_transformers.models.hit` to align with `sentence-transformers>=3.0.0`.
+
+### Removed
+
+- [X] Remove `hierarchy_transformers.models.utils`.
 
 ## v0.0.3 (2024-05-09)
 

@@ -53,6 +53,8 @@ limitations under the License.
 - [X] Model versioning on Huggingface Hub. (no release)
 - [X] Initial release (should work with `sentence-transformers<3.0.0` ) and bug fix. (**v0.0.3**)
 
+Complete changelog is available at [here](docs/changelog.md).
+
 ## About
 
 Hierarchy Transformer (HiT) is a framework that enables transformer encoder-based language models (LMs) to learn hierarchical structures in hyperbolic space. The main idea is to construct a Poincaré ball that directly circumscribes the output embedding space of LMs,leveraging the exponential expansion of hyperbolic space to organise entity embeddings hierarchically. In addition to presenting this framework (see code on [GitHub](https://github.com/KRR-Oxford/HierarchyTransformers)), we are committed to training and releasing HiT models across various hierachiies. The models and datasets will be accessible on [HuggingFace](https://huggingface.co/Hierarchy-Transformers/).
