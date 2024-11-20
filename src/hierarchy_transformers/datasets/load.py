@@ -89,11 +89,14 @@ def load_zenodo_dataset(
     for split in dataset.keys():
         dataset[split] = [
             transformed
-            for example in tqdm(dataset[split], desc=f"Map ({split}):", unit="example", leave=True)
+            for example in tqdm(dataset[split], desc=f"Map ({split})", unit="example", leave=True)
             for transformed in transform(example, negative_type, entity_lexicon)
         ]
 
-    return dataset, entity_lexicon if return_entity_lexicon else dataset
+    if return_entity_lexicon:
+        return dataset, entity_lexicon
+    else:
+        return dataset
 
 
 def zenodo_example_to_triplets(example: dict, negative_type: str, entity_lexicon: dict):
