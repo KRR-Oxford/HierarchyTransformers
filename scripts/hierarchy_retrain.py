@@ -57,7 +57,7 @@ def main(config_file: str, gpu_id: int):
 
     if config.loss.cluster.weight > 0.0:
         if config.apply_triplet_loss:
-            cluster_loss = ClusteringTripletLoss(model.manifold, config.loss.cluster.margin)
+            cluster_loss = HyperbolicClusteringLoss(model.manifold, config.loss.cluster.margin)
         else:
             cluster_loss = ClusteringConstrastiveLoss(
                 model.manifold, config.loss.cluster.positive_margin, config.loss.cluster.margin
@@ -65,7 +65,7 @@ def main(config_file: str, gpu_id: int):
         losses.append((config.loss.cluster.weight, cluster_loss))
 
     if config.loss.centri.weight > 0.0:
-        centri_loss_class = CentripetalTripletLoss if config.apply_triplet_loss else CentripetalContrastiveLoss
+        centri_loss_class = HyperbolicCentripetalLoss if config.apply_triplet_loss else CentripetalContrastiveLoss
         centri_loss = centri_loss_class(model.manifold, model.embed_dim, config.loss.centri.margin)
         losses.append((config.loss.centri.weight, centri_loss))
 

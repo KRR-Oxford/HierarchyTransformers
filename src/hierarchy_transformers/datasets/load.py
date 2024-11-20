@@ -86,10 +86,11 @@ def load_zenodo_dataset(
     if entity_to_index:
         entity_lexicon = entity_to_index
 
-    for split in dataset.keys():
+    for split, examples in dataset.items():
+        # list comprehension is faster than nested for-loop due to C implementation
         dataset[split] = [
             transformed
-            for example in tqdm(dataset[split], desc=f"Map ({split})", unit="example", leave=True)
+            for example in tqdm(examples, desc=f"Map ({split})", unit="example", leave=True)
             for transformed in transform(example, negative_type, entity_lexicon)
         ]
 
