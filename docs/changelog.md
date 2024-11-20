@@ -31,6 +31,3 @@ Significant development to align with `sentence-transformers>=3.0.0`.
 ## v0.0.3 (2024-05-09)
 
 Initial release (should work with `sentence-transformers<3.0.0` ) and bug fix. 
-
-### Added
-
