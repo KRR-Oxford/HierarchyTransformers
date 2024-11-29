@@ -15,6 +15,7 @@
 import torch
 import torch.nn.functional as F
 from geoopt.manifolds import PoincareBall
+from ..utils import format_citation
 
 
 class HyperbolicEntailmentConeLoss(torch.nn.Module):
@@ -81,6 +82,21 @@ class HyperbolicEntailmentConeLoss(torch.nn.Module):
         energies = self.energy(cone_tip=rep_other, u=rep_anchor)
         cone_loss = labels.float() * energies + (1 - labels).float() * F.relu(self.margin - energies)
         return cone_loss.mean()
+    
+    @property
+    def citation(self) -> str:
+        return format_citation(
+            """ 
+            @inproceedings{ganea2018hyperbolic,
+              title={Hyperbolic entailment cones for learning hierarchical embeddings},
+              author={Ganea, Octavian and B{\'e}cigneul, Gary and Hofmann, Thomas},
+              booktitle={International conference on machine learning},
+              pages={1646--1655},
+              year={2018},
+              organization={PMLR}
+            }
+            """
+        )
 
 
 class HyperbolicEntailmentConeTripletLoss(HyperbolicEntailmentConeLoss):

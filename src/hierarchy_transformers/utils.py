@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import torch
-
+from textwrap import dedent
 
 def get_torch_device(gpu_id: int):
     return torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
@@ -42,3 +42,9 @@ def are_models_equal(model1: torch.nn.Module, model2: torch.nn.Module, tolerance
             return False
 
     return True
+
+def format_citation(bibtex: str):
+    """
+    Use `dedent` to properly form bibtex string.
+    """
+    return dedent(bibtex)

@@ -14,8 +14,19 @@
 
 import torch
 from geoopt.manifolds import PoincareBall
+from ..utils import format_citation
 
 class PoincareEmbeddingStaticLoss(torch.nn.Module):
+    """Poincare embedding loss.
+    
+    Essentially, this loss is expected to achieve:
+
+    $$d(child, parent) < d(child, negative)$$
+
+    Inputs are presented in `(subject, *objects)` where the first `object` is positive and the rest are negative.
+    
+    This is designed for the static embedding implementation.
+    """
     
     def __init__(self, manifold: PoincareBall):
         super().__init__()
@@ -28,3 +39,16 @@ class PoincareEmbeddingStaticLoss(torch.nn.Module):
         correct_object_indices = torch.tensor([0] * len(pred_dists)).to(pred_dists.device)
         return self.cross_entropy(-pred_dists, correct_object_indices)
 
+    @property
+    def citation(self) -> str:
+        return format_citation(
+            """ 
+            @article{nickel2017poincare,
+              title={Poincar{\'e} embeddings for learning hierarchical representations},
+              author={Nickel, Maximillian and Kiela, Douwe},
+              journal={Advances in neural information processing systems},
+              volume={30},
+              year={2017}
+            }
+            """
+        )

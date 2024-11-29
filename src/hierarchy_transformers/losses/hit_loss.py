@@ -18,9 +18,9 @@ import torch
 import torch.nn.functional as F
 from geoopt.manifolds import PoincareBall
 from ..models import HierarchyTransformer
+from ..utils import format_citation
 
 logger = logging.getLogger(__name__)
-
 
 
 class HierarchyTransformerLoss(torch.nn.Module):
@@ -34,7 +34,7 @@ class HierarchyTransformerLoss(torch.nn.Module):
         clustering_loss_weight: float = 1.0,
         clustering_loss_margin: float = 5.0,
         centripetal_loss_weight: float = 1.0,
-        centripetal_loss_margin: float = 0.5
+        centripetal_loss_margin: float = 0.5,
     ):
         super().__init__()
 
@@ -47,8 +47,14 @@ class HierarchyTransformerLoss(torch.nn.Module):
     def get_config_dict(self):
         # distance_metric_name = self.distance_metric.__name__
         config = {"distance_metric": f"PoincareBall(c={self.manifold.c}).dist and dist0"}
-        config[HyperbolicClusteringLoss.__name__] = {"weight": self.cluster_weight, **self.cluster_loss.get_config_dict()}
-        config[HyperbolicCentripetalLoss.__name__] = {"weight": self.centri_weight, **self.centri_loss.get_config_dict()}
+        config[HyperbolicClusteringLoss.__name__] = {
+            "weight": self.cluster_weight,
+            **self.cluster_loss.get_config_dict(),
+        }
+        config[HyperbolicCentripetalLoss.__name__] = {
+            "weight": self.centri_weight,
+            **self.centri_loss.get_config_dict(),
+        }
         return config
 
     def forward(self, sentence_features: Iterable[Dict[str, torch.Tensor]], labels: torch.Tensor):
@@ -63,16 +69,29 @@ class HierarchyTransformerLoss(torch.nn.Module):
         cluster_loss = self.cluster_loss(rep_anchor, rep_positive, rep_negative)
         centri_loss = self.centri_loss(rep_anchor, rep_positive, rep_negative)
         combined_loss = self.cluster_weight * cluster_loss + self.centri_weight * centri_loss
-        
+
         # batch reporting
         report = {
             "cluster_loss": round(cluster_loss.item(), 6),
             "centri_loss": round(centri_loss.item(), 6),
-            "combined_loss": round(combined_loss.item(), 6)
+            "combined_loss": round(combined_loss.item(), 6),
         }
         logger.info(report)
 
         return combined_loss
+
+    @property
+    def citation(self) -> str:
+        return format_citation(
+            """ 
+            @article{he2024language,
+              title={Language models as hierarchy encoders},
+              author={He, Yuan and Yuan, Zhangdie and Chen, Jiaoyan and Horrocks, Ian},
+              journal={arXiv preprint arXiv:2401.11374},
+              year={2024}
+            }
+            """
+        )
 
 
 class HyperbolicClusteringLoss(torch.nn.Module):
@@ -80,7 +99,7 @@ class HyperbolicClusteringLoss(torch.nn.Module):
 
     Essentially, this loss is expected to achieve:
 
-    $$d(child, parent) < d(child, non-parent)$$
+    $$d(child, parent) < d(child, negative)$$
 
     Inputs are presented in `(rep_anchor, rep_positive, rep_negative)`.
     """
@@ -109,6 +128,19 @@ class HyperbolicClusteringLoss(torch.nn.Module):
         distances_negative = self.manifold.dist(rep_anchor, rep_negative)
         cluster_triplet_loss = F.relu(distances_positive - distances_negative + self.margin)
         return cluster_triplet_loss.mean()
+
+    @property
+    def citation(self) -> str:
+        return format_citation(
+            """ 
+            @article{he2024language,
+              title={Language models as hierarchy encoders},
+              author={He, Yuan and Yuan, Zhangdie and Chen, Jiaoyan and Horrocks, Ian},
+              journal={arXiv preprint arXiv:2401.11374},
+              year={2024}
+            }
+            """
+        )
 
 
 class HyperbolicCentripetalLoss(torch.nn.Module):
@@ -146,3 +178,16 @@ class HyperbolicCentripetalLoss(torch.nn.Module):
         # child further than parent w.r.t. origin
         centri_triplet_loss = F.relu(self.margin + rep_positive_hyper_norms - rep_anchor_hyper_norms)
         return centri_triplet_loss.mean()
+
+    @property
+    def citation(self) -> str:
+        return format_citation(
+            """ 
+            @article{he2024language,
+              title={Language models as hierarchy encoders},
+              author={He, Yuan and Yuan, Zhangdie and Chen, Jiaoyan and Horrocks, Ian},
+              journal={arXiv preprint arXiv:2401.11374},
+              year={2024}
+            }
+            """
+        )
