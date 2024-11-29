@@ -13,4 +13,5 @@
 # limitations under the License.
 
 from .hit_loss import HierarchyTransformerLoss, HyperbolicClusteringLoss, HyperbolicCentripetalLoss
-from .cone_loss import HyperbolicEntailmentConeLoss, HyperbolicEntailmentConeTripletLoss
+from .hyper_cone_loss import HyperbolicEntailmentConeLoss, HyperbolicEntailmentConeTripletLoss, HyperbolicEntailmentConeStaticLoss
+from .poincare_embed_loss import PoincareEmbeddingStaticLoss
