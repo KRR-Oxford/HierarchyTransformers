@@ -117,6 +117,7 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
         logger.info(f"Hierarchy Evaluation of the model on the {self.name} dataset{out_txt}:")
 
         if self.best_centri_weight and self.best_threshold:
+            # Testing with pre-defined hyperparameters
             logger.info(
                 f"Evaluate on given hyperparemeters `best_centri_weight={self.best_centri_weight}` (centripetal score weight) and `best_threshold={self.best_threshold}` (overall threshold)."
             )
@@ -133,11 +134,10 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
                 warnings.warn("No previous `results.tsv` detected.")
             self.results.loc["testing"] = best_results
         else:
+            # Validation with no pre-defined hyerparameters
             logger.info(
                 f"Evaluate with grid search on hyperparameters `best_centri_weight` (centripetal score weight) and `best_threshold` (overall threshold)."
             )
-
-            # Validation
             best_f1 = -1.0
             best_results = None
             is_updated = True
