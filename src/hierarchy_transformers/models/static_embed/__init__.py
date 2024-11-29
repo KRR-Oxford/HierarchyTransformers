@@ -12,5 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .hierarchy_transformer import HierarchyTransformer
-from .static_embed import StaticPoincareEmbed, StaticPoincareEmbedTrainer
+from .poincare_embed import StaticPoincareEmbed
+from .poincare_trainer import StaticPoincareEmbedTrainer

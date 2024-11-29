@@ -32,7 +32,7 @@ logger.setLevel(logging.INFO)
 
 from hierarchy_transformers.models.utils import *
 from hierarchy_transformers.evaluation import *
-from hierarchy_transformers.models.hit import HierarchyTransformer
+from hierarchy_transformers.models.hierarchy_transformer import HierarchyTransformer
 
 
 @click.command()

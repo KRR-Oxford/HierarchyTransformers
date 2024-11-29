@@ -14,16 +14,17 @@
 
 from __future__ import annotations
 import torch
-from typing import Optional, Tuple
+from typing import Optional
 from tqdm.auto import tqdm
 import math
+from sentence_transformers.evaluation import SentenceEvaluator
 
 
-class HierarchyEvaluator:
+class HierarchyEvaluator(SentenceEvaluator):
     """Base evaluator for evaluating hierarchy encoding in models."""
 
     def __init__(self):
-        pass
+        super().__init__()
 
     def inference(self):
         """

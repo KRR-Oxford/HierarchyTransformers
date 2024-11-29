@@ -17,7 +17,8 @@ from geoopt.manifolds import PoincareBall
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.models import Pooling, Transformer
 import logging
-from typing import Union, Optional, Iterable
+from typing import Optional, Iterable
+from .hyperbolic import get_circum_poincareball
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +88,6 @@ class HierarchyTransformer(SentenceTransformer):
         """
         Get a Poincaré Ball with a curvature adapted to a given embedding dimension so that it circumscribes the output embedding space of pre-trained language models.
         """
-        curvature = 1 / embed_dim
-        manifold = PoincareBall(c=curvature)
+        manifold = get_circum_poincareball(embed_dim)
         logging.info(f"Poincare ball curvature: {manifold.c}")
         return manifold

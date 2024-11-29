@@ -1,4 +1,4 @@
-# Copyright 2024 Yuan He
+# Copyright 2023 Yuan He
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,15 @@
 
 from geoopt.manifolds import PoincareBall
 import torch
+
+
+def get_circum_poincareball(embed_dim: int) -> PoincareBall:
+    """
+    Get a Poincaré Ball with a curvature adapted to a given embedding dimension so that it circumscribes the output embedding space of pre-trained language models.
+    """
+    curvature = 1 / embed_dim
+    manifold = PoincareBall(c=curvature)
+    return manifold
 
 
 def project_onto_subspace(manifold: PoincareBall, point: torch.Tensor, normal: torch.Tensor):
