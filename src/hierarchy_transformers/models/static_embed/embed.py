@@ -26,7 +26,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class StaticPoincareEmbed(torch.nn.Module):
+class HyperbolicStaticEmbedding(torch.nn.Module):
     r"""
     Class for the static hyperbolic embedding models:
 

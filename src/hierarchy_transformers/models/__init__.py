@@ -13,4 +13,4 @@
 # limitations under the License.
 
 from .hierarchy_transformer import HierarchyTransformer
-from .static_embed import StaticPoincareEmbed, StaticPoincareEmbedTrainer
+from .static_embed import HyperbolicStaticEmbedding, HyperbolicStaticEmbeddingTrainer

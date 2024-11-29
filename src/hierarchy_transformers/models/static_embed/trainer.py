@@ -20,13 +20,14 @@ from transformers import get_linear_schedule_with_warmup
 from geoopt.optim import RiemannianAdam
 
 from ...losses import HyperbolicEntailmentConeLoss
-from .poincare_embed import StaticPoincareEmbed
+from .embed import HyperbolicStaticEmbedding
 
 import logging
 
 logger = logging.getLogger(__name__)
 
-class StaticPoincareEmbedTrainer:
+
+class HyperbolicStaticEmbeddingTrainer:
     r"""
     Class for training the static hyperbolic embedding models:
 
@@ -36,7 +37,7 @@ class StaticPoincareEmbedTrainer:
 
     def __init__(
         self,
-        model: StaticPoincareEmbed,
+        model: HyperbolicStaticEmbedding,
         device: torch.device,
         train_dataloader: DataLoader,
         learning_rate: float = 0.01,

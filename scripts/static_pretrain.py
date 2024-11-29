@@ -20,7 +20,7 @@ import click
 from yacs.config import CfgNode
 from deeponto.utils import load_file, set_seed, create_path
 
-from hierarchy_transformers.models import StaticPoincareEmbed, StaticPoincareEmbedTrainer
+from hierarchy_transformers.models import HyperbolicStaticEmbedding, HyperbolicStaticEmbeddingTrainer
 from hierarchy_transformers.models.utils import (
     prepare_hierarchy_examples_for_static,
     load_hierarchy_dataset,
@@ -49,7 +49,7 @@ def main(config_file: str, gpu_id: int):
         model = torch.load(config.pretrained)
     else:
         print(f"Load pre-trained from {config.pretrained}")
-        model = StaticPoincareEmbed(list(entity_lexicon.keys()), embed_dim=config.embed_dim)
+        model = HyperbolicStaticEmbedding(list(entity_lexicon.keys()), embed_dim=config.embed_dim)
     print(model)
     ent2idx = model.ent2idx
 
@@ -57,7 +57,7 @@ def main(config_file: str, gpu_id: int):
     train_dataloader = DataLoader(torch.tensor(train_examples), shuffle=True, batch_size=config.train_batch_size)
 
     device = get_torch_device(gpu_id)
-    static_trainer = StaticPoincareEmbedTrainer(
+    static_trainer = HyperbolicStaticEmbeddingTrainer(
         model=model,
         device=device,
         train_dataloader=train_dataloader,
