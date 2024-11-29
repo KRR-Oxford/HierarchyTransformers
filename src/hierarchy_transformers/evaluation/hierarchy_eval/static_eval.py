@@ -17,8 +17,8 @@ import torch
 from torch.utils.data import DataLoader
 from deeponto.utils import save_file
 
-from .hierarchy_eval import HierarchyEvaluator
-from ..losses import HyperbolicEntailmentConeLoss
+from . import HierarchyEvaluator
+from ...losses import HyperbolicEntailmentConeLoss
 
 
 class StaticPoincareEvaluator(HierarchyEvaluator):

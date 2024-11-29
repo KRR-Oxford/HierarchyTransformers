@@ -13,24 +13,80 @@
 # limitations under the License.
 
 from __future__ import annotations
+
 import torch
 from typing import Optional
 from tqdm.auto import tqdm
 import math
+import pandas as pd
+import logging
+
+logger = logging.getLogger(__name__)
+
 from sentence_transformers.evaluation import SentenceEvaluator
+from hierarchy_transformers import HierarchyTransformer
 
 
 class HierarchyEvaluator(SentenceEvaluator):
-    """Base evaluator for evaluating hierarchy encoding in models."""
+    """
+    Evaluator for evaluating if a model can predict entity hierarchical relationships.
 
-    def __init__(self):
+    The main evaluation metrics are `Precision`, `Recall`, and `F-score`, with overall accuracy (`ACC`) and accuracy on negatives (`ACC-`) additionally reported. The results are written in a `.csv`. If a result file already exists, then values are appended.
+
+    The labels need to be `0` for unrelated pairs and `1` for related pairs.
+    """
+
+    def __init__(
+        self,
+        child_entities: list[str],
+        parent_entities: list[str],
+        labels: list[int],
+        batch_size: int,
+    ):
         super().__init__()
+        
+        # input evaluation examples
+        self.child_entities = child_entities
+        self.parent_entities = parent_entities
+        self.labels = labels
+        # eval batch size
+        self.batch_size = batch_size
+        # result file
+        self.results = pd.DataFrame(columns=["Epoch", "Steps", "Threshold", "Precision", "Recall", "F-score"])
+        
+        # NOTE: static transformation staticmethod to do
+        
+    def inference(self, model):
+        return 
 
-    def inference(self):
+    def __call__(
+        self, model: HierarchyTransformer, output_path: Optional[str] = None, epoch: int = -1, steps: int = -1
+    ) -> dict[str, float]:
         """
-        Inference function to be implemented.
+        Compute the evaluation metrics for the given model.
+
+        Args:
+            model (HierarchyTransformer): The model to evaluate.
+            output_path (str, optional): Path to save the evaluation results `.csv` file. Defaults to `None`.
+            epoch (int, optional): The epoch number. Defaults to `-1`.
+            steps (int, optional): The number of steps. Defaults to `-1`.
+
+        Returns:
+            Dict[str, float]: A dictionary containing the evaluation metrics.
         """
-        raise NotImplementedError
+
+        # output notification
+        if epoch != -1:
+            if steps == -1:
+                out_txt = f" after epoch {epoch}"
+            else:
+                out_txt = f" in epoch {epoch} after {steps} steps"
+        else:
+            out_txt = ""
+
+        logger.info(f"Hierarchy Evaluation of the model on the {self.name} dataset{out_txt}:")
+        
+        # TODO: implement 
 
     @staticmethod
     def evaluate_by_threshold(

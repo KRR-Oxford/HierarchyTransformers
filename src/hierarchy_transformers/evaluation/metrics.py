@@ -62,7 +62,7 @@ def evaluate_by_threshold(
     labels: torch.Tensor,
     threshold: float,
     truth_label: int = 1,
-    smaller_scores_better: bool = True,
+    smaller_scores_better: bool = False,
 ):
     r"""
     Compute evaluation metrics (`Precision`, `Recall`, `F1`, `Accurarcy`, `Accurarcy-`) based on the threshold.
@@ -72,7 +72,7 @@ def evaluate_by_threshold(
         labels (torch.Tensor): Reference labels.
         threshold (float): Threshold that splits the positive and negative predictions.
         truth_label (int): Specify which label represents the truth. Defaults to `1`.
-        smaller_scores_better (bool): Specify if smaller than threshold indicates positive or not.
+        smaller_scores_better (bool): Specify if smaller than threshold indicates positive or not. Defaults to `False`.
     """
 
     # thresholding
@@ -82,6 +82,7 @@ def evaluate_by_threshold(
         predictions = scores > threshold
     # compute results
     results = {
+        "Threshold": threshold,
         **f1_score(predictions=predictions, labels=labels, truth_label=truth_label),
         **accurarcy(predictions=predictions, labels=labels),
         **accurarcy_on_negatives(predictions=predictions, labels=labels, truth_label=truth_label),
@@ -94,7 +95,7 @@ def grid_search(
     labels: torch.Tensor,
     threshold_granularity: int = 100,
     truth_label: int = 1,
-    smaller_scores_better: bool = True,
+    smaller_scores_better: bool = False,
     primary_metric: str = "F1",
     best_primary_metric_value: float = -math.inf,
     preformatted_best_results: dict = {},
@@ -106,7 +107,7 @@ def grid_search(
         labels (torch.Tensor): Reference labels.
         threshold_granularity (int, optional): A score scaling factor to determine the granularity of grid search. Defaults to `100`.
         truth_label (int): Specify which label represents the truth. Defaults to `1`.
-        smaller_scores_better (bool): Specify if smaller than threshold indicates positive or not.
+        smaller_scores_better (bool): Specify if smaller than threshold indicates positive or not. Defaults to `False`.
         primary_metric (str, optional): The primary evaluation metric to determine the grid search result. Defaults to `"F1"`.
         best_primary_metric_value (Optional[float], optional): Best previous primary metric value. Defaults to `-math.inf`.
         preformatted_best_results (dict, optional): Preformatted best results dictionary. Defaults to `{}`.

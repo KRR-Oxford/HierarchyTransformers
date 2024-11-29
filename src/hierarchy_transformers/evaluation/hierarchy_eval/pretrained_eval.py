@@ -17,8 +17,8 @@ import torch
 from deeponto.utils import save_file
 from tqdm.auto import tqdm
 from transformers import pipeline
-from .hierarchy_eval import HierarchyEvaluator
-from ..models import HierarchyTransformer
+from . import HierarchyEvaluator
+from ...models import HierarchyTransformer
 
 
 class PretrainedMaskFillEvaluator(HierarchyEvaluator):

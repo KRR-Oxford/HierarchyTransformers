@@ -12,10 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .hierarchy_eval import evaluate_by_threshold, search_best_threshold
-from .hit_eval import HierarchyTransformerEvaluator
-from .static_eval import StaticPoincareEvaluator
-from .pretrained_eval import (
-    PretrainedMaskFillEvaluator,
-    PretrainedSentenceSimilarityEvaluator,
-)
+from .hit_eval import HierarchyEvaluator

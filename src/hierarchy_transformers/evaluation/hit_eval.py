@@ -12,177 +12,162 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from geoopt.manifolds import PoincareBall
-import torch
-from deeponto.utils import save_file
-from pathlib import Path
+from __future__ import annotations
+
 from typing import Optional
+import pandas as pd
+import os.path
 import logging
+import warnings
 
 logger = logging.getLogger(__name__)
 
-from ..models import HierarchyTransformer
-from .hierarchy_eval import HierarchyEvaluator
+from sentence_transformers.evaluation import SentenceEvaluator
+from hierarchy_transformers import HierarchyTransformer
+from .metrics import evaluate_by_threshold, grid_search
 
 
-class HierarchyTransformerEvaluator(HierarchyEvaluator):
+class HierarchyTransformerEvaluator(SentenceEvaluator):
     """
-    Evaluator for hierarchy transformer encoders (HiTs).
+    Evaluating HiT models for predicting entity hierarchical relationships.
 
-    Hierarchy encoding is evaluated based on the hyperbolic distances between entity
-    embeddings and hyperbolic norms of entity embeddings in the Poincare ball of
-    radius 1/sqrt(d) where d is the embedding dimension.
+    The main evaluation metrics are `Precision`, `Recall`, and `F-score`, with overall accuracy (`ACC`) and accuracy on negatives (`ACC-`) additionally reported. The results are written in a `.csv`. If a result file already exists, then values are appended.
+
+    The labels need to be `0` for unrelated pairs and `1` for related pairs.
+
+    Args:
+        child_entities (list[str]): List of child entity names.
+        parent_entities (list[str]): List of parent entity names.
+        labels (list[int]): List of reference labels.
+        batch_size (int): Evaluation batch size.
+        truth_label (int, optional): Specify which label represents the truth. Defaults to `1`.
+        best_centri_weight (Optional[float], optional): Best centripetal score weight determined on a validation set (used for testing only). Defaults to `None`.
+        best_threshold (Optional[float], optional): Best overall score threshold determined on a validation set (used for testing only). Defaults to `None`.
     """
 
     def __init__(
         self,
-        device: torch.device,
-        eval_batch_size: int,
-        val_examples: list,
-        test_examples: Optional[list] = None,
-        train_examples: Optional[list] = None,
+        child_entities: list[str],
+        parent_entities: list[str],
+        labels: list[int],
+        batch_size: int,
+        truth_label: int = 1,
+        best_centri_weight: Optional[float] = None,
+        best_threshold: Optional[float] = None,
     ):
         super().__init__()
 
-        self.device = device
-        self.eval_batch_size = eval_batch_size
-        self.val_examples = val_examples
-        self.test_examples = test_examples
-        self.train_examples = train_examples
+        # input evaluation examples
+        self.child_entities = child_entities
+        self.parent_entities = parent_entities
+        self.labels = labels
+        # eval batch size
+        self.batch_size = batch_size
+        # truth reference label
+        self.truth_label = truth_label
+        # best thresholds searched on validation sets; only used for testing
+        assert type(best_centri_weight) == type(
+            best_threshold
+        ), "Inconsistent types of hyperparameters 'best_centri_weight' (centripetal score weight) and 'best_threshold' (overall threshold)"
+        self.best_centri_weight = best_centri_weight
+        self.best_threshold = best_threshold
+        # result file
+        self.results = pd.DataFrame(
+            columns=["CentriWeight", "Threshold", "Precision", "Recall", "F1", "Accuracy", "Accuracy-"]
+        )
 
-    @staticmethod
-    def encode(model: HierarchyTransformer, examples: list, eval_batch_size: int):
+        # NOTE: static transformation staticmethod to do
+
+    def inference(self, model: HierarchyTransformer, centri_weight: float):
         """
-        Encode input examples with a given HiT model.
+        The default probing method of the HiT model. It output scores that indicate hierarchical relationships between entities.
         """
-        child_embeds = model.encode(
-            sentences=[x.texts[0] for x in examples], 
-            batch_size=eval_batch_size, 
-            convert_to_tensor=True,
-        )
-        parent_embeds = model.encode(
-            sentences=[x.texts[1] for x in examples], 
-            batch_size=eval_batch_size, 
-            convert_to_tensor=True
-        )
-        labels = torch.tensor([x.label for x in examples]).to(child_embeds.device)
+        child_embeds = model.encode(sentences=self.child_entities, batch_size=self.batch_size, convert_to_tensor=True)
+        parent_embeds = model.encode(sentences=self.parent_entities, batch_size=self.batch_size, convert_to_tensor=True)
         dists = model.manifold.dist(child_embeds, parent_embeds)
         child_norms = model.manifold.dist0(child_embeds)
         parent_norms = model.manifold.dist0(parent_embeds)
-        return torch.stack([labels, dists, child_norms, parent_norms]).T
+        return -(dists + centri_weight * (parent_norms - child_norms))
 
-    @classmethod
-    def score(cls, result_mat: torch.Tensor, centri_score_weight: float):
+    def __call__(
+        self, model: HierarchyTransformer, output_path: Optional[str] = None, epoch: int = -1, steps: int = -1
+    ) -> dict[str, float]:
         """
-        The empirical scoring function for using HiT embeddings to predict subsumptions.
+        Compute the evaluation metrics for the given model.
 
-        The scores are "lower-the-better".
+        Args:
+            model (HierarchyTransformer): The model to evaluate.
+            output_path (str, optional): Path to save the evaluation results `.csv` file. Defaults to `None`.
+            epoch (int, optional): The epoch number. Defaults to `-1`.
+            steps (int, optional): The number of steps. Defaults to `-1`.
 
-        NOTE: In the [paper](https://arxiv.org/abs/2401.11374), the `-` operator is appended to this function to make it "higher-the-better".
+        Returns:
+            Dict[str, float]: A dictionary containing the evaluation metrics.
         """
-        scores = result_mat[:, 1] + centri_score_weight * (result_mat[:, 3] - result_mat[:, 2])
-        labels = result_mat[:, 0]
-        return scores, labels
 
-    @classmethod
-    def search_best_threshold(cls, result_mat: torch.Tensor, threshold_granularity: int = 100):
-        """
-        Grid search the best scoring threshold.
-        """
-        best_f1 = -1.0
-        best_results = None
-        is_updated = True
-
-        for centri_score_weight in range(50):
-            # early stop if increasing the centri score weight does not help
-            if not is_updated:
-                break
-            is_updated = False
-
-            centri_score_weight = (centri_score_weight + 0.1) / 10
-            scores, labels = cls.score(result_mat, centri_score_weight)
-            cur_best_results = super().search_best_threshold(
-                scores,
-                labels,
-                threshold_granularity,
-                determined_metric="F1",
-                best_determined_metric_value=best_f1,
-                preformatted_best_results={"centri_score_weight": centri_score_weight},
-            )
-            if cur_best_results:
-                best_results = cur_best_results
-                best_f1 = best_results["F1"]
-                is_updated = True
-
-        return best_results
-
-    def inference(
-        self,
-        model: HierarchyTransformer,
-        examples: list,
-        best_val_centri_score_weight: float = None,
-        best_val_threshold: float = None,
-    ):
-        """
-        Inference function.
-        """
-        result_mat = self.encode(model, examples, self.eval_batch_size)
-        if not best_val_threshold or not best_val_centri_score_weight:
-            eval_results = self.search_best_threshold(result_mat, 100)
+        # output notification
+        if epoch != -1:
+            if steps == -1:
+                out_txt = f" after epoch {epoch}"
+            else:
+                out_txt = f" in epoch {epoch} after {steps} steps"
         else:
-            eval_scores, eval_labels = self.score(result_mat, best_val_centri_score_weight)
-            eval_results = self.evaluate_by_threshold(eval_scores, eval_labels, best_val_threshold)
-            eval_results = {
-                "centri_score_weight": best_val_centri_score_weight,
-                **eval_results,
-            }
+            out_txt = ""
 
-        return result_mat, eval_results
+        logger.info(f"Hierarchy Evaluation of the model on the {self.name} dataset{out_txt}:")
 
-    def __call__(self, model, output_path: str = None, epoch: int = -1, steps: int = -1) -> float:
-        """
-        This is called to evaluate the model during the training procedure. It returns a score for the evaluation with a higher score indicating a better result.
-        """
-
-        # set to eval mode
-        Path(f"{output_path}/epoch={epoch}.step={steps}").mkdir(parents=True, exist_ok=True)
-        # model.save(f"{output_path}/epoch={epoch}.step={steps}")
-
-        if self.train_examples:
-            logger.info("Evaluate on train examples...")
-            train_result_mat, train_results = self.inference(model, self.train_examples)
-            torch.save(
-                train_result_mat,
-                f"{output_path}/epoch={epoch}.step={steps}/train_result_mat.pt",
+        if self.best_centri_weight and self.best_threshold:
+            logger.info(
+                f"Evaluate on given hyperparemeters `best_centri_weight={self.best_centri_weight}` (centripetal score weight) and `best_threshold={self.best_threshold}` (overall threshold)."
             )
-            save_file(
-                train_results,
-                f"{output_path}/epoch={epoch}.step={steps}/train_results.json",
+            best_results = evaluate_by_threshold(
+                scores=scores,
+                labels=self.labels,
+                threshold=self.best_threshold,
+                truth_label=self.truth_label,
+                smaller_scores_better=False,
+            )
+            try:
+                self.results = pd.read_csv(os.path.join(output_path, "results.tsv"), sep="\t")
+            except:
+                warnings.warn("No previous `results.tsv` detected.")
+            self.results.loc["testing"] = best_results
+        else:
+            logger.info(
+                f"Evaluate with grid search on hyperparameters `best_centri_weight` (centripetal score weight) and `best_threshold` (overall threshold)."
             )
 
-        logger.info("Evaluate on val examples...")
-        val_result_mat, val_results = self.inference(model, self.val_examples)
-        torch.save(
-            val_result_mat,
-            f"{output_path}/epoch={epoch}.step={steps}/val_result_mat.pt",
-        )
-        save_file(val_results, f"{output_path}/epoch={epoch}.step={steps}/val_results.json")
+            # Validation
+            best_f1 = -1.0
+            best_results = None
+            is_updated = True
 
-        if self.test_examples:
-            logger.info("Evaluate on test examples using best val threshold...")
-            test_result_mat, test_results = self.inference(
-                model,
-                self.test_examples,
-                val_results["centri_score_weight"],
-                val_results["threshold"],
-            )
-            torch.save(
-                test_result_mat,
-                f"{output_path}/epoch={epoch}.step={steps}/test_result_mat.pt",
-            )
-            save_file(
-                test_results,
-                f"{output_path}/epoch={epoch}.step={steps}/test_results.json",
-            )
+            for centri_weight in range(50):
+                # early stop if increasing the centri score weight does not help
+                if not is_updated:
+                    break
+                is_updated = False
 
-        return val_results["F1"]
+                centri_weight = (centri_weight + 0.1) / 10
+                scores = self.inference(model, centri_weight)
+                cur_best_results = grid_search(
+                    scores=scores,
+                    labels=self.labels,
+                    threshold_granularity=100,
+                    truth_label=self.truth_label,
+                    smaller_scores_better=False,
+                    primary_metric="F1",
+                    best_primary_metric_value=best_f1,
+                    preformatted_best_results={"CentriWeight": centri_weight},
+                )
+                if cur_best_results:
+                    best_results = cur_best_results
+                    best_f1 = best_results["F1"]
+                    is_updated = True
+
+            idx = f"epoch={epoch},steps={steps}"
+            self.results.loc[idx] = best_results
+            
+        self.results.to_csv(os.path.join(output_path, "results.tsv"), sep="\t")
+        
+        return best_results
