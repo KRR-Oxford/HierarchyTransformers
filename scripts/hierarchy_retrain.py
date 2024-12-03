@@ -15,6 +15,8 @@
 from deeponto.utils import load_file, set_seed
 import os, sys, logging, click
 from yacs.config import CfgNode
+
+from transformers import TrainerCallback
 from sentence_transformers.trainer import SentenceTransformerTrainer
 from sentence_transformers.training_args import SentenceTransformerTrainingArguments
 
@@ -84,10 +86,11 @@ def main(config_file: str):
     trainer = SentenceTransformerTrainer(
         model=model,
         args=args,
-        train_dataset=triplet_dataset["train"],  # loss requires triplets
-        eval_dataset=triplet_dataset["val"],     # loss requires triplet
+        train_dataset=triplet_dataset["train"],  # train loss requires triplets
+        eval_dataset=triplet_dataset["val"],     # val loss requires triplets
         loss=hit_loss,
         evaluator=val_evaluator,                 # actual eval requires labelled pairs
+        callbacks=[BatchLossLoggingCallback()],
     )
     trainer.train()
 
@@ -104,6 +107,14 @@ def main(config_file: str):
     final_output_dir = f"{output_dir}/final"
     model.save(final_output_dir)
 
+
+# Custom callback to maintain progress bar integrity
+class BatchLossLoggingCallback(TrainerCallback):
+    def on_step_begin(self, args, state, control, **kwargs):
+        """
+        Log batch loss without disrupting the progress bar.
+        """
+        # Logs will be handled by the model's forward method, so nothing extra is needed here.
 
 if __name__ == "__main__":
     main()

@@ -15,10 +15,9 @@
 from __future__ import annotations
 
 from typing import Optional
+import os.path, warnings, logging
 import pandas as pd
-import os.path
-import logging
-import warnings
+import torch
 
 from sentence_transformers.evaluation import SentenceEvaluator
 from hierarchy_transformers import HierarchyTransformer
@@ -141,7 +140,7 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
                 scores = self.inference(model, centri_weight)
                 cur_best_results = grid_search(
                     scores=scores,
-                    labels=self.labels,
+                    labels=torch.tensor(self.labels).to(scores.device),
                     threshold_granularity=100,
                     truth_label=self.truth_label,
                     smaller_scores_better=False,
