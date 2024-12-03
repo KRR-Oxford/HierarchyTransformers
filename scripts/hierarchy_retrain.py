@@ -15,8 +15,8 @@
 from deeponto.utils import load_file, set_seed, create_path
 import os, sys, logging, click
 from yacs.config import CfgNode
+import pandas as pd
 
-from transformers import TrainerCallback
 from sentence_transformers.trainer import SentenceTransformerTrainer
 from sentence_transformers.training_args import SentenceTransformerTrainingArguments
 
@@ -25,17 +25,14 @@ from hierarchy_transformers.losses import HierarchyTransformerLoss
 from hierarchy_transformers.evaluation import HierarchyTransformerEvaluator
 from hierarchy_transformers.datasets import load_hf_dataset
 
-logging.basicConfig(
-    level=logging.INFO,
-    handlers=[logging.StreamHandler(sys.stderr)]
-)
+logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stderr)])
 logger = logging.getLogger(__name__)
 
 
 @click.command()
 @click.option("-c", "--config_file", type=click.Path(exists=True))
 def main(config_file: str):
-    
+
     # 0. set seed, load config, and format output dir
     set_seed(8888)
     config = CfgNode(load_file(config_file))
@@ -65,7 +62,7 @@ def main(config_file: str):
         parent_entities=pair_dataset["val"]["parent"],
         labels=pair_dataset["val"]["label"],
         batch_size=config.eval_batch_size,
-        output_path=output_dir
+        output_path=output_dir,
     )
     val_evaluator(model)
 
@@ -76,13 +73,14 @@ def main(config_file: str):
         learning_rate=float(config.learning_rate),
         per_device_train_batch_size=int(config.train_batch_size),
         per_device_eval_batch_size=int(config.eval_batch_size),
-        warmup_ratio=0.1,
-        warmup_steps=int(config.warmup_steps),
+        warmup_ratio=0.1,  # alternatively, set warmup_steps to 500
         eval_strategy="epoch",
         save_strategy="epoch",
         save_total_limit=2,
         logging_steps=100,
-        load_best_model_at_end=True
+        metric_for_best_model="F1",  # to override loss for model selection
+        greater_is_better=True,  # due to F1 score
+        load_best_model_at_end=True,
     )
 
     # 5. Create the trainer & start training
@@ -90,21 +88,24 @@ def main(config_file: str):
         model=model,
         args=args,
         train_dataset=triplet_dataset["train"],  # train loss requires triplets
-        eval_dataset=triplet_dataset["val"],     # val loss requires triplets
+        eval_dataset=triplet_dataset["val"],  # val loss requires triplets
         loss=hit_loss,
-        evaluator=val_evaluator,                 # actual eval requires labelled pairs
+        evaluator=val_evaluator,  # actual eval requires labelled pairs
     )
     trainer.train()
 
-    # 6. Evaluate the model performance on the STS Benchmark test dataset
+    # 6. Evaluate the model performance on the test dataset
+    # read the current validation results to pick the best hyerparameters
+    results = pd.read_csv(os.path.join(output_dir, "results.tsv"), sep="\t", index_col=0)
+    best_val = results.loc[results["F1"].idxmax()]
     test_evaluator = HierarchyTransformerEvaluator(
         child_entities=pair_dataset["test"]["child"],
         parent_entities=pair_dataset["test"]["parent"],
         labels=pair_dataset["test"]["label"],
         batch_size=config.eval_batch_size,
-        output_path=output_dir
+        output_path=output_dir,
     )
-    test_evaluator(model)
+    test_evaluator(model, best_centri_weight=best_val["CentriWeight"], best_threshold=best_val["Threshold"])
 
     # 7. Save the trained & evaluated model locally
     final_output_dir = f"{output_dir}/final"

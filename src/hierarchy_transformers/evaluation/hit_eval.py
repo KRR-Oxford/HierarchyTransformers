@@ -40,8 +40,6 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
         labels (list[int]): List of reference labels.
         batch_size (int): Evaluation batch size.
         truth_label (int, optional): Specify which label represents the truth. Defaults to `1`.
-        best_centri_weight (Optional[float], optional): Best centripetal score weight determined on a validation set (used for testing only). Defaults to `None`.
-        best_threshold (Optional[float], optional): Best overall score threshold determined on a validation set (used for testing only). Defaults to `None`.
     """
 
     def __init__(
@@ -51,12 +49,10 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
         labels: list[int],
         batch_size: int,
         truth_label: int = 1,
-        best_centri_weight: Optional[float] = None,
-        best_threshold: Optional[float] = None,
-        output_path: Optional[str] = None,
     ):
         super().__init__()
-
+        # set primary metric for model selection
+        self.primary_metric = "F1"
         # input evaluation examples
         self.child_entities = child_entities
         self.parent_entities = parent_entities
@@ -65,39 +61,47 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
         self.batch_size = batch_size
         # truth reference label
         self.truth_label = truth_label
-        # best thresholds searched on validation sets; only used for testing
-        assert type(best_centri_weight) == type(
-            best_threshold
-        ), "Inconsistent types of hyperparameters 'best_centri_weight' (centripetal score weight) and 'best_threshold' (overall threshold)"
-        self.best_centri_weight = best_centri_weight
-        self.best_threshold = best_threshold
         # result file
         self.results = pd.DataFrame(
             columns=["CentriWeight", "Threshold", "Precision", "Recall", "F1", "Accuracy", "Accuracy-"]
         )
-        # a temporary fix of trainer not passing the `output_dir` arg to evaluator
-        self.output_path = output_path
         # NOTE: static transformation staticmethod to do
 
-    def inference(self, model: HierarchyTransformer, centri_weight: float, child_embeds: Optional[torch.Tensor] = None, parent_embeds: Optional[torch.Tensor] = None):
+    def inference(
+        self,
+        model: HierarchyTransformer,
+        centri_weight: float,
+        child_embeds: Optional[torch.Tensor] = None,
+        parent_embeds: Optional[torch.Tensor] = None,
+    ):
         """
         The default probing method of the HiT model. It output scores that indicate hierarchical relationships between entities.
-        
+
         Optional `child_embeds` and `parent_embeds` are used to save time from repetitive encoding.
         """
         if child_embeds is None:
             logger.info("Encode child entities.")
-            child_embeds = model.encode(sentences=self.child_entities, batch_size=self.batch_size, convert_to_tensor=True)
+            child_embeds = model.encode(
+                sentences=self.child_entities, batch_size=self.batch_size, convert_to_tensor=True
+            )
         if parent_embeds is None:
             logger.info("Encode parent entities.")
-            parent_embeds = model.encode(sentences=self.parent_entities, batch_size=self.batch_size, convert_to_tensor=True)
+            parent_embeds = model.encode(
+                sentences=self.parent_entities, batch_size=self.batch_size, convert_to_tensor=True
+            )
         dists = model.manifold.dist(child_embeds, parent_embeds)
         child_norms = model.manifold.dist0(child_embeds)
         parent_norms = model.manifold.dist0(parent_embeds)
         return -(dists + centri_weight * (parent_norms - child_norms))
 
     def __call__(
-        self, model: HierarchyTransformer, output_path: Optional[str] = None, epoch: int = -1, steps: int = -1
+        self,
+        model: HierarchyTransformer,
+        output_path: Optional[str] = None,
+        epoch: int = -1,
+        steps: int = -1,
+        best_centri_weight: Optional[float] = None,
+        best_threshold: Optional[float] = None,
     ) -> dict[str, float]:
         """
         Compute the evaluation metrics for the given model.
@@ -107,36 +111,43 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
             output_path (str, optional): Path to save the evaluation results `.csv` file. Defaults to `None`.
             epoch (int, optional): The epoch number. Defaults to `-1`.
             steps (int, optional): The number of steps. Defaults to `-1`.
-
+            best_centri_weight (float, optional): The best centripetal score weight searched on a validation set (used for testing). Defaults to `None`.
+            best_threshold (float, optional): The best overall threshold searched on a validation set (used for testing). Defaults to `None`.
+            
         Returns:
             Dict[str, float]: A dictionary containing the evaluation metrics.
         """
-        
-        # a temporary fix of trainer not passing the `output_dir` arg to evaluator
-        if not output_path:
-            output_path = self.output_path
-            warnings.warn("`output_dir` arg is not given by the trainer; use pre-defined one on init.")
-        
-        logger.info("Encode child entities.")
-        child_embeds = model.encode(sentences=self.child_entities, batch_size=self.batch_size, convert_to_tensor=True) 
-        logger.info("Encode parent entities.")
-        parent_embeds = model.encode(sentences=self.parent_entities, batch_size=self.batch_size, convert_to_tensor=True) 
 
-        if self.best_centri_weight and self.best_threshold:
-            
+        # best thresholds and metric searched on validation sets
+        assert type(best_centri_weight) == type(
+            best_threshold
+        ), "Inconsistent types of hyperparameters 'best_centri_weight' (centripetal score weight) and 'best_threshold' (overall threshold)"
+
+        logger.info("Encode child entities.")
+        child_embeds = model.encode(sentences=self.child_entities, batch_size=self.batch_size, convert_to_tensor=True)
+        logger.info("Encode parent entities.")
+        parent_embeds = model.encode(sentences=self.parent_entities, batch_size=self.batch_size, convert_to_tensor=True)
+
+        if best_centri_weight and best_threshold:
+
             # Testing with pre-defined hyperparameters
             logger.info(
                 f"Evaluate on given hyperparemeters `best_centri_weight={self.best_centri_weight}` (centripetal score weight) and `best_threshold={self.best_threshold}` (overall threshold)."
             )
-            
+
             # Compute the scores
-            scores = self.inference(model=model, centri_weight=self.best_centri_weight, child_embeds=child_embeds, parent_embeds=parent_embeds)
-            
+            scores = self.inference(
+                model=model,
+                centri_weight=best_centri_weight,
+                child_embeds=child_embeds,
+                parent_embeds=parent_embeds,
+            )
+
             # Compute the evaluation metrics
             best_results = evaluate_by_threshold(
                 scores=scores,
                 labels=self.labels,
-                threshold=self.best_threshold,
+                threshold=best_threshold,
                 truth_label=self.truth_label,
                 smaller_scores_better=False,
             )
@@ -160,11 +171,13 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
                     break
                 is_updated = False
 
-                centri_weight = (centri_weight + 0.1) / 10
-                
+                centri_weight /= 10
+
                 # Compute the scores
-                scores = self.inference(model=model, centri_weight=centri_weight, child_embeds=child_embeds, parent_embeds=parent_embeds)
-                
+                scores = self.inference(
+                    model=model, centri_weight=centri_weight, child_embeds=child_embeds, parent_embeds=parent_embeds
+                )
+
                 # Perform grid search on hyperparameters
                 cur_best_results = grid_search(
                     scores=scores,
@@ -181,11 +194,11 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
                     best_f1 = best_results["F1"]
                     is_updated = True
 
-            idx = f"epoch={epoch},steps={steps}"
+            idx = f"epoch={epoch}"
             self.results.loc[idx] = best_results
 
         self.results.to_csv(os.path.join(output_path, "results.tsv"), sep="\t")
-            
+
         logger.info(f"Eval results: {best_results}")
 
-        return best_results["F1"]
+        return best_results
