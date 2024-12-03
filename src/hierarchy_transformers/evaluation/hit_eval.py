@@ -153,7 +153,7 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
             )
             best_results["centri_weight"] = best_centri_weight
             try:
-                self.results = pd.read_csv(os.path.join(output_path, "results.tsv"), sep="\t")
+                self.results = pd.read_csv(os.path.join(output_path, "results.tsv"), sep="\t", index_col=0)
             except:
                 warnings.warn("No previous `results.tsv` detected.")
             self.results.loc["testing"] = best_results
