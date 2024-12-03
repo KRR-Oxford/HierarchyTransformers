@@ -83,8 +83,8 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
         
         Optional `child_embeds` and `parent_embeds` are used to save time from repetitive encoding.
         """
-        child_embeds = model.encode(sentences=self.child_entities, batch_size=self.batch_size, convert_to_tensor=True) if not child_embeds else child_embeds
-        parent_embeds = model.encode(sentences=self.parent_entities, batch_size=self.batch_size, convert_to_tensor=True) if not parent_embeds else parent_embeds
+        child_embeds = model.encode(sentences=self.child_entities, batch_size=self.batch_size, convert_to_tensor=True) if child_embeds is None else child_embeds
+        parent_embeds = model.encode(sentences=self.parent_entities, batch_size=self.batch_size, convert_to_tensor=True) if parent_embeds is None else parent_embeds
         dists = model.manifold.dist(child_embeds, parent_embeds)
         child_norms = model.manifold.dist0(child_embeds)
         parent_norms = model.manifold.dist0(parent_embeds)
@@ -107,14 +107,17 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
         """
 
         if self.best_centri_weight and self.best_threshold:
+            
             # Testing with pre-defined hyperparameters
             logger.info(
                 f"Evaluate on given hyperparemeters `best_centri_weight={self.best_centri_weight}` (centripetal score weight) and `best_threshold={self.best_threshold}` (overall threshold)."
             )
+            
             # Compute the scores
             child_embeds = model.encode(sentences=self.child_entities, batch_size=self.batch_size, convert_to_tensor=True) 
             parent_embeds = model.encode(sentences=self.parent_entities, batch_size=self.batch_size, convert_to_tensor=True) 
             scores = self.inference(model=model, centri_weight=self.best_centri_weight, child_embeds=child_embeds, parent_embeds=parent_embeds)
+            
             # Compute the evaluation metrics
             best_results = evaluate_by_threshold(
                 scores=scores,
@@ -150,6 +153,7 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
                 parent_embeds = model.encode(sentences=self.parent_entities, batch_size=self.batch_size, convert_to_tensor=True) 
                 scores = self.inference(model=model, centri_weight=centri_weight, child_embeds=child_embeds, parent_embeds=parent_embeds)
                 
+                # Perform grid search on hyperparameters
                 cur_best_results = grid_search(
                     scores=scores,
                     labels=torch.tensor(self.labels).to(scores.device),
