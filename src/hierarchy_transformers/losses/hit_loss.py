@@ -39,6 +39,7 @@ class HierarchyTransformerLoss(torch.nn.Module):
         super().__init__()
 
         self.model = model
+        self.manifold = self.model.manifold
         self.cluster_loss = HyperbolicClusteringLoss(self.model.manifold, clustering_loss_margin)
         self.centri_loss = HyperbolicCentripetalLoss(self.model.manifold, centripetal_loss_margin)
         self.cluster_weight = clustering_loss_weight
