@@ -114,9 +114,23 @@ parent_norms = model.manifold.dist0(parent_entity_embeddings)
 subsumption_scores = - (dists + centri_score_weight * (parent_norms - child_norms))
 ```
 
-Training and evaluation scripts are available at [here](https://github.com/KRR-Oxford/HierarchyTransformers/tree/main/scripts). See `scripts/evaluate.py` for how we determine the hyperparameters on the validation set for subsumption prediction.
+### Reproduce Model Training
 
-Technical details are presented in the [paper](https://arxiv.org/abs/2401.11374).
+Use the [training and evaluation scripts]((https://github.com/KRR-Oxford/HierarchyTransformers/tree/main/scripts)) to reproduce the complete process of model training, validation, and final testing.
+
+```bash
+# use the following script if you want to train a HiT model
+python scripts/hierarchy_retrain.py -c path_to_config_file.yaml
+```
+
+To run on a single GPU (which we found it somehow faster):
+
+```bash
+# run on GPU_id=0
+CUDA_VISIBLE_DEVICES=0 python scripts/hierarchy_retrain.py -c path_to_config_file.yaml
+```
+
+More technical details are presented in the [paper](https://arxiv.org/abs/2401.11374).
 
 ## License
 

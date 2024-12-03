@@ -53,6 +53,7 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
         truth_label: int = 1,
         best_centri_weight: Optional[float] = None,
         best_threshold: Optional[float] = None,
+        output_path: Optional[str] = None,
     ):
         super().__init__()
 
@@ -74,7 +75,8 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
         self.results = pd.DataFrame(
             columns=["CentriWeight", "Threshold", "Precision", "Recall", "F1", "Accuracy", "Accuracy-"]
         )
-
+        # a temporary fix of trainer not passing the `output_dir` arg to evaluator
+        self.output_path = output_path
         # NOTE: static transformation staticmethod to do
 
     def inference(self, model: HierarchyTransformer, centri_weight: float, child_embeds: Optional[torch.Tensor] = None, parent_embeds: Optional[torch.Tensor] = None):
@@ -109,6 +111,11 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
         Returns:
             Dict[str, float]: A dictionary containing the evaluation metrics.
         """
+        
+        # a temporary fix of trainer not passing the `output_dir` arg to evaluator
+        if not output_path:
+            output_path = self.output_path
+            warnings.warn("`output_dir` arg is not given by the trainer; use pre-defined one on init.")
         
         logger.info("Encode child entities.")
         child_embeds = model.encode(sentences=self.child_entities, batch_size=self.batch_size, convert_to_tensor=True) 

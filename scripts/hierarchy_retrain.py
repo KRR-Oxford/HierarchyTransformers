@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from deeponto.utils import load_file, set_seed
+from deeponto.utils import load_file, set_seed, create_path
 import os, sys, logging, click
 from yacs.config import CfgNode
 
@@ -42,6 +42,7 @@ def main(config_file: str):
     model_path_suffix = config.model_path.split(os.path.sep)[-1]
     dataset_path_suffix = config.dataset_path.split(os.path.sep)[-1]
     output_dir = f"experiments/HiT-{model_path_suffix}-{dataset_path_suffix}-{config.dataset_name}"
+    create_path(output_dir)
 
     # 1. Load dataset and pre-trained model
     triplet_dataset = load_hf_dataset(config.dataset_path, config.dataset_name + "-Triplets")
@@ -64,8 +65,9 @@ def main(config_file: str):
         parent_entities=pair_dataset["val"]["parent"],
         labels=pair_dataset["val"]["label"],
         batch_size=config.eval_batch_size,
+        output_path=output_dir
     )
-    val_evaluator(model, output_dir)
+    val_evaluator(model)
 
     # 4. Define the training arguments
     args = SentenceTransformerTrainingArguments(
@@ -100,6 +102,7 @@ def main(config_file: str):
         parent_entities=pair_dataset["test"]["parent"],
         labels=pair_dataset["test"]["label"],
         batch_size=config.eval_batch_size,
+        output_path=output_dir
     )
     test_evaluator(model)
 
