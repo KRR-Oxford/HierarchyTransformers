@@ -57,47 +57,48 @@ def main(config_file: str):
     )
     logger.info(f"HiT loss config: {hit_loss.get_config_dict()}")
 
-    # 3. Define a validation evaluator for use during training.
-    val_evaluator = HierarchyTransformerEvaluator(
-        child_entities=pair_dataset["val"]["child"],
-        parent_entities=pair_dataset["val"]["parent"],
-        labels=pair_dataset["val"]["label"],
-        batch_size=config.eval_batch_size,
-        truth_label=1,
-    )
+    # # 3. Define a validation evaluator for use during training.
+    # val_evaluator = HierarchyTransformerEvaluator(
+    #     child_entities=pair_dataset["val"]["child"],
+    #     parent_entities=pair_dataset["val"]["parent"],
+    #     labels=pair_dataset["val"]["label"],
+    #     batch_size=config.eval_batch_size,
+    #     truth_label=1,
+    # )
 
-    # 4. Define the training arguments
-    args = SentenceTransformerTrainingArguments(
-        output_dir=output_dir,
-        num_train_epochs=int(config.num_train_epochs),
-        learning_rate=float(config.learning_rate),
-        per_device_train_batch_size=int(config.train_batch_size),
-        per_device_eval_batch_size=int(config.eval_batch_size),
-        warmup_ratio=0.1,  # alternatively, set warmup_steps to 500
-        eval_strategy="epoch",
-        save_strategy="epoch",
-        save_total_limit=2,
-        logging_steps=100,
-        metric_for_best_model="f1",  # to override loss for model selection
-        greater_is_better=True,  # due to F1 score
-        load_best_model_at_end=True,
-    )
+    # # 4. Define the training arguments
+    # args = SentenceTransformerTrainingArguments(
+    #     output_dir=output_dir,
+    #     num_train_epochs=int(config.num_train_epochs),
+    #     learning_rate=float(config.learning_rate),
+    #     per_device_train_batch_size=int(config.train_batch_size),
+    #     per_device_eval_batch_size=int(config.eval_batch_size),
+    #     warmup_ratio=0.1,  # alternatively, set warmup_steps to 500
+    #     eval_strategy="epoch",
+    #     save_strategy="epoch",
+    #     save_total_limit=2,
+    #     logging_steps=100,
+    #     metric_for_best_model="f1",  # to override loss for model selection
+    #     greater_is_better=True,  # due to F1 score
+    #     load_best_model_at_end=True,
+    # )
 
-    # 5. Create the trainer & start training
-    trainer = SentenceTransformerTrainer(
-        model=model,
-        args=args,
-        train_dataset=triplet_dataset["train"],  # train loss requires triplets
-        eval_dataset=triplet_dataset["val"],  # val loss requires triplets
-        loss=hit_loss,
-        evaluator=val_evaluator,  # actual eval requires labelled pairs
-    )
-    trainer.train()
+    # # 5. Create the trainer & start training
+    # trainer = SentenceTransformerTrainer(
+    #     model=model,
+    #     args=args,
+    #     train_dataset=triplet_dataset["train"],  # train loss requires triplets
+    #     eval_dataset=triplet_dataset["val"],  # val loss requires triplets
+    #     loss=hit_loss,
+    #     evaluator=val_evaluator,  # actual eval requires labelled pairs
+    # )
+    # trainer.train()
 
     # 6. Evaluate the model performance on the test dataset
     # read the current validation results to pick the best hyerparameters
     results = pd.read_csv(os.path.join(output_dir, "eval", "results.tsv"), sep="\t", index_col=0)
     best_val = results.loc[results["f1"].idxmax()]
+    logger.info(f"Evaluate on test dataset with hyperparameters: centri_weight={best_val["centri_weight"]}; threshold={best_val["threshold"]}")
     test_evaluator = HierarchyTransformerEvaluator(
         child_entities=pair_dataset["test"]["child"],
         parent_entities=pair_dataset["test"]["parent"],

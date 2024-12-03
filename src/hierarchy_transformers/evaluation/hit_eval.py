@@ -146,7 +146,7 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
             # Compute the evaluation metrics
             best_results = evaluate_by_threshold(
                 scores=scores,
-                labels=self.labels,
+                labels=torch.tensor(self.labels).to(scores.device),
                 threshold=best_threshold,
                 truth_label=self.truth_label,
                 smaller_scores_better=False,
