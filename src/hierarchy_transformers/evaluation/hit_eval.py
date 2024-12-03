@@ -151,6 +151,7 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
                 truth_label=self.truth_label,
                 smaller_scores_better=False,
             )
+            best_results["centri_weight"] = best_centri_weight
             try:
                 self.results = pd.read_csv(os.path.join(output_path, "results.tsv"), sep="\t")
             except:

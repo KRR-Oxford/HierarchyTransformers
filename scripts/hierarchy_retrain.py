@@ -45,7 +45,7 @@ def main(config_file: str):
     # NOTE: according to docs, it is very important to have column names ["child", "parent", "negative"] *in order* to match ["anchor", "positive", "negative"]
     triplet_dataset = load_hf_dataset(config.dataset_path, config.dataset_name + "-Triplets")
     pair_dataset = load_hf_dataset(config.dataset_path, config.dataset_name + "-Pairs")
-    model = HierarchyTransformer.from_pretrained(model_name_or_path=config.model_path)
+    model = HierarchyTransformer.from_pretrained(model_name_or_path="/home/yuan/projects/HiT/experiments/HiT-all-MiniLM-L6-v2-WordNetNoun-MixedHop-RandomNegatives/checkpoint-26670")
 
     # 2. set up the loss function
     hit_loss = HierarchyTransformerLoss(
@@ -97,8 +97,11 @@ def main(config_file: str):
     # 6. Evaluate the model performance on the test dataset
     # read the current validation results to pick the best hyerparameters
     results = pd.read_csv(os.path.join(output_dir, "eval", "results.tsv"), sep="\t", index_col=0)
+    print(results)
     best_val = results.loc[results["f1"].idxmax()]
-    logger.info(f"Evaluate on test dataset with hyperparameters: centri_weight={best_val["centri_weight"]}; threshold={best_val["threshold"]}")
+    best_val_centri_weight = best_val["centri_weight"]
+    best_val_threshold = best_val["threshold"]
+    logger.info(f"Evaluate on test dataset with hyperparameters: centri_weight={best_val_centri_weight}; threshold={best_val_threshold}")
     test_evaluator = HierarchyTransformerEvaluator(
         child_entities=pair_dataset["test"]["child"],
         parent_entities=pair_dataset["test"]["parent"],
@@ -106,11 +109,11 @@ def main(config_file: str):
         batch_size=config.eval_batch_size,
         truth_label=1,
     )
-    test_evaluator(model, best_centri_weight=best_val["centri_weight"], best_threshold=best_val["threshold"])
+    test_evaluator(model=model, output_path=os.path.join(output_dir, "eval"), best_centri_weight=best_val_centri_weight, best_threshold=best_val_threshold)
 
     # 7. Save the trained & evaluated model locally
-    final_output_dir = f"{output_dir}/final"
-    model.save(final_output_dir)
+    # final_output_dir = f"{output_dir}/final"
+    # model.save(final_output_dir)
 
 
 if __name__ == "__main__":
