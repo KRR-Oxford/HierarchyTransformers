@@ -42,6 +42,7 @@ def main(config_file: str):
     create_path(output_dir)
 
     # 1. Load dataset and pre-trained model
+    # NOTE: according to docs, it is very important to have column names ["child", "parent", "negative"] *in order* to match ["anchor", "positive", "negative"]
     triplet_dataset = load_hf_dataset(config.dataset_path, config.dataset_name + "-Triplets")
     pair_dataset = load_hf_dataset(config.dataset_path, config.dataset_name + "-Pairs")
     model = HierarchyTransformer.from_pretrained(model_name_or_path=config.model_path)

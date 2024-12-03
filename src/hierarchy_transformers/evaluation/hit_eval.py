@@ -132,7 +132,7 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
 
             # Testing with pre-defined hyperparameters
             logger.info(
-                f"Evaluate on given hyperparemeters `best_centri_weight={self.best_centri_weight}` (centripetal score weight) and `best_threshold={self.best_threshold}` (overall threshold)."
+                f"Evaluate on given hyperparemeters `best_centri_weight={best_centri_weight}` (centripetal score weight) and `best_threshold={best_threshold}` (overall threshold)."
             )
 
             # Compute the scores
