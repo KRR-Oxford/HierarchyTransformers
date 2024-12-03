@@ -18,18 +18,18 @@ import torch
 from hierarchy_transformers.models import HierarchyTransformer
 
 
-@pytest.fixture(params=os.getenv("MODEL_NAMES", "").split(","))
-def model_name(request):
+@pytest.fixture(params=os.getenv("MODEL_PATHS", "").split(","))
+def model_path(request):
     # Ensure there are valid model names
     if not request.param:
-        pytest.fail("No valid model names found in the MODEL_NAMES environment variable")
+        pytest.fail("No valid model names found in the MODEL_PATHS environment variable")
     return request.param.strip()  # Strip any extra spaces
 
 
-def test_hierarchy_transformer_loading(model_name):
+def test_hierarchy_transformer_loading(model_path):
     try:
         # Attempt to load the HierarchyTransformer model
-        model = HierarchyTransformer.from_pretrained(model_name)
+        model = HierarchyTransformer.from_pretrained(model_path)
     except Exception as e:
         pytest.fail(f"Model failed to load: {str(e)}")
 

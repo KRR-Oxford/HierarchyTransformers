@@ -18,14 +18,14 @@ import random
 from datasets import load_dataset
 
 
-@pytest.fixture(params=os.getenv("DATASET_NAMES", "").split(","))
-def dataset_name(request):
+@pytest.fixture(params=os.getenv("DATASET_PATHS", "").split(","))
+def dataset_path(request):
     # Ensure there are valid dataset names
     if not request.param:
-        pytest.fail("No valid dataset names found in the DATASET_NAMES environment variable")
+        pytest.fail("No valid dataset names found in the DATASET_PATHS environment variable")
     return request.param.strip()  # Strip any extra spaces
 
-def test_dataset_loading(dataset_name):
+def test_dataset_loading(dataset_path):
     
     hop_type = random.choice(["MultiHop", "MixedHop"])
     neg_type = random.choice(["HardNegatives", "RandomNegatives"])
@@ -33,7 +33,7 @@ def test_dataset_loading(dataset_name):
     part = f"{hop_type}-{neg_type}-{struct_type}"
     try:
         # Attempt to load the HierarchyTransformer model
-        dataset = load_dataset(dataset_name, part)
+        dataset = load_dataset(dataset_path, part)
     except Exception as e:
         pytest.fail(f"Dataset failed to load: {str(e)}")
 
