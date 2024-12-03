@@ -180,6 +180,6 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
         if output_path:
             self.results.to_csv(os.path.join(output_path, "results.tsv"), sep="\t")
             
-        print(self.results)
+        logger.info(f"Eval results: {best_results}")
 
-        return best_results
+        return best_results["F1"]

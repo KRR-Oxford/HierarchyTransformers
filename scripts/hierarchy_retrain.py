@@ -51,8 +51,7 @@ def main(config_file: str):
         centripetal_loss_weight=config.hit_loss.centripetal_loss_weight,
         centripetal_loss_margin=config.hit_loss.centripetal_loss_margin,
     )
-
-    print(hit_loss.get_config_dict())
+    logger.info(f"HiT loss config: {hit_loss.get_config_dict()}")
 
     # 3. Define a validation evaluator for use during training.
     val_evaluator = HierarchyTransformerEvaluator(
