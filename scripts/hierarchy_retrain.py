@@ -15,7 +15,6 @@
 from deeponto.utils import load_file, set_seed, create_path
 import os, sys, logging, click
 from yacs.config import CfgNode
-import pandas as pd
 
 from sentence_transformers.trainer import SentenceTransformerTrainer
 from sentence_transformers.training_args import SentenceTransformerTrainingArguments
@@ -73,7 +72,7 @@ def main(config_file: str):
         learning_rate=float(config.learning_rate),
         per_device_train_batch_size=int(config.train_batch_size),
         per_device_eval_batch_size=int(config.eval_batch_size),
-        warmup_steps=500,  # alternatively, set warmup_steps to 500
+        warmup_steps=500,  
         eval_strategy="epoch",
         save_strategy="epoch",
         save_total_limit=2,
