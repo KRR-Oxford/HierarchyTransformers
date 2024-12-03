@@ -35,8 +35,13 @@ logger = logging.getLogger(__name__)
 @click.command()
 @click.option("-c", "--config_file", type=click.Path(exists=True))
 def main(config_file: str):
+    
+    # 0. set seed, load config, and format output dir
     set_seed(8888)
     config = CfgNode(load_file(config_file))
+    model_path_suffix = config.model_path.split(os.path.sep)[-1]
+    dataset_path_suffix = config.dataset_path.split(os.path.sep)[-1]
+    output_dir = f"experiments/HiT-{model_path_suffix}-{dataset_path_suffix}-{config.dataset_name}"
 
     # 1. Load dataset and pre-trained model
     triplet_dataset = load_hf_dataset(config.dataset_path, config.dataset_name + "-Triplets")
@@ -60,12 +65,9 @@ def main(config_file: str):
         labels=pair_dataset["val"]["label"],
         batch_size=config.eval_batch_size,
     )
-    val_evaluator(model)
+    val_evaluator(model, output_dir)
 
     # 4. Define the training arguments
-    model_path_suffix = config.model_path.split(os.path.sep)[-1]
-    dataset_path_suffix = config.dataset_path.split(os.path.sep)[-1]
-    output_dir = f"experiments/HiT-{model_path_suffix}-{dataset_path_suffix}-{config.dataset_name}"
     args = SentenceTransformerTrainingArguments(
         output_dir=output_dir,
         num_train_epochs=int(config.num_train_epochs),
@@ -89,7 +91,6 @@ def main(config_file: str):
         eval_dataset=triplet_dataset["val"],     # val loss requires triplets
         loss=hit_loss,
         evaluator=val_evaluator,                 # actual eval requires labelled pairs
-        callbacks=[BatchLossLoggingCallback()],
     )
     trainer.train()
 
@@ -106,14 +107,6 @@ def main(config_file: str):
     final_output_dir = f"{output_dir}/final"
     model.save(final_output_dir)
 
-
-# Custom callback to maintain progress bar integrity
-class BatchLossLoggingCallback(TrainerCallback):
-    def on_step_begin(self, args, state, control, **kwargs):
-        """
-        Log batch loss without disrupting the progress bar.
-        """
-        # Logs will be handled by the model's forward method, so nothing extra is needed here.
 
 if __name__ == "__main__":
     main()

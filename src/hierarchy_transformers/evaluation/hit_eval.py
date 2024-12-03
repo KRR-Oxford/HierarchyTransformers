@@ -177,8 +177,7 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
             idx = f"epoch={epoch},steps={steps}"
             self.results.loc[idx] = best_results
 
-        if output_path:
-            self.results.to_csv(os.path.join(output_path, "results.tsv"), sep="\t")
+        self.results.to_csv(os.path.join(output_path, "results.tsv"), sep="\t")
             
         logger.info(f"Eval results: {best_results}")
 
