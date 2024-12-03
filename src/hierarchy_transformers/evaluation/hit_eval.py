@@ -83,8 +83,12 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
         
         Optional `child_embeds` and `parent_embeds` are used to save time from repetitive encoding.
         """
-        child_embeds = model.encode(sentences=self.child_entities, batch_size=self.batch_size, convert_to_tensor=True) if child_embeds is None else child_embeds
-        parent_embeds = model.encode(sentences=self.parent_entities, batch_size=self.batch_size, convert_to_tensor=True) if parent_embeds is None else parent_embeds
+        if child_embeds is None:
+            logger.info("Encode child entities.")
+            child_embeds = model.encode(sentences=self.child_entities, batch_size=self.batch_size, convert_to_tensor=True)
+        if parent_embeds is None:
+            logger.info("Encode parent entities.")
+            parent_embeds = model.encode(sentences=self.parent_entities, batch_size=self.batch_size, convert_to_tensor=True)
         dists = model.manifold.dist(child_embeds, parent_embeds)
         child_norms = model.manifold.dist0(child_embeds)
         parent_norms = model.manifold.dist0(parent_embeds)
@@ -105,6 +109,11 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
         Returns:
             Dict[str, float]: A dictionary containing the evaluation metrics.
         """
+        
+        logger.info("Encode child entities.")
+        child_embeds = model.encode(sentences=self.child_entities, batch_size=self.batch_size, convert_to_tensor=True) 
+        logger.info("Encode parent entities.")
+        parent_embeds = model.encode(sentences=self.parent_entities, batch_size=self.batch_size, convert_to_tensor=True) 
 
         if self.best_centri_weight and self.best_threshold:
             
@@ -114,8 +123,6 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
             )
             
             # Compute the scores
-            child_embeds = model.encode(sentences=self.child_entities, batch_size=self.batch_size, convert_to_tensor=True) 
-            parent_embeds = model.encode(sentences=self.parent_entities, batch_size=self.batch_size, convert_to_tensor=True) 
             scores = self.inference(model=model, centri_weight=self.best_centri_weight, child_embeds=child_embeds, parent_embeds=parent_embeds)
             
             # Compute the evaluation metrics
@@ -149,8 +156,6 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
                 centri_weight = (centri_weight + 0.1) / 10
                 
                 # Compute the scores
-                child_embeds = model.encode(sentences=self.child_entities, batch_size=self.batch_size, convert_to_tensor=True) 
-                parent_embeds = model.encode(sentences=self.parent_entities, batch_size=self.batch_size, convert_to_tensor=True) 
                 scores = self.inference(model=model, centri_weight=centri_weight, child_embeds=child_embeds, parent_embeds=parent_embeds)
                 
                 # Perform grid search on hyperparameters
@@ -172,6 +177,9 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
             idx = f"epoch={epoch},steps={steps}"
             self.results.loc[idx] = best_results
 
-        self.results.to_csv(os.path.join(output_path, "results.tsv"), sep="\t")
+        if output_path:
+            self.results.to_csv(os.path.join(output_path, "results.tsv"), sep="\t")
+            
+        print(self.results)
 
         return best_results
