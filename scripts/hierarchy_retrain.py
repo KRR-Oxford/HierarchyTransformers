@@ -64,8 +64,6 @@ def main(config_file: str):
         batch_size=config.eval_batch_size,
         truth_label=1,
     )
-    # eval in the beginning; debug use
-    val_evaluator(model, output_path=os.path.join(output_dir, "eval"), epoch=-1)
 
     # 4. Define the training arguments
     args = SentenceTransformerTrainingArguments(
