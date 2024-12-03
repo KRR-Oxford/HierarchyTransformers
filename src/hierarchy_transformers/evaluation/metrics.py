@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
 from tqdm import tqdm
 import math
 import torch
@@ -44,7 +43,7 @@ def accurarcy(predictions: torch.Tensor, labels: torch.Tensor):
     Pytorch tensor implementation of `accuracy` computation.
     """
     acc = torch.sum(labels == predictions) / len(labels)
-    return {"Accuracy": acc}
+    return {"Accuracy": acc.item()}
 
 
 def accurarcy_on_negatives(predictions: torch.Tensor, labels: torch.Tensor, truth_label: int = 1):
@@ -54,7 +53,7 @@ def accurarcy_on_negatives(predictions: torch.Tensor, labels: torch.Tensor, trut
     That is, it computes accuracy only w.r.t. negative samples (with `label != truth_label`).
     """
     neg_acc = torch.sum((labels == predictions) & (labels != truth_label)) / torch.sum(labels != truth_label)
-    return {"Accuracy-": neg_acc}
+    return {"Accuracy-": neg_acc.item()}
 
 
 def evaluate_by_threshold(
