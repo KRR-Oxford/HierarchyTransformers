@@ -13,9 +13,7 @@
 # limitations under the License.
 
 from deeponto.utils import load_file, set_seed
-import logging
-import os
-import click
+import os, sys, logging, click
 from yacs.config import CfgNode
 from sentence_transformers.trainer import SentenceTransformerTrainer
 from sentence_transformers.training_args import SentenceTransformerTrainingArguments
@@ -25,9 +23,11 @@ from hierarchy_transformers.losses import HierarchyTransformerLoss
 from hierarchy_transformers.evaluation import HierarchyTransformerEvaluator
 from hierarchy_transformers.datasets import load_hf_dataset
 
-
+logging.basicConfig(
+    level=logging.INFO,
+    handlers=[logging.StreamHandler(sys.stderr)]
+)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 @click.command()
@@ -37,7 +37,8 @@ def main(config_file: str):
     config = CfgNode(load_file(config_file))
 
     # 1. Load dataset and pre-trained model
-    dataset = load_hf_dataset(config.dataset_path, config.dataset_name)
+    triplet_dataset = load_hf_dataset(config.dataset_path, config.dataset_name + "-Triplets")
+    pair_dataset = load_hf_dataset(config.dataset_path, config.dataset_name + "-Pairs")
     model = HierarchyTransformer.from_pretrained(model_name_or_path=config.model_path)
 
     # 2. set up the loss function
@@ -53,25 +54,27 @@ def main(config_file: str):
 
     # 3. Define a validation evaluator for use during training.
     val_evaluator = HierarchyTransformerEvaluator(
-        child_entities=dataset["val"]["child"],
-        parent_entities=dataset["val"]["parent"],
-        labels=dataset["val"]["label"],
+        child_entities=pair_dataset["val"]["child"],
+        parent_entities=pair_dataset["val"]["parent"],
+        labels=pair_dataset["val"]["label"],
         batch_size=config.eval_batch_size,
     )
+    val_evaluator(model)
 
     # 4. Define the training arguments
-    dataset_suffix = config.data_path.split(os.path.sep)[-1]
-    output_dir = f"experiments/HiT-{dataset_suffix}-{config.dataset_name}"
+    model_path_suffix = config.model_path.split(os.path.sep)[-1]
+    dataset_path_suffix = config.dataset_path.split(os.path.sep)[-1]
+    output_dir = f"experiments/HiT-{model_path_suffix}-{dataset_path_suffix}-{config.dataset_name}"
     args = SentenceTransformerTrainingArguments(
         output_dir=output_dir,
-        num_train_epochs=config.num_train_epochs,
-        learning_rate=config.learning_rate,
-        per_device_train_batch_size=config.train_batch_size,
-        per_device_eval_batch_size=config.eval_batch_size,
+        num_train_epochs=int(config.num_train_epochs),
+        learning_rate=float(config.learning_rate),
+        per_device_train_batch_size=int(config.train_batch_size),
+        per_device_eval_batch_size=int(config.eval_batch_size),
         warmup_ratio=0.1,
-        warmup_steps=config.warmup_steps,
-        eval_strategy="epochs",
-        save_strategy="epochs",
+        warmup_steps=int(config.warmup_steps),
+        eval_strategy="epoch",
+        save_strategy="epoch",
         save_total_limit=2,
         logging_steps=100,
         load_best_model_at_end=True
@@ -81,18 +84,18 @@ def main(config_file: str):
     trainer = SentenceTransformerTrainer(
         model=model,
         args=args,
-        train_dataset=dataset["train"],
-        eval_dataset=dataset["val"],
+        train_dataset=triplet_dataset["train"],  # loss requires triplets
+        eval_dataset=triplet_dataset["val"],     # loss requires triplet
         loss=hit_loss,
-        evaluator=val_evaluator,
+        evaluator=val_evaluator,                 # actual eval requires labelled pairs
     )
     trainer.train()
 
     # 6. Evaluate the model performance on the STS Benchmark test dataset
     test_evaluator = HierarchyTransformerEvaluator(
-        child_entities=dataset["test"]["child"],
-        parent_entities=dataset["test"]["parent"],
-        labels=dataset["test"]["label"],
+        child_entities=pair_dataset["test"]["child"],
+        parent_entities=pair_dataset["test"]["parent"],
+        labels=pair_dataset["test"]["label"],
         batch_size=config.eval_batch_size,
     )
     test_evaluator(model)

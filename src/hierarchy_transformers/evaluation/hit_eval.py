@@ -20,11 +20,11 @@ import os.path
 import logging
 import warnings
 
-logger = logging.getLogger(__name__)
-
 from sentence_transformers.evaluation import SentenceEvaluator
 from hierarchy_transformers import HierarchyTransformer
 from .metrics import evaluate_by_threshold, grid_search
+
+logger = logging.getLogger(__name__)
 
 
 class HierarchyTransformerEvaluator(SentenceEvaluator):
@@ -105,17 +105,6 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
             Dict[str, float]: A dictionary containing the evaluation metrics.
         """
 
-        # output notification
-        if epoch != -1:
-            if steps == -1:
-                out_txt = f" after epoch {epoch}"
-            else:
-                out_txt = f" in epoch {epoch} after {steps} steps"
-        else:
-            out_txt = ""
-
-        logger.info(f"Hierarchy Evaluation of the model on the {self.name} dataset{out_txt}:")
-
         if self.best_centri_weight and self.best_threshold:
             # Testing with pre-defined hyperparameters
             logger.info(
@@ -167,7 +156,7 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
 
             idx = f"epoch={epoch},steps={steps}"
             self.results.loc[idx] = best_results
-            
+
         self.results.to_csv(os.path.join(output_path, "results.tsv"), sep="\t")
-        
+
         return best_results
