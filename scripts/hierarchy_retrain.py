@@ -106,7 +106,7 @@ def main(config_file: str):
         batch_size=config.eval_batch_size,
         truth_label=1,
     )
-    test_evaluator(model, best_centri_weight=best_val["CentriWeight"], best_threshold=best_val["Threshold"])
+    test_evaluator(model, best_centri_weight=best_val["centri_weight"], best_threshold=best_val["threshold"])
 
     # 7. Save the trained & evaluated model locally
     final_output_dir = f"{output_dir}/final"
