@@ -79,7 +79,7 @@ def main(config_file: str):
         save_strategy="epoch",
         save_total_limit=2,
         logging_steps=100,
-        metric_for_best_model="F1",  # to override loss for model selection
+        metric_for_best_model="f1",  # to override loss for model selection
         greater_is_better=True,  # due to F1 score
         load_best_model_at_end=True,
     )
@@ -98,7 +98,7 @@ def main(config_file: str):
     # 6. Evaluate the model performance on the test dataset
     # read the current validation results to pick the best hyerparameters
     results = pd.read_csv(os.path.join(output_dir, "eval", "results.tsv"), sep="\t", index_col=0)
-    best_val = results.loc[results["F1"].idxmax()]
+    best_val = results.loc[results["f1"].idxmax()]
     test_evaluator = HierarchyTransformerEvaluator(
         child_entities=pair_dataset["test"]["child"],
         parent_entities=pair_dataset["test"]["parent"],
