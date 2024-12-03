@@ -52,7 +52,7 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
     ):
         super().__init__()
         # set primary metric for model selection
-        self.primary_metric = "F1"
+        self.primary_metric = "f1"
         # input evaluation examples
         self.child_entities = child_entities
         self.parent_entities = parent_entities
@@ -63,7 +63,7 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
         self.truth_label = truth_label
         # result file
         self.results = pd.DataFrame(
-            columns=["CentriWeight", "Threshold", "Precision", "Recall", "F1", "Accuracy", "Accuracy-"]
+            columns=["centri_weight", "threshold", "precision", "recall", "f1", "accuracy", "accuracy_on_negatives"]
         )
         # NOTE: static transformation staticmethod to do
 
@@ -185,13 +185,13 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
                     threshold_granularity=100,
                     truth_label=self.truth_label,
                     smaller_scores_better=False,
-                    primary_metric="F1",
+                    primary_metric="f1",
                     best_primary_metric_value=best_f1,
-                    preformatted_best_results={"CentriWeight": centri_weight},
+                    preformatted_best_results={"centri_weight": centri_weight},
                 )
                 if cur_best_results:
                     best_results = cur_best_results
-                    best_f1 = best_results["F1"]
+                    best_f1 = best_results["f1"]
                     is_updated = True
 
             idx = f"epoch={epoch}"

@@ -35,7 +35,7 @@ def f1_score(predictions: torch.Tensor, labels: torch.Tensor, truth_label: int =
     precision = tp / (tp + fp)
     recall = tp / (tp + fn)
     f1 = 2 * (precision * recall) / (precision + recall)
-    return {"Precision": precision.item(), "Recall": recall.item(), "F1": f1.item()}  # recall is ACC+
+    return {"precision": precision.item(), "recall": recall.item(), "f1": f1.item()}  # recall is ACC+
 
 
 def accurarcy(predictions: torch.Tensor, labels: torch.Tensor):
@@ -43,7 +43,7 @@ def accurarcy(predictions: torch.Tensor, labels: torch.Tensor):
     Pytorch tensor implementation of `accuracy` computation.
     """
     acc = torch.sum(labels == predictions) / len(labels)
-    return {"Accuracy": acc.item()}
+    return {"accuracy": acc.item()}
 
 
 def accurarcy_on_negatives(predictions: torch.Tensor, labels: torch.Tensor, truth_label: int = 1):
@@ -53,7 +53,7 @@ def accurarcy_on_negatives(predictions: torch.Tensor, labels: torch.Tensor, trut
     That is, it computes accuracy only w.r.t. negative samples (with `label != truth_label`).
     """
     neg_acc = torch.sum((labels == predictions) & (labels != truth_label)) / torch.sum(labels != truth_label)
-    return {"Accuracy-": neg_acc.item()}
+    return {"accuracy_on_negatives": neg_acc.item()}
 
 
 def evaluate_by_threshold(
@@ -81,7 +81,7 @@ def evaluate_by_threshold(
         predictions = scores > threshold
     # compute results
     results = {
-        "Threshold": threshold,
+        "threshold": threshold,
         **f1_score(predictions=predictions, labels=labels, truth_label=truth_label),
         **accurarcy(predictions=predictions, labels=labels),
         **accurarcy_on_negatives(predictions=predictions, labels=labels, truth_label=truth_label),

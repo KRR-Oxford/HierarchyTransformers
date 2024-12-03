@@ -62,9 +62,10 @@ def main(config_file: str):
         parent_entities=pair_dataset["val"]["parent"],
         labels=pair_dataset["val"]["label"],
         batch_size=config.eval_batch_size,
-        output_path=output_dir,
+        truth_label=1,
     )
-    val_evaluator(model)
+    # eval in the beginning; debug use
+    val_evaluator(model, output_path=os.path.join(output_dir, "eval"), epoch=-1)
 
     # 4. Define the training arguments
     args = SentenceTransformerTrainingArguments(
@@ -96,14 +97,14 @@ def main(config_file: str):
 
     # 6. Evaluate the model performance on the test dataset
     # read the current validation results to pick the best hyerparameters
-    results = pd.read_csv(os.path.join(output_dir, "results.tsv"), sep="\t", index_col=0)
+    results = pd.read_csv(os.path.join(output_dir, "eval", "results.tsv"), sep="\t", index_col=0)
     best_val = results.loc[results["F1"].idxmax()]
     test_evaluator = HierarchyTransformerEvaluator(
         child_entities=pair_dataset["test"]["child"],
         parent_entities=pair_dataset["test"]["parent"],
         labels=pair_dataset["test"]["label"],
         batch_size=config.eval_batch_size,
-        output_path=output_dir,
+        truth_label=1,
     )
     test_evaluator(model, best_centri_weight=best_val["CentriWeight"], best_threshold=best_val["Threshold"])
 
