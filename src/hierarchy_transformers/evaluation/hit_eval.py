@@ -113,7 +113,7 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
             steps (int, optional): The number of steps. Defaults to `-1`.
             best_centri_weight (float, optional): The best centripetal score weight searched on a validation set (used for testing). Defaults to `None`.
             best_threshold (float, optional): The best overall threshold searched on a validation set (used for testing). Defaults to `None`.
-            
+
         Returns:
             Dict[str, float]: A dictionary containing the evaluation metrics.
         """
@@ -144,14 +144,16 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
             )
 
             # Compute the evaluation metrics
-            best_results = evaluate_by_threshold(
-                scores=scores,
-                labels=torch.tensor(self.labels).to(scores.device),
-                threshold=best_threshold,
-                truth_label=self.truth_label,
-                smaller_scores_better=False,
+            best_results = {"centri_weight": best_centri_weight}
+            best_results.update(
+                evaluate_by_threshold(
+                    scores=scores,
+                    labels=torch.tensor(self.labels).to(scores.device),
+                    threshold=best_threshold,
+                    truth_label=self.truth_label,
+                    smaller_scores_better=False,
+                )
             )
-            best_results["centri_weight"] = best_centri_weight
             try:
                 self.results = pd.read_csv(os.path.join(output_path, "results.tsv"), sep="\t", index_col=0)
             except:

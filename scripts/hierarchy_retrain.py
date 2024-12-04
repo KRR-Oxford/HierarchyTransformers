@@ -98,8 +98,8 @@ def main(config_file: str):
     # results = pd.read_csv(os.path.join(output_dir, "eval", "results.tsv"), sep="\t", index_col=0)
     val_results = val_evaluator.results
     best_val = val_results.loc[val_results["f1"].idxmax()]
-    best_val_centri_weight = best_val["centri_weight"]
-    best_val_threshold = best_val["threshold"]
+    best_val_centri_weight = float(best_val["centri_weight"])
+    best_val_threshold = float(best_val["threshold"])
     test_evaluator = HierarchyTransformerEvaluator(
         child_entities=pair_dataset["test"]["child"],
         parent_entities=pair_dataset["test"]["parent"],
