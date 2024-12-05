@@ -18,8 +18,7 @@ import torch
 
 
 def f1_score(predictions: torch.Tensor, labels: torch.Tensor, truth_label: int = 1):
-    """
-    Pytorch tensor implementation of `f1_score` computation.
+    """Pytorch tensor implementation of `f1_score` computation.
 
     Args:
         predictions (torch.Tensor): Predictions.
@@ -39,16 +38,13 @@ def f1_score(predictions: torch.Tensor, labels: torch.Tensor, truth_label: int =
 
 
 def accurarcy(predictions: torch.Tensor, labels: torch.Tensor):
-    """
-    Pytorch tensor implementation of `accuracy` computation.
-    """
+    """Pytorch tensor implementation of `accuracy` computation."""
     acc = torch.sum(labels == predictions) / len(labels)
     return {"accuracy": acc.item()}
 
 
 def accurarcy_on_negatives(predictions: torch.Tensor, labels: torch.Tensor, truth_label: int = 1):
-    """
-    Pytorch tensor implementation of `accuracy_on_negatives` computation.
+    """Pytorch tensor implementation of `accuracy_on_negatives` computation.
 
     That is, it computes accuracy only w.r.t. negative samples (with `label != truth_label`).
     """
@@ -63,8 +59,7 @@ def evaluate_by_threshold(
     truth_label: int = 1,
     smaller_scores_better: bool = False,
 ):
-    r"""
-    Compute evaluation metrics (`Precision`, `Recall`, `F1`, `Accurarcy`, `Accurarcy-`) based on the threshold.
+    r"""Compute evaluation metrics (`Precision`, `Recall`, `F1`, `Accurarcy`, `Accurarcy-`) based on the threshold.
 
     Args:
         scores (torch.Tensor): Prediction scores.

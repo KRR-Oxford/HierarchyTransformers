@@ -24,8 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class HierarchyTransformer(SentenceTransformer):
-    r"""
-    Class for Hierarchy Transformer encoder (HiT), extending from [`SentenceTransformer`](https://www.sbert.net/)
+    r"""Class for Hierarchy Transformer encoder (HiT), extending from [`SentenceTransformer`](https://www.sbert.net/).
 
     Attributes:
         embed_dim (int): The embedding dimension of this model.
@@ -60,10 +59,7 @@ class HierarchyTransformer(SentenceTransformer):
         pooling_mode: Optional[str] = "mean",
         device: Optional[torch.device] = None,
     ):
-        """
-        Load an instance of `SentenceTransformer` from either the `sentence_transformers` library
-        or `transformers` library.
-        """
+        """Load a pretrained model from HuggingFace hub or local repository."""
         try:
             # Load from sentence_transformers library
             pretrained_model = SentenceTransformer(model_name_or_path, device=device, revision=revision)
@@ -85,8 +81,7 @@ class HierarchyTransformer(SentenceTransformer):
 
     @staticmethod
     def get_circum_poincareball(embed_dim: int) -> PoincareBall:
-        """
-        Get a Poincaré Ball with a curvature adapted to a given embedding dimension so that it circumscribes the output embedding space of pre-trained language models.
+        """Get a Poincaré Ball with a curvature adapted to a given embedding dimension so that it circumscribes the output embedding space of pre-trained language models.
         """
         manifold = get_circum_poincareball(embed_dim)
         logging.info(f"Poincare ball curvature: {manifold.c}")

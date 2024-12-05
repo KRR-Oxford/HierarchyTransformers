@@ -27,8 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 class HierarchyTransformerEvaluator(SentenceEvaluator):
-    """
-    Evaluating HiT models for predicting entity hierarchical relationships.
+    """Evaluating HiT models for predicting entity hierarchical relationships.
 
     The main evaluation metrics are `Precision`, `Recall`, and `F-score`, with overall accuracy (`ACC`) and accuracy on negatives (`ACC-`) additionally reported. The results are written in a `.csv`. If a result file already exists, then values are appended.
 
@@ -74,8 +73,7 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
         child_embeds: Optional[torch.Tensor] = None,
         parent_embeds: Optional[torch.Tensor] = None,
     ):
-        """
-        The default probing method of the HiT model. It output scores that indicate hierarchical relationships between entities.
+        """The default probing method of the HiT model. It output scores that indicate hierarchical relationships between entities.
 
         Optional `child_embeds` and `parent_embeds` are used to save time from repetitive encoding.
         """
@@ -103,8 +101,7 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
         best_centri_weight: Optional[float] = None,
         best_threshold: Optional[float] = None,
     ) -> dict[str, float]:
-        """
-        Compute the evaluation metrics for the given model.
+        """Compute the evaluation metrics for the given model.
 
         Args:
             model (HierarchyTransformer): The model to evaluate.

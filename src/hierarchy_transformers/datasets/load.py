@@ -23,8 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 def load_hf_dataset(path: str, name: Optional[str] = None, **config_kwargs):
-    """
-    Load a HiT dataset from Hugging Face.
+    """Load a HiT dataset from Hugging Face.
 
     See available datasets on: https://huggingface.co/Hierarchy-Transformers
 
@@ -42,8 +41,7 @@ def load_zenodo_dataset(
     entity_to_index: Optional[dict] = None,
     return_entity_lexicon: bool = False,
 ):
-    """
-    Load a HiT dataset from a local version downloaded from Zenodo.
+    """Load a HiT dataset from a local version downloaded from Zenodo.
 
     It is recommended to use `load_hf_dataset` from this library or `load_dataset` from HuggingFace datasets if one doesn't require the original entity IDs.
 
@@ -56,6 +54,7 @@ def load_zenodo_dataset(
         entity_to_index (Optional[dict], optional): A dictionary to transform entity IDs to indices (one-hot encoding) required by the static hierarchy models. Defaults to `None`.
         return_entity_lexicon (bool, optional): Whether or not to return the lexicon of entity IDs to their names (and potentially other textual information). Defaults to `False`.
     """
+    
     assert negative_type in ["random", "hard"], f"Unknown negative type '{negative_type}'."
     assert example_type in ["triplet", "pair", "idx"], f"Unknown example type '{example_type}'."
     if example_type == "idx":
@@ -103,9 +102,8 @@ def load_zenodo_dataset(
 
 
 def zenodo_example_to_triplets(example: dict, negative_type: str, entity_lexicon: dict):
-    """
-    Helper function to present Zenodo dataset examples into triplets of the form `(child, parent, negative)`.
-    """
+    """Helper function to present Zenodo dataset examples into triplets of the form `(child, parent, negative)`."""
+    
     child = entity_lexicon[example["child"]]["name"]
     parent = entity_lexicon[example["parent"]]["name"]
     negative_type = f"{negative_type}_negatives"
@@ -114,9 +112,8 @@ def zenodo_example_to_triplets(example: dict, negative_type: str, entity_lexicon
 
 
 def zenodo_example_to_pairs(example: dict, negative_type: str, entity_lexicon: dict):
-    """
-    Helper function to present Zenodo dataset examples into labelled pairs of the form `(child, parent, label)`.
-    """
+    """Helper function to present Zenodo dataset examples into labelled pairs of the form `(child, parent, label)`."""
+    
     child = entity_lexicon[example["child"]]["name"]
     parent = entity_lexicon[example["parent"]]["name"]
     negative_type = f"{negative_type}_negatives"
@@ -127,9 +124,8 @@ def zenodo_example_to_pairs(example: dict, negative_type: str, entity_lexicon: d
 
 
 def zenodo_example_to_idxs(example: dict, negative_type: str, entity_to_indices: dict):
-    """
-    Helper function to present Zenodo dataset examples into an entity index list of `(child_idx, paren_idx, *negative_idxs)`.
-    """
+    """Helper function to present Zenodo dataset examples into an entity index list of `(child_idx, paren_idx, *negative_idxs)`."""
+    
     child = entity_to_indices[example["child"]]
     parent = entity_to_indices[example["parent"]]
     negative_type = f"{negative_type}_negatives"
