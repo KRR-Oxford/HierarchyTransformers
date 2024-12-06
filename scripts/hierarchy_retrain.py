@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from deeponto.utils import load_file, set_seed, create_path
+from deeponto.utils import set_seed, create_path, load_file, save_file
 import os, sys, logging, click
 from yacs.config import CfgNode
 
@@ -39,6 +39,7 @@ def main(config_file: str):
     dataset_path_suffix = config.dataset_path.split(os.path.sep)[-1]
     output_dir = f"experiments/HiT-{model_path_suffix}-{dataset_path_suffix}-{config.dataset_name}"
     create_path(output_dir)
+    save_file(load_file(config_file), os.path.join(output_dir, "config.yaml")) # save config to output dir
 
     # 1. Load dataset and pre-trained model
     # NOTE: according to docs, it is very important to have column names ["child", "parent", "negative"] *in order* to match ["anchor", "positive", "negative"]
