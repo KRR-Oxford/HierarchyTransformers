@@ -1,0 +1,17 @@
+# dataset from Hugging Face
+dataset_path: "Hierarchy-Transformers/WordNetNoun"
+dataset_name: "MixedHop-RandomNegatives"
+
+# pre-trained model from Hugging Face
+model_path: "sentence-transformers/all-MiniLM-L6-v2"
+
+# training config
+num_train_epochs: 20
+train_batch_size: 256
+eval_batch_size: 512
+learning_rate: 1e-5 
+hit_loss: 
+  clustering_loss_weight: 1.0
+  clustering_loss_margin: 5.0
+  centripetal_loss_weight: 1.0
+  centripetal_loss_margin: 0.5
