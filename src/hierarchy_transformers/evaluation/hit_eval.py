@@ -194,7 +194,7 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
                     best_f1 = best_results["f1"]
                     is_updated = True
 
-            idx = f"epoch={epoch}"
+            idx = f"epoch={epoch}" if epoch != "validation" else epoch
             self.results.loc[idx] = best_results
 
         self.results.to_csv(os.path.join(output_path, "results.tsv"), sep="\t")
