@@ -1,0 +1,16 @@
+# Mixed-hop Prediction on WordNet's random negatives
+dataset_path: "Hierarchy-Transformers/WordNetNoun"
+dataset_name: "MixedHop-RandomNegatives"
+model_path: "sentence-transformers/all-MiniLM-L12-v2"
+
+# Mixed-hop Prediction on WordNet's hard negatives
+# dataset_path: "Hierarchy-Transformers/WordNetNoun"
+# dataset_name: "MixedHop-HardNegatives"
+# model_path: "Hierarchy-Transformers/HiT-MiniLM-L12-WordNetNoun"
+
+# Mixed-hop Prediction evaluation on DOID's random negatives
+# dataset_path: "Hierarchy-Transformers/DOID"
+# dataset_name: "MixedHop-RandomNegatives"
+# model_path: "Hierarchy-Transformers/HiT-MiniLM-L12-WordNetNoun"
+
+eval_batch_size: 512

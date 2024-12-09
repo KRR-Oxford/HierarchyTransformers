@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import torch
 from transformers import (
     AutoModelForSequenceClassification,
@@ -37,8 +38,17 @@ from hierarchy_transformers.models.hierarchy_transformer import HierarchyTransfo
 
 @click.command()
 @click.option("-c", "--config_file", type=click.Path(exists=True))
-@click.option("-g", "--gpu_id", type=int, default=0)
-def main(config_file: str, gpu_id: int):
+def main(config_file: str):
+    
+    # 0. set seed, load config, and format output dir
+    # set_seed(8888)
+    config = CfgNode(load_file(config_file))
+    model_path_suffix = config.model_path.split(os.path.sep)[-1]
+    dataset_path_suffix = config.dataset_path.split(os.path.sep)[-1]
+    output_dir = f"experiments/HiT-{model_path_suffix}-{dataset_path_suffix}-{config.dataset_name}"
+    create_path(output_dir)
+    save_file(load_file(config_file), os.path.join(output_dir, "config.yaml")) # save config to output dir
+    
     # set_seed(8888)
     config = CfgNode(load_file(config_file))
 

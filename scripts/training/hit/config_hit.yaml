@@ -3,7 +3,7 @@ dataset_path: "Hierarchy-Transformers/WordNetNoun"
 dataset_name: "MixedHop-RandomNegatives"
 
 # pre-trained model from Hugging Face
-model_path: "sentence-transformers/all-MiniLM-L6-v2"
+model_path: "sentence-transformers/all-MiniLM-L12-v2"
 
 # training config
 num_train_epochs: 20
