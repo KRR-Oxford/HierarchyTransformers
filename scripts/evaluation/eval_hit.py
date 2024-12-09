@@ -12,15 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from deeponto.utils import set_seed, create_path, load_file, save_file
-import os, sys, logging, click
+from deeponto.utils import load_file
+import sys, logging, click
 from yacs.config import CfgNode
 
-from sentence_transformers.trainer import SentenceTransformerTrainer
-from sentence_transformers.training_args import SentenceTransformerTrainingArguments
-
 from hierarchy_transformers.models import HierarchyTransformer
-from hierarchy_transformers.losses import HierarchyTransformerLoss
 from hierarchy_transformers.evaluation import HierarchyTransformerEvaluator
 from hierarchy_transformers.datasets import load_hf_dataset
 
@@ -49,7 +45,7 @@ def main(config_file: str, output_path: str):
         batch_size=config.eval_batch_size,
         truth_label=1,
     )
-    val_evaluator(model=model, output_path=output_path)
+    val_evaluator(model=model, output_path=output_path, epoch="validation")
 
     # 3. Evaluate the model performance on the test dataset
     val_results = val_evaluator.results
