@@ -13,3 +13,4 @@
 # limitations under the License.
 
 from .hit_eval import HierarchyTransformerEvaluator
+from .sbert_eval import SentenceTransformerEvaluator
