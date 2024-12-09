@@ -50,6 +50,7 @@ class SentenceTransformerEvaluator(SentenceEvaluator):
         labels: list[int],
         batch_size: int,
         truth_label: int = 1,
+        template: str = "${child} is a ${parent}.",
     ):
         super().__init__()
         # set primary metric for model selection
@@ -66,15 +67,17 @@ class SentenceTransformerEvaluator(SentenceEvaluator):
         self.results = pd.DataFrame(
             columns=["threshold", "precision", "recall", "f1", "accuracy", "accuracy_on_negatives"]
         )
+        # template for probing
+        self.template = template
 
-    def inference(self, model: SentenceTransformer, template: str = "${subject} ${predicate} ${object}."):
+    def inference(self, model: SentenceTransformer):
         """The probing method of the pre-trained sBERT model. It output scores that indicate hierarchical relationships between entities."""
         template = Template(template)
         sentences = []
         masked_sentences = []
         for child, parent in zip(self.child_entities, self.parent_entities):
-            sentences.append(template.substitute(child=child, parent=parent))
-            masked_sentences.append(template.substitute(child=child, parent=model.tokenizer.mask_token))
+            sentences.append(self.template.substitute(child=child, parent=parent))
+            masked_sentences.append(self.template.substitute(child=child, parent=model.tokenizer.mask_token))
 
         sentence_embeds = model.encode(sentences=sentences, convert_to_tensor=True, show_progress_bar=True)
         masked_embeds = model.encode(sentences=masked_sentences, convert_to_tensor=True, show_progress_bar=True)
