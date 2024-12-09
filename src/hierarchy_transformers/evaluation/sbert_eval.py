@@ -68,11 +68,10 @@ class SentenceTransformerEvaluator(SentenceEvaluator):
             columns=["threshold", "precision", "recall", "f1", "accuracy", "accuracy_on_negatives"]
         )
         # template for probing
-        self.template = template
+        self.template = Template(template)
 
     def inference(self, model: SentenceTransformer):
         """The probing method of the pre-trained sBERT model. It output scores that indicate hierarchical relationships between entities."""
-        template = Template(template)
         sentences = []
         masked_sentences = []
         for child, parent in zip(self.child_entities, self.parent_entities):
