@@ -95,8 +95,6 @@ def main(config_file: str):
     trainer.train()
 
     # 6. Evaluate the model performance on the test dataset
-    # read the current validation results to pick the best hyerparameters
-    # results = pd.read_csv(os.path.join(output_dir, "eval", "results.tsv"), sep="\t", index_col=0)
     val_results = val_evaluator.results
     best_val = val_results.loc[val_results["f1"].idxmax()]
     best_val_centri_weight = float(best_val["centri_weight"])
