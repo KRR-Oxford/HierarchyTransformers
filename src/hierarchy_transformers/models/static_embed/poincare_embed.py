@@ -13,25 +13,20 @@
 # limitations under the License.
 
 import torch
-import torch.nn.functional as F
-from torch.utils.data import DataLoader
 from geoopt.manifolds import PoincareBall
 from geoopt import ManifoldParameter
-from tqdm import tqdm
-from transformers import get_linear_schedule_with_warmup
-from geoopt.optim import RiemannianAdam
-from ...losses import HyperbolicEntailmentConeLoss
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class HyperbolicStaticEmbedding(torch.nn.Module):
-    r"""
-    Class for the static hyperbolic embedding models:
+class PoincareStaticEmbedding(torch.nn.Module):
+    r"""Class for the static hyperbolic embedding models:
 
-    1. Poincaré Embedding by [Nickel et al., NeurIPS 2017](https://arxiv.org/abs/1705.08039).
-    2. Hyperbolic Entailment Cone by [Ganea et al., ICML 2018](https://arxiv.org/abs/1804.01882).
+        - [1] Poincaré Embedding by [Nickel et al., NeurIPS 2017](https://arxiv.org/abs/1705.08039).
+        - [2] Hyperbolic Entailment Cone by [Ganea et al., ICML 2018](https://arxiv.org/abs/1804.01882).
+        
+    both of which lie in a unit Poincaré ball. According to [2], it is better to apply the entailment cone loss in the post-training phase of a Poincaré embedding model in [1].
 
     Attributes:
         entities (list): The list of input entity IDs (fixed).
@@ -42,7 +37,7 @@ class HyperbolicStaticEmbedding(torch.nn.Module):
         embed (torch.nn.Embedding): The static hyperbolic embeddings for entities.
     """
 
-    def __init__(self, entity_ids: list, embed_dim: int):
+    def __init__(self, entity_ids: list, embed_dim: int, init_weights: float = 1e-3):
         super().__init__()
 
         self.entities = entity_ids
@@ -51,23 +46,24 @@ class HyperbolicStaticEmbedding(torch.nn.Module):
         self.embed_dim = embed_dim
         self.manifold = PoincareBall()
         self.dist = self.manifold.dist
-        self.embed = self.init_static_graph_embedding(len(self.idx2ent), self.embed_dim, 1e-3)
 
-    def init_static_graph_embedding(self, static_entity_size: int, embed_dim: int, init_weights: float):
-        """
-        Initialise the static hyperbolic embeddings for entities.
-        """
-        # init embedding weights to somewhere near the origin
-        static_embedding = torch.nn.Embedding(static_entity_size, embed_dim, sparse=False, max_norm=1.0)
-        static_embedding.weight.data.uniform_(-init_weights, init_weights)
-        static_embedding.weight = ManifoldParameter(static_embedding.weight, manifold=self.manifold)
-        return static_embedding
+        # initialise static embedding
+        self.embed = torch.nn.Embedding(
+            num_embeddings=len(self.idx2ent),  # fixed num embeddings,
+            embedding_dim=self.embed_dim,
+            sparse=False,
+            max_norm=1.0,  # unit poincare ball projection
+        )
+        self.embed.weight.data.uniform_(-init_weights, init_weights)
+        self.embed.weight = ManifoldParameter(self.embed.weight, manifold=self.manifold)
+        logger.info(f"Init static hyperbolic embedding for {len(self.idx2ent)} entities.")
 
     def forward(self, inputs: torch.Tensor):
+        """Forward propagation.
+
+        The inputs are organised as `(batch_size, num_entities, embed_dim)` where `dim=` includes `(child, parent, negative_parents*)`.
         """
-        !!! note
-            The inputs are organised as `(batch_size, num_entities, embed_dim)` where `dim=` includes `(child, parent, negative_parents*)`.
-        """
+
         input_embeds = self.embed(
             inputs
         )  # (batch_size, num_entities, hidden_dim), dim 1 includes (child, parent, negative_parents*)

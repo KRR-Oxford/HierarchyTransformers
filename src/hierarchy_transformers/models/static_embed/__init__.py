@@ -12,5 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .embed import HyperbolicStaticEmbedding
-from .trainer import HyperbolicStaticEmbeddingTrainer
+from .poincare_embed import PoincareStaticEmbedding
+from .poincare_trainer import PoincareStaticEmbeddingTrainer
