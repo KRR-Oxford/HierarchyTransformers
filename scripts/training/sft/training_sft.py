@@ -93,7 +93,8 @@ def main(config_file: str):
     test_scores = torch.tensor(test_preds.predictions).argmax(dim=1)
     test_labels = torch.tensor(test_preds.label_ids)
     test_results = pd.DataFrame(columns=["threshold", "precision", "recall", "f1", "accuracy", "accuracy_on_negatives"])
-    test_results.loc["testing"] = evaluate_by_threshold(test_scores, test_labels, 0.0, False)
+    test_results.loc["testing"] = evaluate_by_threshold(scores=test_scores, labels=test_labels, threshold=0.5)
+    logger.info(test_results.loc["testing"])
     create_path(os.path.join(output_dir, "eval"))
     test_results.to_csv(os.path.join(output_dir, "eval", "results.tsv"), sep="\t")
 
