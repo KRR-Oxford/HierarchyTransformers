@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional, Iterable
+import logging
 import torch
 from geoopt.manifolds import PoincareBall
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.models import Pooling, Transformer
-import logging
-from typing import Optional, Iterable
 from .hyperbolic import get_circum_poincareball
 
 logger = logging.getLogger(__name__)

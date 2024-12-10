@@ -15,7 +15,7 @@
 import torch
 import torch.nn.functional as F
 from geoopt.manifolds import PoincareBall
-from ..utils import format_citation
+from hierarchy_transformers.utils import format_citation
 
 
 class HyperbolicEntailmentConeLoss(torch.nn.Module):

@@ -14,7 +14,7 @@
 
 import torch
 from geoopt.manifolds import PoincareBall
-from ..utils import format_citation
+from hierarchy_transformers.utils import format_citation
 
 class PoincareEmbeddingStaticLoss(torch.nn.Module):
     """Poincare embedding loss.

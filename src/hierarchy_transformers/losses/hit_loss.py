@@ -17,15 +17,14 @@ import logging
 import torch
 import torch.nn.functional as F
 from geoopt.manifolds import PoincareBall
-from ..models import HierarchyTransformer
-from ..utils import format_citation
+from hierarchy_transformers.models import HierarchyTransformer
+from hierarchy_transformers.utils import format_citation
 
 logger = logging.getLogger(__name__)
 
 
 class HierarchyTransformerLoss(torch.nn.Module):
-    """Hyperbolic loss that linearly combines hperbolic clustering loss and hyperbolic Centripetal loss and applies weights for joint optimisation.
-    """
+    """Hyperbolic loss that linearly combines hperbolic clustering loss and hyperbolic Centripetal loss and applies weights for joint optimisation."""
 
     def __init__(
         self,
@@ -58,8 +57,7 @@ class HierarchyTransformerLoss(torch.nn.Module):
         return config
 
     def forward(self, sentence_features: Iterable[Dict[str, torch.Tensor]], labels: torch.Tensor):
-        """Forward propagation that follows [`sentence_transformers.losses`](https://github.com/UKPLab/sentence-transformers/tree/master/sentence_transformers/losses).
-        """
+        """Forward propagation that follows [`sentence_transformers.losses`](https://github.com/UKPLab/sentence-transformers/tree/master/sentence_transformers/losses)."""
         reps = [self.model(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features]
         assert len(reps) == 3
         rep_anchor, rep_positive, rep_negative = reps
