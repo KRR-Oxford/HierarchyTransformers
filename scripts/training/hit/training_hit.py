@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""This training script is hierarchy re-training of HiT models."""
 
 from deeponto.utils import set_seed, create_path, load_file, save_file
 import os, sys, logging, click
