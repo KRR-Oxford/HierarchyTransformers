@@ -36,10 +36,9 @@ def load_hf_dataset(path: str, name: Optional[str] = None, **config_kwargs):
 
 def load_zenodo_dataset(
     path: str,
+    entity_lexicon_or_index: dict,
     negative_type: str = "random",
     example_type: str = "triplet",
-    entity_to_index: Optional[dict] = None,
-    return_entity_lexicon: bool = False,
 ):
     """Load a HiT dataset from a local version downloaded from Zenodo.
 
@@ -49,16 +48,14 @@ def load_zenodo_dataset(
 
     Args:
         path (str): Path to a local dataset downloaded from Zenodo.
+        entity_lexicon_or_index (dict): A dictionary to transform entity IDs to names required by langauge models or indices (one-hot encoding) required by the static hierarchy models.
         negative_type (str): Type of negative examples. Options are `['random', 'hard']`.
         example_type (str): Type of example structure. Options are `['triplet', 'pair', 'idx']`.
-        entity_to_index (Optional[dict], optional): A dictionary to transform entity IDs to indices (one-hot encoding) required by the static hierarchy models. Defaults to `None`.
-        return_entity_lexicon (bool, optional): Whether or not to return the lexicon of entity IDs to their names (and potentially other textual information). Defaults to `False`.
     """
-    
+
     assert negative_type in ["random", "hard"], f"Unknown negative type '{negative_type}'."
     assert example_type in ["triplet", "pair", "idx"], f"Unknown example type '{example_type}'."
-    if example_type == "idx":
-        assert entity_to_index is not None, "The `ent2idx` dictionary is not found."
+    assert entity_lexicon_or_index is not None, "The entity transformation dictionary is not found."
 
     # check if train, val, test splits are all there
     datafiles = dict()
@@ -72,18 +69,11 @@ def load_zenodo_dataset(
     # load the jsonl dataset altogther
     dataset = load_dataset("json", data_files=datafiles)
 
-    # load the entity lexicon for id to names
-    with open(os.path.join(path, "entity_lexicon.json"), "r") as input:
-        entity_lexicon = json.load(input)
-
     transform = {
         "triplet": zenodo_example_to_triplets,
         "pair": zenodo_example_to_pairs,
         "idx": zenodo_example_to_idxs,
     }[example_type]
-
-    if entity_to_index:
-        entity_lexicon = entity_to_index
 
     for split, examples in dataset.items():
         # list comprehension is faster than nested for-loop due to C implementation
@@ -91,19 +81,16 @@ def load_zenodo_dataset(
             [
                 transformed
                 for example in tqdm(examples, desc=f"Map ({split})", leave=True)
-                for transformed in transform(example, negative_type, entity_lexicon)
+                for transformed in transform(example, negative_type, entity_lexicon_or_index)
             ]
         )
 
-    if return_entity_lexicon:
-        return dataset, entity_lexicon
-    else:
-        return dataset
+    return dataset
 
 
 def zenodo_example_to_triplets(example: dict, negative_type: str, entity_lexicon: dict):
     """Helper function to present Zenodo dataset examples into triplets of the form `(child, parent, negative)`."""
-    
+
     child = entity_lexicon[example["child"]]["name"]
     parent = entity_lexicon[example["parent"]]["name"]
     negative_type = f"{negative_type}_negatives"
@@ -113,7 +100,7 @@ def zenodo_example_to_triplets(example: dict, negative_type: str, entity_lexicon
 
 def zenodo_example_to_pairs(example: dict, negative_type: str, entity_lexicon: dict):
     """Helper function to present Zenodo dataset examples into labelled pairs of the form `(child, parent, label)`."""
-    
+
     child = entity_lexicon[example["child"]]["name"]
     parent = entity_lexicon[example["parent"]]["name"]
     negative_type = f"{negative_type}_negatives"
@@ -125,7 +112,7 @@ def zenodo_example_to_pairs(example: dict, negative_type: str, entity_lexicon: d
 
 def zenodo_example_to_idxs(example: dict, negative_type: str, entity_to_indices: dict):
     """Helper function to present Zenodo dataset examples into an entity index list of `(child_idx, paren_idx, *negative_idxs)`."""
-    
+
     child = entity_to_indices[example["child"]]
     parent = entity_to_indices[example["parent"]]
     negative_type = f"{negative_type}_negatives"
