@@ -120,11 +120,6 @@ subsumption_scores = - (dists + centri_score_weight * (parent_norms - child_norm
 
 Use the example scripts in our [repository](https://github.com/KRR-Oxford/HierarchyTransformers/tree/main/scripts) to reproduce existing models and train/evaluate your own models. 
 
-```bash
-# use the following script if you want to train a HiT model
-python scripts/hierarchy_retrain.py -c path_to_config_file.yaml
-```
-
 ## License
 
 
