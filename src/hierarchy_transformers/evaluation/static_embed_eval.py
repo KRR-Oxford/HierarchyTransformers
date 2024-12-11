@@ -158,7 +158,7 @@ class PoincareStaticEmbeddingEvaluator:
             cur_best_results = grid_search(
                 scores=scores,
                 labels=labels,
-                threshold_granularity=1,
+                threshold_granularity=1 if isinstance(loss, PoincareEmbeddingStaticLoss) else 100,
                 truth_label=self.truth_label,
                 smaller_scores_better=True,
                 primary_metric="f1",
