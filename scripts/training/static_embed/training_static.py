@@ -53,10 +53,9 @@ def main(config_file: str, gpu_id: int):
 
     # 2. set up the loss function
     poincare_embed_loss = PoincareEmbeddingStaticLoss(model.manifold)
-    if int(config.num_post_train_epochs) > 0:  # set-up the cone loss for post-training
-        hyperbolic_cone_loss = HyperbolicEntailmentConeStaticLoss(model.manifold)
 
     # 3. Create the trainer & start training
+    logger.info("Train Poincare embedding on the hyperbolic distance loss...")
     device = get_torch_device(gpu_id)
     trainer = PoincareStaticEmbeddingTrainer(
         model=model,
@@ -71,32 +70,49 @@ def main(config_file: str, gpu_id: int):
     torch.save(trainer.model, os.path.join(output_dir, "poincare_static.pt"))
 
     # 4. Evaluate the model performance on validation and test datasets
-    create_path(os.path.join(output_dir, "eval"))
+    create_path(os.path.join(output_dir, "eval_poincare"))
     val_evaluator = PoincareStaticEmbeddingEvaluator(
         eval_examples=dataset["val"], batch_size=config.eval_batch_size, truth_label=1
     )
-    val_evaluator(model=model, loss=trainer.loss, device=device, epoch="validation", output_path=os.path.join(output_dir, "eval"))
+    val_evaluator(model=trainer.model, loss=trainer.loss, device=device, epoch="validation", output_path=os.path.join(output_dir, "eval_poincare"))
     val_results = val_evaluator.results
     best_val = val_results.loc[val_results["f1"].idxmax()]
     best_val_threshold = float(best_val["threshold"])
     test_evaluator = PoincareStaticEmbeddingEvaluator(
         eval_examples=dataset["test"], batch_size=config.eval_batch_size, truth_label=1
     )
-    test_evaluator(model=model, loss=trainer.loss, device=device, output_path=os.path.join(output_dir, "eval"), best_threshold=best_val_threshold)
+    test_evaluator(model=trainer.model, loss=trainer.loss, device=device, output_path=os.path.join(output_dir, "eval_poincare"), best_threshold=best_val_threshold)
     
     # 5. Create the trainer & start post-training
-    device = get_torch_device(gpu_id)
-    trainer = PoincareStaticEmbeddingTrainer(
-        model=model,
-        train_dataset=dataset["train"],
-        loss=poincare_embed_loss,
-        num_train_epochs=int(config.num_train_epochs),
-        learning_rate=float(config.learning_rate),
-        train_batch_size=int(config.train_batch_size),
-        warmup_epochs=int(config.warmup_epochs),
-    )
-    trainer.train(device=device)
-    torch.save(trainer.model, os.path.join(output_dir, "poincare_static.pt"))
+    if int(config.num_post_train_epochs) > 0:
+        logger.info("Post-train Poincare embedding on the hyperbolic entailment cone loss...")
+        # set-up the cone loss for post-training
+        hyperbolic_cone_loss = HyperbolicEntailmentConeStaticLoss(model.manifold)
+        post_trainer = PoincareStaticEmbeddingTrainer(
+            model=trainer.model,  # continue to train
+            train_dataset=dataset["train"],
+            loss=hyperbolic_cone_loss,
+            num_train_epochs=int(config.num_post_train_epochs),
+            learning_rate=float(config.learning_rate),
+            train_batch_size=int(config.train_batch_size),
+            warmup_epochs=int(config.warmup_epochs),
+        )
+        post_trainer.train(device=device)
+        torch.save(post_trainer.model, os.path.join(output_dir, "hypercone_static.pt"))
+        
+        # 6. Evaluate the post-trained model performance on validation and test datasets
+        create_path(os.path.join(output_dir, "eval_hypercone"))
+        val_evaluator = PoincareStaticEmbeddingEvaluator(
+            eval_examples=dataset["val"], batch_size=config.eval_batch_size, truth_label=1
+        )
+        val_evaluator(model=post_trainer.model, loss=post_trainer.loss, device=device, epoch="validation", output_path=os.path.join(output_dir, "eval_hypercone"))
+        val_results = val_evaluator.results
+        best_val = val_results.loc[val_results["f1"].idxmax()]
+        best_val_threshold = float(best_val["threshold"])
+        test_evaluator = PoincareStaticEmbeddingEvaluator(
+            eval_examples=dataset["test"], batch_size=config.eval_batch_size, truth_label=1
+        )
+        test_evaluator(model=post_trainer.model, loss=post_trainer.loss, device=device, output_path=os.path.join(output_dir, "eval_hypercone"), best_threshold=best_val_threshold)
 
 
 if __name__ == "__main__":
