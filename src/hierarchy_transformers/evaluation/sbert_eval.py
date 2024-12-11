@@ -41,6 +41,7 @@ class SentenceTransformerEvaluator(SentenceEvaluator):
         labels (list[int]): List of reference labels.
         batch_size (int): Evaluation batch size.
         truth_label (int, optional): Specify which label represents the truth. Defaults to `1`.
+        template (str, optional): The probing template.
     """
 
     def __init__(
