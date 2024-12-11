@@ -90,7 +90,7 @@ def grid_search(
     threshold_granularity: int = 100,
     truth_label: int = 1,
     smaller_scores_better: bool = False,
-    primary_metric: str = "F1",
+    primary_metric: str = "f1",
     best_primary_metric_value: float = -math.inf,
     preformatted_best_results: dict = {},
 ):

@@ -61,6 +61,7 @@ class PoincareStaticEmbeddingEvaluator:
         """The probing method of the pre-trained hyperbolic static embedding models. It output scores that indicate hierarchical relationships between entities."""
 
         # set up scoring function according to input loss
+        # NOTE: both scores are smaller the better
         if isinstance(loss, PoincareEmbeddingStaticLoss):
             # distance scoring from [Nickel et al., NeurIPS 2017]
             def score_func(subject: torch.Tensor, objects: torch.Tensor, norm_score_weight: float = 1000.0):
@@ -135,7 +136,7 @@ class PoincareStaticEmbeddingEvaluator:
                 labels=labels,
                 threshold=best_threshold,
                 truth_label=self.truth_label,
-                smaller_scores_better=False,
+                smaller_scores_better=True,
             )
 
             try:
@@ -159,7 +160,7 @@ class PoincareStaticEmbeddingEvaluator:
                 labels=labels,
                 threshold_granularity=1,
                 truth_label=self.truth_label,
-                smaller_scores_better=False,
+                smaller_scores_better=True,
                 primary_metric="f1",
                 best_primary_metric_value=best_f1,
                 preformatted_best_results={},
