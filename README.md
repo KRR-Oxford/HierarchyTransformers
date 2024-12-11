@@ -48,7 +48,7 @@ limitations under the License.
 
 **News** ([changelog](docs/changelog.md)) :newspaper:
 
-- [ ] Under significant development to align with `sentence-transformers>=3.0.0`.
+- [X] Under significant development to align with `sentence-transformers>=3.4.0`.
 - [X] Project page is now available ([click](https://krr-oxford.github.io/HierarchyTransformers/)).
 - [X] Initial release (should work with `sentence-transformers<3.0.0` ) and bug fix. (**v0.0.3**)
 
@@ -62,6 +62,8 @@ Hierarchy Transformer (HiT) is a framework that enables transformer encoder-base
 ### Main Dependencies
 
 This repository follows a similar layout as the [`sentence-transformers`](https://www.sbert.net/index.html) library. The main model directly extends the sentence transformer architecture. We also utilise [`deeponto`](https://krr-oxford.github.io/DeepOnto/) for extracting hierarchies from source data and constructing datasets from hierarchies, and [`geoopt`](https://geoopt.readthedocs.io/en/latest/index.html) for arithmetic in hyperbolic space.
+
+> The current release of `sentence-transformers=3.3.1` contains bugs during evaluation, which were fixed in their GitHub dev version `sentence-transformers=3.4.0.dev0`, please update the dependency manually until the official `3.4.0` is released.
 
 ### Install from PyPI
 
