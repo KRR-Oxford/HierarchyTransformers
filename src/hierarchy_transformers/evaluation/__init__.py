@@ -14,3 +14,4 @@
 
 from .hit_eval import HierarchyTransformerEvaluator
 from .sbert_eval import SentenceTransformerEvaluator
+from .static_embed_eval import PoincareStaticEmbeddingEvaluator
