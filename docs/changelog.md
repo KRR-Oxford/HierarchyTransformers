@@ -7,9 +7,9 @@ Removed for now removed features.
 Fixed for any bug fixes.
 Security in case of vulnerabilities. -->
 
-## Unreleased
+## v0.1.0 (2024-12-11)
 
-Significant development to align with `sentence-transformers>=3.4.0`.
+Significant development to align with `sentence-transformers>=3.4.0.dev0`.
 
 ### Added
 

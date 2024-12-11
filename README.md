@@ -48,7 +48,7 @@ limitations under the License.
 
 **News** ([changelog](docs/changelog.md)) :newspaper:
 
-- [X] Under significant development to align with `sentence-transformers>=3.4.0`.
+- [X] Under significant development to align with `sentence-transformers>=3.4.0.dev0` (**v0.1.0**).
 - [X] Project page is now available ([click](https://krr-oxford.github.io/HierarchyTransformers/)).
 - [X] Initial release (should work with `sentence-transformers<3.0.0` ) and bug fix. (**v0.0.3**)
 
