@@ -76,13 +76,23 @@ def load_zenodo_dataset(
     }[example_type]
 
     for split, examples in dataset.items():
-        # list comprehension is faster than nested for-loop due to C implementation
-        dataset_split = [
-            transformed
-            for example in tqdm(examples, desc=f"Map ({split})", leave=True)
-            for transformed in transform(example, negative_type, entity_lexicon_or_index)
-        ]
-        dataset[split] = dataset_split if example_type == "idx" else Dataset.from_list(dataset_split)
+
+        if example_type == "idx":
+            # for static embedding model, inputs are not flattened
+            dataset_split = [
+                transform(example, negative_type, entity_lexicon_or_index)
+                for example in tqdm(examples, desc=f"Map ({split})", leave=True)
+            ]
+        else:
+            # for other models, inputs are flattened
+            dataset_split = [
+                transformed
+                for example in tqdm(examples, desc=f"Map ({split})", leave=True)
+                for transformed in transform(example, negative_type, entity_lexicon_or_index)
+            ]
+            dataset_split = Dataset.from_list(dataset_split)
+
+        dataset[split] = dataset_split
 
     return dataset
 
