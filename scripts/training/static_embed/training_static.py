@@ -12,22 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import torch
-from torch.utils.data import DataLoader
-import logging
-import random
-import click
+from deeponto.utils import set_seed, create_path, load_file, save_file
+import os, logging, click
 from yacs.config import CfgNode
-from deeponto.utils import load_file, set_seed, create_path
+import torch
 
-from hierarchy_transformers.models import HyperbolicStaticEmbedding, HyperbolicStaticEmbeddingTrainer
-from hierarchy_transformers.models.utils import (
-    prepare_hierarchy_examples_for_static,
-    load_hierarchy_dataset,
-    get_torch_device,
-)
-from hierarchy_transformers.evaluation import StaticPoincareEvaluator
-
+from hierarchy_transformers.models import PoincareStaticEmbedding, PoincareStaticEmbeddingTrainer
+from hierarchy_transformers.losses import PoincareEmbeddingStaticLoss, HyperbolicEntailmentConeStaticLoss
+from hierarchy_transformers.datasets import load_zenodo_dataset
+from hierarchy_transformers.evaluation import PoincareStaticEmbeddingEvaluator
+from hierarchy_transformers.utils import get_torch_device
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -37,51 +31,72 @@ logger.setLevel(logging.INFO)
 @click.option("-c", "--config_file", type=click.Path(exists=True))
 @click.option("-g", "--gpu_id", type=int, default=0)
 def main(config_file: str, gpu_id: int):
-    # set_seed(8888)
+
+    # 0. set seed, load config, and format output dir
+    set_seed(8888)
     config = CfgNode(load_file(config_file))
+    dataset_path_suffix = config.dataset_path.split(os.path.sep)[-1]
+    output_dir = f"experiments/PoincareStatic-{dataset_path_suffix}-{config.negative_type}"
+    create_path(output_dir)
+    save_file(load_file(config_file), os.path.join(output_dir, "config.yaml"))  # save config to output dir
 
-    # load dataset
-    data_path = config.data_path
-    dataset, entity_lexicon = load_hierarchy_dataset(data_path)
-
-    # init static poincare embedding
-    if not config.pretrained:
-        model = torch.load(config.pretrained)
-    else:
-        print(f"Load pre-trained from {config.pretrained}")
-        model = HyperbolicStaticEmbedding(list(entity_lexicon.keys()), embed_dim=config.embed_dim)
+    # 1. Load dataset and pre-trained model
+    entity_lexicon = load_file(os.path.join(config.dataset_path, "entity_lexicon.json"))
+    model = PoincareStaticEmbedding(list(entity_lexicon.keys()), embed_dim=config.embed_dim)
     print(model)
-    ent2idx = model.ent2idx
+    dataset = load_zenodo_dataset(
+        path=config.dataset_path,
+        entity_lexicon_or_index=model.ent2idx,
+        negative_type=config.negative_type,
+        example_type="idx",
+    )
 
-    train_examples = prepare_hierarchy_examples_for_static(ent2idx, dataset["train"], config.apply_hard_negatives)
-    train_dataloader = DataLoader(torch.tensor(train_examples), shuffle=True, batch_size=config.train_batch_size)
+    # 2. set up the loss function
+    poincare_embed_loss = PoincareEmbeddingStaticLoss(model.manifold)
+    if int(config.num_post_train_epochs) > 0:  # set-up the cone loss for post-training
+        hyperbolic_cone_loss = HyperbolicEntailmentConeStaticLoss(model.manifold)
 
+    # 3. Create the trainer & start training
     device = get_torch_device(gpu_id)
-    static_trainer = HyperbolicStaticEmbeddingTrainer(
+    trainer = PoincareStaticEmbeddingTrainer(
         model=model,
-        device=device,
-        train_dataloader=train_dataloader,
+        train_dataset=dataset["train"],
+        loss=poincare_embed_loss,
+        num_train_epochs=int(config.num_train_epochs),
         learning_rate=float(config.learning_rate),
-        num_epochs=config.num_epochs,
-        num_warmup_epochs=config.warmup_epochs,
-        apply_cone_loss=config.apply_cone_loss,
+        train_batch_size=int(config.train_batch_size),
+        warmup_epochs=int(config.warmup_epochs),
     )
-    output_path = f"experiments/static_poincare-hard={config.apply_hard_negatives}-cone={config.apply_cone_loss}"
-    create_path(output_path)
-    static_trainer.run(output_path)
+    trainer.train(device=device)
+    torch.save(trainer.model, os.path.join(output_dir, "poincare_static.pt"))
 
-    val_examples = prepare_hierarchy_examples_for_static(ent2idx, dataset["val"], config.apply_hard_negatives)
-    test_examples = prepare_hierarchy_examples_for_static(ent2idx, dataset["test"], config.apply_hard_negatives)
-    static_eval = StaticPoincareEvaluator(
-        model_path=f"{output_path}/poincare.{model.embed_dim}d.pt",
-        device=device,
-        val_examples=val_examples,
-        test_examples=test_examples,
-        eval_batch_size=config.eval_batch_size,
-        train_examples=train_examples,
-        apply_entailment_cone=config.apply_cone_loss,
+    # 4. Evaluate the model performance on validation and test datasets
+    create_path(os.path.join(output_dir, "eval"))
+    val_evaluator = PoincareStaticEmbeddingEvaluator(
+        eval_examples=dataset["val"], batch_size=config.eval_batch_size, truth_label=1
     )
-    static_eval(output_path)
+    val_evaluator(model=model, loss=trainer.loss, device=device, epoch="validation", output_path=os.path.join(output_dir, "eval"))
+    val_results = val_evaluator.results
+    best_val = val_results.loc[val_results["f1"].idxmax()]
+    best_val_threshold = float(best_val["threshold"])
+    test_evaluator = PoincareStaticEmbeddingEvaluator(
+        eval_examples=dataset["test"], batch_size=config.eval_batch_size, truth_label=1
+    )
+    test_evaluator(model=model, loss=trainer.loss, device=device, output_path=os.path.join(output_dir, "eval"), best_threshold=best_val_threshold)
+    
+    # 5. Create the trainer & start post-training
+    device = get_torch_device(gpu_id)
+    trainer = PoincareStaticEmbeddingTrainer(
+        model=model,
+        train_dataset=dataset["train"],
+        loss=poincare_embed_loss,
+        num_train_epochs=int(config.num_train_epochs),
+        learning_rate=float(config.learning_rate),
+        train_batch_size=int(config.train_batch_size),
+        warmup_epochs=int(config.warmup_epochs),
+    )
+    trainer.train(device=device)
+    torch.save(trainer.model, os.path.join(output_dir, "poincare_static.pt"))
 
 
 if __name__ == "__main__":

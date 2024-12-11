@@ -1,0 +1,12 @@
+# local dataset downloaded from Zenodo
+dataset_path: "data/wordnet-multi"
+negative_type: "random"
+
+# training config
+embed_dim: 200
+num_train_epochs: 10
+train_batch_size: 256
+eval_batch_size: 512
+learning_rate: 0.01
+warmup_epochs: 10
+num_post_train_epochs: -1  # post-train with hyperbolic entailment cone loss
