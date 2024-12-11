@@ -91,8 +91,7 @@ class PoincareStaticEmbeddingEvaluator:
         scores = torch.concat(scores, dim=0)
         labels = torch.tensor(
             ([self.truth_label] + [1 - self.truth_label] * num_negatives) * (int(len(scores) / (1 + num_negatives)))
-        )
-        labels.to(scores.device)
+        ).to(scores.device)
         assert len(labels) == len(scores)
 
         return scores, labels
