@@ -76,7 +76,7 @@ class PoincareStaticEmbeddingTrainer:
 
     def train(self, device):
         self.model.to(device)
-        for _ in range(self.num_epochs):
+        for _ in range(self.num_train_epochs):
             epoch_bar = tqdm(
                 range(self.num_epoch_steps), desc=f"Epoch {self.current_epoch + 1}", leave=True, unit="batch"
             )
