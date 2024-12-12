@@ -7,6 +7,12 @@ Removed for now removed features.
 Fixed for any bug fixes.
 Security in case of vulnerabilities. -->
 
+## Unreleased
+
+### Changed
+
+- [X] [`chore`] Refactor all the code with ruff linter.
+
 ## v0.1.0 (2024-12-11)
 
 Significant development to align with `sentence-transformers>=3.4.0.dev0`.
