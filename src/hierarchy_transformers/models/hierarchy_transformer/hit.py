@@ -11,13 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
-from typing import Optional, Iterable
 import logging
+from collections.abc import Iterable
+
 import torch
 from geoopt.manifolds import PoincareBall
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.models import Pooling, Transformer
+
 from .hyperbolic import get_circum_poincareball
 
 logger = logging.getLogger(__name__)
@@ -33,10 +36,10 @@ class HierarchyTransformer(SentenceTransformer):
 
     def __init__(
         self,
-        model_name_or_path: Optional[str] = None,
-        modules: Optional[Iterable[torch.nn.Module]] = None,
-        device: Optional[str] = None,
-        revision: Optional[str] = None,
+        model_name_or_path: str | None = None,
+        modules: Iterable[torch.nn.Module] | None = None,
+        device: str | None = None,
+        revision: str | None = None,
     ):
         super().__init__(model_name_or_path=model_name_or_path, modules=modules, device=device, revision=revision)
         # PoincareBall in geoopt will be wrongly classified as a sub-module
@@ -55,9 +58,9 @@ class HierarchyTransformer(SentenceTransformer):
     def from_pretrained(
         cls,
         model_name_or_path: str,
-        revision: Optional[str] = None,
-        pooling_mode: Optional[str] = "mean",
-        device: Optional[torch.device] = None,
+        revision: str | None = None,
+        pooling_mode: str | None = "mean",
+        device: torch.device | None = None,
     ):
         """Load a pretrained model from HuggingFace hub or local repository."""
         try:
@@ -69,7 +72,7 @@ class HierarchyTransformer(SentenceTransformer):
             logger.info(
                 f"Load `{model_name_or_path}` from `sentence-transformers` with existing pooling (discard the normalising layer if any)."
             )
-        except:
+        except Exception:
             # Load from huggingface transformers library
             transformer = Transformer(model_name_or_path, max_seq_length=256, model_args={"revision": revision})
             pooling = Pooling(
@@ -81,8 +84,7 @@ class HierarchyTransformer(SentenceTransformer):
 
     @staticmethod
     def get_circum_poincareball(embed_dim: int) -> PoincareBall:
-        """Get a Poincaré Ball with a curvature adapted to a given embedding dimension so that it circumscribes the output embedding space of pre-trained language models.
-        """
+        """Get a Poincaré Ball with a curvature adapted to a given embedding dimension so that it circumscribes the output embedding space of pre-trained language models."""
         manifold = get_circum_poincareball(embed_dim)
         logging.info(f"Poincare ball curvature: {manifold.c}")
         return manifold

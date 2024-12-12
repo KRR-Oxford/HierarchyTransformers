@@ -11,15 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
-from typing import Optional, Union
-import os.path, warnings, logging
+import logging
+import os.path
+import warnings
+
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 
+from hierarchy_transformers.losses import HyperbolicEntailmentConeStaticLoss, PoincareEmbeddingStaticLoss
 from hierarchy_transformers.models import PoincareStaticEmbedding
-from hierarchy_transformers.losses import PoincareEmbeddingStaticLoss, HyperbolicEntailmentConeStaticLoss
+
 from .metrics import evaluate_by_threshold, grid_search
 
 logger = logging.getLogger(__name__)
@@ -27,10 +31,10 @@ logger = logging.getLogger(__name__)
 
 class PoincareStaticEmbeddingEvaluator:
     """Evaluating hyperbolic static embedding models ([1] and [2]) for predicting entity hierarchical relationships.
-    
+
         - [1] Poincaré Embedding by [Nickel et al., NeurIPS 2017](https://arxiv.org/abs/1705.08039).
         - [2] Hyperbolic Entailment Cone by [Ganea et al., ICML 2018](https://arxiv.org/abs/1804.01882).
-        
+
     both of which lie in a unit Poincaré ball. According to [2], it is better to apply the entailment cone loss in the post-training phase of a Poincaré embedding model in [1].
 
     The main evaluation metrics are `Precision`, `Recall`, and `F-score`, with overall accuracy (`ACC`) and accuracy on negatives (`ACC-`) additionally reported. The results are written in a `.csv`. If a result file already exists, then values are appended.
@@ -55,7 +59,7 @@ class PoincareStaticEmbeddingEvaluator:
     def inference(
         self,
         model: PoincareStaticEmbedding,
-        loss: Union[PoincareEmbeddingStaticLoss, HyperbolicEntailmentConeStaticLoss],
+        loss: PoincareEmbeddingStaticLoss | HyperbolicEntailmentConeStaticLoss,
         device: torch.device,
     ):
         """The probing method of the pre-trained hyperbolic static embedding models. It output scores that indicate hierarchical relationships between entities."""
@@ -100,12 +104,12 @@ class PoincareStaticEmbeddingEvaluator:
     def __call__(
         self,
         model: PoincareStaticEmbedding,
-        loss: Union[PoincareEmbeddingStaticLoss, HyperbolicEntailmentConeStaticLoss],
+        loss: PoincareEmbeddingStaticLoss | HyperbolicEntailmentConeStaticLoss,
         device: torch.device,
-        output_path: Optional[str] = None,
+        output_path: str | None = None,
         epoch: int = -1,
         steps: int = -1,
-        best_threshold: Optional[float] = None,
+        best_threshold: float | None = None,
     ):
         """Compute the evaluation metrics for the given model.
 
@@ -123,7 +127,6 @@ class PoincareStaticEmbeddingEvaluator:
         """
 
         if best_threshold:
-
             # Testing with pre-defined hyperparameters
             logger.info(f"Evaluate on given hyperparemeters `best_threshold={best_threshold}`.")
 
@@ -139,15 +142,15 @@ class PoincareStaticEmbeddingEvaluator:
                 smaller_scores_better=True,
             )
 
-            try:
+            # log the results
+            if os.path.exists(os.path.join(output_path, "results.tsv")):
                 self.results = pd.read_csv(os.path.join(output_path, "results.tsv"), sep="\t", index_col=0)
-            except:
+            else:
                 warnings.warn("No previous `results.tsv` detected.")
             self.results.loc["testing"] = best_results
         else:
-
             # Validation with no pre-defined hyerparameters
-            logger.info(f"Evaluate with grid search on hyperparameters `best_threshold` (overall threshold)")
+            logger.info("Evaluate with grid search on hyperparameters `best_threshold` (overall threshold)")
             best_f1 = -1.0
             best_results = None
 

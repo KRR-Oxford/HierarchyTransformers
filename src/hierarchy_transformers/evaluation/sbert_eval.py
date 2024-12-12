@@ -11,17 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from __future__ import annotations
 
+import logging
+import os.path
+import warnings
 from string import Template
-from typing import Optional
-import os.path, warnings, logging
+
 import pandas as pd
 import torch
-
-from sentence_transformers.evaluation import SentenceEvaluator
 from sentence_transformers import SentenceTransformer
+from sentence_transformers.evaluation import SentenceEvaluator
 
 from .metrics import evaluate_by_threshold, grid_search
 
@@ -88,10 +88,10 @@ class SentenceTransformerEvaluator(SentenceEvaluator):
     def __call__(
         self,
         model: SentenceTransformer,
-        output_path: Optional[str] = None,
+        output_path: str | None = None,
         epoch: int = -1,
         steps: int = -1,
-        best_threshold: Optional[float] = None,
+        best_threshold: float | None = None,
     ) -> dict[str, float]:
         """Compute the evaluation metrics for the given model.
 
@@ -108,7 +108,6 @@ class SentenceTransformerEvaluator(SentenceEvaluator):
         """
 
         if best_threshold:
-
             # Testing with pre-defined hyperparameters
             logger.info(f"Evaluate on given hyperparemeters `best_threshold={best_threshold}`.")
 
@@ -124,15 +123,15 @@ class SentenceTransformerEvaluator(SentenceEvaluator):
                 smaller_scores_better=False,
             )
 
-            try:
+            # log the results
+            if os.path.exists(os.path.join(output_path, "results.tsv")):
                 self.results = pd.read_csv(os.path.join(output_path, "results.tsv"), sep="\t", index_col=0)
-            except:
+            else:
                 warnings.warn("No previous `results.tsv` detected.")
             self.results.loc["testing"] = best_results
         else:
-
             # Validation with no pre-defined hyerparameters
-            logger.info(f"Evaluate with grid search on hyperparameters `best_threshold` (overall threshold)")
+            logger.info("Evaluate with grid search on hyperparameters `best_threshold` (overall threshold)")
             best_f1 = -1.0
             best_results = None
 

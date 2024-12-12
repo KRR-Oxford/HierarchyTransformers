@@ -11,16 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
-from deeponto.utils import set_seed, create_path, load_file, save_file
-import os, logging, click
-from yacs.config import CfgNode
+import logging
+import os
+
+import click
 import torch
+from deeponto.utils import create_path, load_file, save_file, set_seed
+from yacs.config import CfgNode
 
-from hierarchy_transformers.models import PoincareStaticEmbedding, PoincareStaticEmbeddingTrainer
-from hierarchy_transformers.losses import PoincareEmbeddingStaticLoss, HyperbolicEntailmentConeStaticLoss
 from hierarchy_transformers.datasets import load_zenodo_dataset
 from hierarchy_transformers.evaluation import PoincareStaticEmbeddingEvaluator
+from hierarchy_transformers.losses import HyperbolicEntailmentConeStaticLoss, PoincareEmbeddingStaticLoss
+from hierarchy_transformers.models import PoincareStaticEmbedding, PoincareStaticEmbeddingTrainer
 from hierarchy_transformers.utils import get_torch_device
 
 logger = logging.getLogger(__name__)
@@ -82,7 +86,7 @@ def main(config_file: str, gpu_id: int):
         eval_examples=dataset["test"], batch_size=config.eval_batch_size, truth_label=1
     )
     test_evaluator(model=trainer.model, loss=trainer.loss, device=device, output_path=os.path.join(output_dir, "eval_poincare"), best_threshold=best_val_threshold)
-    
+
     # 5. Create the trainer & start post-training
     if int(config.num_post_train_epochs) > 0:
         logger.info("Post-train Poincare embedding on the hyperbolic entailment cone loss...")
@@ -99,7 +103,7 @@ def main(config_file: str, gpu_id: int):
         )
         post_trainer.train(device=device)
         torch.save(post_trainer.model, os.path.join(output_dir, "hypercone_static.pt"))
-        
+
         # 6. Evaluate the post-trained model performance on validation and test datasets
         create_path(os.path.join(output_dir, "eval_hypercone"))
         val_evaluator = PoincareStaticEmbeddingEvaluator(

@@ -11,11 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
+
+import logging
 
 import torch
-from geoopt.manifolds import PoincareBall
 from geoopt import ManifoldParameter
-import logging
+from geoopt.manifolds import PoincareBall
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +27,7 @@ class PoincareStaticEmbedding(torch.nn.Module):
 
         - [1] Poincaré Embedding by [Nickel et al., NeurIPS 2017](https://arxiv.org/abs/1705.08039).
         - [2] Hyperbolic Entailment Cone by [Ganea et al., ICML 2018](https://arxiv.org/abs/1804.01882).
-        
+
     both of which lie in a unit Poincaré ball. According to [2], it is better to apply the entailment cone loss in the post-training phase of a Poincaré embedding model in [1].
 
     Attributes:

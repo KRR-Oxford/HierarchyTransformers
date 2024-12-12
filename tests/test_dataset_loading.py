@@ -11,10 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
-import pytest
 import os
 import random
+
+import pytest
 from datasets import load_dataset
 
 
@@ -25,8 +27,8 @@ def dataset_path(request):
         pytest.fail("No valid dataset names found in the DATASET_PATHS environment variable")
     return request.param.strip()  # Strip any extra spaces
 
+
 def test_dataset_loading(dataset_path):
-    
     hop_type = random.choice(["MultiHop", "MixedHop"])
     neg_type = random.choice(["HardNegatives", "RandomNegatives"])
     struct_type = random.choice(["Triplets", "Pairs"])
@@ -39,8 +41,8 @@ def test_dataset_loading(dataset_path):
 
     # Check that the datast is not None
     assert dataset is not None, "Loaded dataset is None"
-    
-    
+
+
 # [Deprecated] HF upload code
 
 # save_path = "WordNetNoun"
@@ -82,8 +84,8 @@ def test_dataset_loading(dataset_path):
 #         for is_triplet in [True, False]:
 #             dataset_zenodo = prepare_hierarchy_examples(entity_lexicon, dataset[split], is_hard, is_triplet)
 #             if is_triplet:
-#                 dataset_zenodo = [{'child': x.texts[0], 'parent': x.texts[1], 'negative': x.texts[2]} for x in dataset_zenodo] 
-#             else: 
+#                 dataset_zenodo = [{'child': x.texts[0], 'parent': x.texts[1], 'negative': x.texts[2]} for x in dataset_zenodo]
+#             else:
 #                 dataset_zenodo = [{'child': x.texts[0], 'parent': x.texts[1], 'label': x.label} for x in dataset_zenodo]
 #             neg = "HardNegatives" if is_hard else "RandomNegatives"
 #             struct = "Triplets" if is_triplet else "Pairs"

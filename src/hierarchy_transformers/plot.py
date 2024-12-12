@@ -11,13 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
-from sentence_transformers import SentenceTransformer
-from deeponto.onto import Taxonomy
-import seaborn as sns
-import torch
-from geoopt.manifolds import PoincareBall
 import logging
+
+import seaborn as sns
+from deeponto.onto import Taxonomy
+from geoopt.manifolds import PoincareBall
+from sentence_transformers import SentenceTransformer
 
 logger = logging.getLogger(__name__)
 

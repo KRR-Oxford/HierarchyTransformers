@@ -11,13 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
 import logging
+
 import torch
+from geoopt.optim import RiemannianAdam
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import get_linear_schedule_with_warmup
-from geoopt.optim import RiemannianAdam
+
 from .poincare_embed import PoincareStaticEmbedding
 
 logger = logging.getLogger(__name__)
@@ -42,7 +45,6 @@ class PoincareStaticEmbeddingTrainer:
         train_batch_size: int = 200,
         warmup_epochs: int = 10,
     ):
-
         self.model = model
         self.train_dataloader = DataLoader(torch.tensor(train_dataset), shuffle=True, batch_size=train_batch_size)
         self.loss = loss

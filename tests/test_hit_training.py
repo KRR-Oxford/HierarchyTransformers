@@ -11,23 +11,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
-import pytest
 import random
 import tempfile
-from datasets import load_dataset
 
+import pytest
+from datasets import load_dataset
 from sentence_transformers.trainer import SentenceTransformerTrainer
 from sentence_transformers.training_args import SentenceTransformerTrainingArguments
 
-from hierarchy_transformers.models import HierarchyTransformer
 from hierarchy_transformers.losses import HierarchyTransformerLoss
-
+from hierarchy_transformers.models import HierarchyTransformer
 
 
 @pytest.fixture
 def model_path():
     return "sentence-transformers/all-MiniLM-L6-v2"
+
 
 @pytest.fixture
 def dataset_path():
@@ -35,7 +36,6 @@ def dataset_path():
 
 
 def test_training(model_path, dataset_path):
-    
     # Create a temporary directory for the output files
     with tempfile.TemporaryDirectory() as temp_dir:
         # 1. Load dataset and model
@@ -45,10 +45,10 @@ def test_training(model_path, dataset_path):
         trial_train = triplet_dataset["train"].select(range(64))
         trial_val = triplet_dataset["val"].select(range(32))
         model = HierarchyTransformer.from_pretrained(model_path)
-        
+
         # 2. set up the loss function
         hit_loss = HierarchyTransformerLoss(model=model)
-        
+
         # 3. Define the training arguments
         args = SentenceTransformerTrainingArguments(
             output_dir=temp_dir,
@@ -60,7 +60,7 @@ def test_training(model_path, dataset_path):
             eval_strategy="epoch",
             save_strategy="epoch",
         )
-        
+
         # 4. Train the model on trial samples
         trainer = SentenceTransformerTrainer(
             model=model,

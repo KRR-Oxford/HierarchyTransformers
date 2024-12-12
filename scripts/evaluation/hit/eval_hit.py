@@ -12,14 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This evaluation script is for HiT models."""
+from __future__ import annotations
 
+import logging
+import sys
+
+import click
 from deeponto.utils import load_file
-import sys, logging, click
 from yacs.config import CfgNode
 
-from hierarchy_transformers.models import HierarchyTransformer
-from hierarchy_transformers.evaluation import HierarchyTransformerEvaluator
 from hierarchy_transformers.datasets import load_hf_dataset
+from hierarchy_transformers.evaluation import HierarchyTransformerEvaluator
+from hierarchy_transformers.models import HierarchyTransformer
 
 logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stderr)])
 logger = logging.getLogger(__name__)

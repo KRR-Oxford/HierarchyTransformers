@@ -11,34 +11,43 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
 import pytest
 import torch
 from geoopt.manifolds import PoincareBall
-from hierarchy_transformers.models.hierarchy_transformer.hyperbolic import project_onto_subspace, reflect_about_subspace
+
+from hierarchy_transformers.models.hierarchy_transformer.hyperbolic import (
+    project_onto_subspace,
+    reflect_about_subspace,
+)
+
 
 @pytest.fixture
 def manifold():
     # Create a PoincareBall manifold with a sample curvature
     return PoincareBall(c=1.0)
 
+
 @pytest.fixture
 def sample_point():
     # Create a sample point on the manifold
     return torch.tensor([0.3, 0.3], dtype=torch.float32)
+
 
 @pytest.fixture
 def normal_vector():
     # Create a sample normal vector for the subspace
     return torch.tensor([0.0, 1.0], dtype=torch.float32)
 
+
 def test_reflect_about_subspace(sample_point, normal_vector):
     # Test the reflect_about_subspace function
     reflection = reflect_about_subspace(sample_point, normal_vector)
-    
+
     # Check that the reflection is a torch.Tensor
     assert isinstance(reflection, torch.Tensor), "Reflection should be a torch.Tensor"
-    
+
     # Check the shape of the reflection
     assert reflection.shape == sample_point.shape, "Reflection should have the same shape as the input point"
 
@@ -49,6 +58,7 @@ def test_reflect_about_subspace(sample_point, normal_vector):
     # Edge case: Normal vector cannot be zero
     with pytest.raises(ValueError):
         reflect_about_subspace(sample_point, torch.zeros_like(normal_vector))
+
 
 def test_project_onto_subspace(manifold, sample_point, normal_vector):
     # Test the project_onto_subspace function

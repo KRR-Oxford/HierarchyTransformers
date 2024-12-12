@@ -11,16 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from __future__ import annotations
 
-from typing import Optional
-import os.path, warnings, logging
+import logging
+import os.path
+import warnings
+
 import pandas as pd
 import torch
-
 from sentence_transformers.evaluation import SentenceEvaluator
+
 from hierarchy_transformers import HierarchyTransformer
+
 from .metrics import evaluate_by_threshold, grid_search
 
 logger = logging.getLogger(__name__)
@@ -70,8 +72,8 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
         self,
         model: HierarchyTransformer,
         centri_weight: float,
-        child_embeds: Optional[torch.Tensor] = None,
-        parent_embeds: Optional[torch.Tensor] = None,
+        child_embeds: torch.Tensor | None = None,
+        parent_embeds: torch.Tensor | None = None,
     ):
         """The default probing method of the HiT model. It output scores that indicate hierarchical relationships between entities.
 
@@ -95,11 +97,11 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
     def __call__(
         self,
         model: HierarchyTransformer,
-        output_path: Optional[str] = None,
+        output_path: str | None = None,
         epoch: int = -1,
         steps: int = -1,
-        best_centri_weight: Optional[float] = None,
-        best_threshold: Optional[float] = None,
+        best_centri_weight: float | None = None,
+        best_threshold: float | None = None,
     ) -> dict[str, float]:
         """Compute the evaluation metrics for the given model.
 
@@ -116,17 +118,18 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
         """
 
         # best thresholds and metric searched on validation sets
-        assert type(best_centri_weight) == type(
-            best_threshold
+        assert (
+            type(best_centri_weight) is type(best_threshold)
         ), "Inconsistent types of hyperparameters 'best_centri_weight' (centripetal score weight) and 'best_threshold' (overall threshold)"
 
         logger.info("Encode child entities.")
         child_embeds = model.encode(sentences=self.child_entities, batch_size=self.batch_size, convert_to_tensor=True)
         logger.info("Encode parent entities.")
-        parent_embeds = model.encode(sentences=self.parent_entities, batch_size=self.batch_size, convert_to_tensor=True)
+        parent_embeds = model.encode(
+            sentences=self.parent_entities, batch_size=self.batch_size, convert_to_tensor=True
+        )
 
         if best_centri_weight and best_threshold:
-
             # Testing with pre-defined hyperparameters
             logger.info(
                 f"Evaluate on given hyperparemeters `best_centri_weight={best_centri_weight}` (centripetal score weight) and `best_threshold={best_threshold}` (overall threshold)."
@@ -151,15 +154,17 @@ class HierarchyTransformerEvaluator(SentenceEvaluator):
                     smaller_scores_better=False,
                 )
             )
-            try:
+
+            # log the results
+            if os.path.exists(os.path.join(output_path, "results.tsv")):
                 self.results = pd.read_csv(os.path.join(output_path, "results.tsv"), sep="\t", index_col=0)
-            except:
+            else:
                 warnings.warn("No previous `results.tsv` detected.")
             self.results.loc["testing"] = best_results
         else:
             # Validation with no pre-defined hyerparameters
             logger.info(
-                f"Evaluate with grid search on hyperparameters `best_centri_weight` (centripetal score weight) and `best_threshold` (overall threshold)."
+                "Evaluate with grid search on hyperparameters `best_centri_weight` (centripetal score weight) and `best_threshold` (overall threshold)."
             )
             best_f1 = -1.0
             best_results = None

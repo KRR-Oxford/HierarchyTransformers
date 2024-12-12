@@ -11,18 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
-import os
-import json
-from typing import Optional
-from datasets import load_dataset, Dataset
 import logging
+import os
+
+from datasets import Dataset, load_dataset
 from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
 
-def load_hf_dataset(path: str, name: Optional[str] = None, **config_kwargs):
+def load_hf_dataset(path: str, name: str | None = None, **config_kwargs):
     """Load a HiT dataset from Hugging Face.
 
     See available datasets on: https://huggingface.co/Hierarchy-Transformers

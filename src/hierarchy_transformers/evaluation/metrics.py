@@ -11,10 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
-from tqdm import tqdm
 import math
+
 import torch
+from tqdm import tqdm
 
 
 def f1_score(predictions: torch.Tensor, labels: torch.Tensor, truth_label: int = 1):
@@ -114,7 +116,7 @@ def grid_search(
     end = int(scores.max() * threshold_granularity)
 
     # grid search to update the best results
-    for threshold in tqdm(range(start, end), desc=f"Thresholding"):
+    for threshold in tqdm(range(start, end), desc="Thresholding"):
         threshold = threshold / threshold_granularity
         results = evaluate_by_threshold(
             scores=scores,

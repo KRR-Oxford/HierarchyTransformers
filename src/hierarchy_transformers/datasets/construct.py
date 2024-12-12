@@ -11,12 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
+
+import json
+from pathlib import Path
 
 from deeponto.onto import Taxonomy, TaxonomyNegativeSampler
 from deeponto.utils import save_file
 from sklearn.model_selection import train_test_split
-import json
-from pathlib import Path
 from tqdm.auto import tqdm
 
 

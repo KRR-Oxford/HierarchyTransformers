@@ -12,18 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This training script is hierarchy re-training of HiT models."""
+from __future__ import annotations
 
-from deeponto.utils import set_seed, create_path, load_file, save_file
-import os, sys, logging, click
-from yacs.config import CfgNode
+import logging
+import os
+import sys
 
+import click
+from deeponto.utils import create_path, load_file, save_file, set_seed
 from sentence_transformers.trainer import SentenceTransformerTrainer
 from sentence_transformers.training_args import SentenceTransformerTrainingArguments
+from yacs.config import CfgNode
 
-from hierarchy_transformers.models import HierarchyTransformer
-from hierarchy_transformers.losses import HierarchyTransformerLoss
-from hierarchy_transformers.evaluation import HierarchyTransformerEvaluator
 from hierarchy_transformers.datasets import load_hf_dataset
+from hierarchy_transformers.evaluation import HierarchyTransformerEvaluator
+from hierarchy_transformers.losses import HierarchyTransformerLoss
+from hierarchy_transformers.models import HierarchyTransformer
 
 logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stderr)])
 logger = logging.getLogger(__name__)
@@ -32,7 +36,6 @@ logger = logging.getLogger(__name__)
 @click.command()
 @click.option("-c", "--config_file", type=click.Path(exists=True))
 def main(config_file: str):
-
     # 0. set seed, load config, and format output dir
     set_seed(8888)
     config = CfgNode(load_file(config_file))
@@ -40,7 +43,7 @@ def main(config_file: str):
     dataset_path_suffix = config.dataset_path.split(os.path.sep)[-1]
     output_dir = f"experiments/HiT-{model_path_suffix}-{dataset_path_suffix}-{config.dataset_name}"
     create_path(output_dir)
-    save_file(load_file(config_file), os.path.join(output_dir, "config.yaml")) # save config to output dir
+    save_file(load_file(config_file), os.path.join(output_dir, "config.yaml"))  # save config to output dir
 
     # 1. Load dataset and pre-trained model
     # NOTE: according to docs, it is very important to have column names ["child", "parent", "negative"] *in order* to match ["anchor", "positive", "negative"]
@@ -74,7 +77,7 @@ def main(config_file: str):
         learning_rate=float(config.learning_rate),
         per_device_train_batch_size=int(config.train_batch_size),
         per_device_eval_batch_size=int(config.eval_batch_size),
-        warmup_steps=500,  
+        warmup_steps=500,
         eval_strategy="epoch",
         save_strategy="epoch",
         save_total_limit=2,
@@ -107,7 +110,12 @@ def main(config_file: str):
         batch_size=config.eval_batch_size,
         truth_label=1,
     )
-    test_evaluator(model=model, output_path=os.path.join(output_dir, "eval"), best_centri_weight=best_val_centri_weight, best_threshold=best_val_threshold)
+    test_evaluator(
+        model=model,
+        output_path=os.path.join(output_dir, "eval"),
+        best_centri_weight=best_val_centri_weight,
+        best_threshold=best_val_threshold,
+    )
 
     # 7. Save the trained & evaluated model locally
     final_output_dir = f"{output_dir}/final"

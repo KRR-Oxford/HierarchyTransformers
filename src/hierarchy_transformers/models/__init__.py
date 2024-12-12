@@ -11,6 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
-from .hierarchy_transformer import HierarchyTransformer
+from .hierarchy_transformer import HierarchyTransformer, hyperbolic
 from .static_embed import PoincareStaticEmbedding, PoincareStaticEmbeddingTrainer
+
+__all__ = [
+    "HierarchyTransformer",
+    "hyperbolic",
+    "PoincareStaticEmbedding",
+    "PoincareStaticEmbeddingTrainer",
+]

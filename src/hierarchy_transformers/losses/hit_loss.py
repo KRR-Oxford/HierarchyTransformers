@@ -11,12 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
-from typing import Iterable, Dict
 import logging
+from collections.abc import Iterable
+
 import torch
 import torch.nn.functional as F
 from geoopt.manifolds import PoincareBall
+
 from hierarchy_transformers.models import HierarchyTransformer
 from hierarchy_transformers.utils import format_citation
 
@@ -56,7 +59,7 @@ class HierarchyTransformerLoss(torch.nn.Module):
         }
         return config
 
-    def forward(self, sentence_features: Iterable[Dict[str, torch.Tensor]], labels: torch.Tensor):
+    def forward(self, sentence_features: Iterable[dict[str, torch.Tensor]], labels: torch.Tensor):
         """Forward propagation that follows [`sentence_transformers.losses`](https://github.com/UKPLab/sentence-transformers/tree/master/sentence_transformers/losses)."""
         reps = [self.model(sentence_feature)["sentence_embedding"] for sentence_feature in sentence_features]
         assert len(reps) == 3
@@ -80,7 +83,7 @@ class HierarchyTransformerLoss(torch.nn.Module):
     @property
     def citation(self) -> str:
         return format_citation(
-            """ 
+            """
             @article{he2024language,
               title={Language models as hierarchy encoders},
               author={He, Yuan and Yuan, Zhangdie and Chen, Jiaoyan and Horrocks, Ian},
@@ -129,7 +132,7 @@ class HyperbolicClusteringLoss(torch.nn.Module):
     @property
     def citation(self) -> str:
         return format_citation(
-            """ 
+            """
             @article{he2024language,
               title={Language models as hierarchy encoders},
               author={He, Yuan and Yuan, Zhangdie and Chen, Jiaoyan and Horrocks, Ian},
@@ -179,7 +182,7 @@ class HyperbolicCentripetalLoss(torch.nn.Module):
     @property
     def citation(self) -> str:
         return format_citation(
-            """ 
+            """
             @article{he2024language,
               title={Language models as hierarchy encoders},
               author={He, Yuan and Yuan, Zhangdie and Chen, Jiaoyan and Horrocks, Ian},

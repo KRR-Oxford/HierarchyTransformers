@@ -11,10 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
 
 import torch
 import torch.nn.functional as F
 from geoopt.manifolds import PoincareBall
+
 from hierarchy_transformers.utils import format_citation
 
 
@@ -82,11 +84,11 @@ class HyperbolicEntailmentConeLoss(torch.nn.Module):
         energies = self.energy(cone_tip=rep_other, u=rep_anchor)
         cone_loss = labels.float() * energies + (1 - labels).float() * F.relu(self.margin - energies)
         return cone_loss.mean()
-    
+
     @property
     def citation(self) -> str:
         return format_citation(
-            """ 
+            """
             @inproceedings{ganea2018hyperbolic,
               title={Hyperbolic entailment cones for learning hierarchical embeddings},
               author={Ganea, Octavian and B{\'e}cigneul, Gary and Hofmann, Thomas},
@@ -130,16 +132,15 @@ class HyperbolicEntailmentConeStaticLoss(HyperbolicEntailmentConeLoss):
     $$
 
     Inputs are presented in `(subject, *objects)` where the first `object` is positive and the rest are negative.
-    
+
     This is designed for the static embedding implementation.
     """
 
     def __init__(self, manifold: PoincareBall, min_euclidean_norm: float = 0.1, margin: float = 0.1, eps: float = 1e-5):
         super().__init__(manifold, min_euclidean_norm, margin, eps)
-        
+
     def forward(self, subject: torch.Tensor, objects: torch.Tensor):
         # the first object is positive
         energy = self.energy(objects, subject)
         return (energy[:, 0].sum() + F.relu(self.margin - energy[:, 1:]).sum()) / torch.numel(energy)
 
-    

@@ -11,9 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
+
+from textwrap import dedent
 
 import torch
-from textwrap import dedent
+
 
 def get_torch_device(gpu_id: int):
     return torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
@@ -42,6 +45,7 @@ def are_models_equal(model1: torch.nn.Module, model2: torch.nn.Module, tolerance
             return False
 
     return True
+
 
 def format_citation(bibtex: str):
     """

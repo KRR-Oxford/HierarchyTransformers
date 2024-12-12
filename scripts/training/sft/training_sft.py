@@ -12,20 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """This training script is for standard [CLS] supervised fine-tuning for BERT models."""
+from __future__ import annotations
 
-from deeponto.utils import set_seed, create_path, load_file, save_file
-import os, sys, logging, click
-from yacs.config import CfgNode
-import torch
+import logging
+import os
+import sys
+
+import click
 import pandas as pd
-
+import torch
+from deeponto.utils import create_path, load_file, save_file, set_seed
 from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
     DataCollatorWithPadding,
-    TrainingArguments,
     Trainer,
+    TrainingArguments,
 )
+from yacs.config import CfgNode
+
 from hierarchy_transformers.datasets import load_hf_dataset
 from hierarchy_transformers.evaluation.metrics import evaluate_by_threshold
 
@@ -36,7 +41,6 @@ logger = logging.getLogger(__name__)
 @click.command()
 @click.option("-c", "--config_file", type=click.Path(exists=True))
 def main(config_file: str):
-
     # 0. set seed, load config, and format output dir
     set_seed(8888)
     config = CfgNode(load_file(config_file))
@@ -92,7 +96,9 @@ def main(config_file: str):
     test_preds = trainer.predict(test_examples)
     test_scores = torch.tensor(test_preds.predictions).argmax(dim=1)
     test_labels = torch.tensor(test_preds.label_ids)
-    test_results = pd.DataFrame(columns=["threshold", "precision", "recall", "f1", "accuracy", "accuracy_on_negatives"])
+    test_results = pd.DataFrame(
+        columns=["threshold", "precision", "recall", "f1", "accuracy", "accuracy_on_negatives"]
+    )
     test_results.loc["testing"] = evaluate_by_threshold(scores=test_scores, labels=test_labels, threshold=0.5)
     logger.info(test_results.loc["testing"])
     create_path(os.path.join(output_dir, "eval"))
