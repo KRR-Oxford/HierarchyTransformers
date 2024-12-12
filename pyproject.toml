@@ -81,8 +81,11 @@ required-imports = ["from __future__ import annotations"]
 
 [tool.pytest.ini-options]
 testpaths = ["tests"]
-addopts = "--verbose --cov=hierarchy_transformers --cov-report=term-missing"
-env = [
-    "MODEL_PATHS=Hierarchy-Transformers/HiT-MiniLM-L12-WordNetNoun,Hierarchy-Transformers/HiT-MiniLM-L12-SnomedCT",
-    "DATASET_PATHS=Hierarchy-Transformers/WordNetNoun,Hierarchy-Transformers/SnomedCT"
+addopts = "--strict-markers -m 'not slow'"
+markers = [
+    "slow: marks tests as slow"
 ]
+
+[tool.pytest_env]
+MODEL_PATHS="Hierarchy-Transformers/HiT-MiniLM-L12-WordNetNoun,Hierarchy-Transformers/HiT-MiniLM-L12-SnomedCT"
+DATASET_PATHS="Hierarchy-Transformers/WordNetNoun,Hierarchy-Transformers/SnomedCT"
