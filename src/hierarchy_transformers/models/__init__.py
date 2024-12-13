@@ -13,11 +13,12 @@
 # limitations under the License.
 from __future__ import annotations
 
-from .hierarchy_transformer import HierarchyTransformer, hyperbolic
+from .hierarchy_transformer import HierarchyTransformer, HierarchyTransformerTrainer, hyperbolic
 from .static_embed import PoincareStaticEmbedding, PoincareStaticEmbeddingTrainer
 
 __all__ = [
     "HierarchyTransformer",
+    "HierarchyTransformerTrainer",
     "hyperbolic",
     "PoincareStaticEmbedding",
     "PoincareStaticEmbeddingTrainer",

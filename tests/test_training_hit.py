@@ -18,11 +18,10 @@ import tempfile
 
 import pytest
 from datasets import load_dataset
-from sentence_transformers.trainer import SentenceTransformerTrainer
 from sentence_transformers.training_args import SentenceTransformerTrainingArguments
 
 from hierarchy_transformers.losses import HierarchyTransformerLoss
-from hierarchy_transformers.models import HierarchyTransformer
+from hierarchy_transformers.models import HierarchyTransformer, HierarchyTransformerTrainer
 
 
 @pytest.fixture
@@ -62,7 +61,7 @@ def test_training(model_path, dataset_path):
         )
 
         # 4. Train the model on trial samples
-        trainer = SentenceTransformerTrainer(
+        trainer = HierarchyTransformerTrainer(
             model=model,
             args=args,
             train_dataset=trial_train,  # train loss requires triplets
