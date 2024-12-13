@@ -21,7 +21,6 @@ import sys
 
 import click
 from deeponto.utils import create_path, load_file, set_seed
-from sentence_transformers.trainer import SentenceTransformerTrainer
 from sentence_transformers.training_args import SentenceTransformerTrainingArguments
 from yacs.config import CfgNode
 
@@ -29,6 +28,7 @@ from hierarchy_transformers.datasets import load_hf_dataset
 from hierarchy_transformers.evaluation import HierarchyTransformerEvaluator
 from hierarchy_transformers.losses import HierarchyTransformerLoss
 from hierarchy_transformers.models import HierarchyTransformer
+from hierarchy_transformers.models.hierarchy_transformer.hit_trainer import HierarchyTransformerTrainer
 
 logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler(sys.stderr)])
 logger = logging.getLogger(__name__)
@@ -92,7 +92,7 @@ def main(config_file: str):
     )
 
     # 5. Create the trainer & start training
-    trainer = SentenceTransformerTrainer(
+    trainer = HierarchyTransformerTrainer(
         model=model,
         args=args,
         train_dataset=triplet_dataset["train"],  # train loss requires triplets

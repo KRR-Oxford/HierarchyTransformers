@@ -22,6 +22,8 @@ from hierarchy_transformers.models import HierarchyTransformer
 
 
 class HierarchyTransformerTrainer(SentenceTransformerTrainer):
+    r"""A simple extension of `SentenceTransformerTrainer` to monitor and log batch losses of `HierarchyTransformer`."""
+
     def compute_loss(
         self,
         model: HierarchyTransformer,
@@ -37,9 +39,9 @@ class HierarchyTransformerTrainer(SentenceTransformerTrainer):
             loss_dict, outputs = loss_dict
         self.log(
             {
-                "cluster_loss": loss_dict["cluster_loss"].item(),
-                "centri_loss": loss_dict["centri_loss"].item(),
-                "combined_loss": loss_dict["loss"].item(),
+                "cluster_loss": round(loss_dict["cluster_loss"].item(), 4),
+                "centri_loss": round(loss_dict["centri_loss"].item(), 4),
+                "combined_loss": round(loss_dict["loss"].item(), 4),
             }
         )
 

@@ -14,7 +14,9 @@
 from __future__ import annotations
 
 from .hit import HierarchyTransformer
+from .hit_trainer import HierarchyTransformerTrainer
 
 __all__ = [
-    "HierarchyTransformer"
+    "HierarchyTransformer",
+    "HierarchyTransformerTrainer",
 ]
