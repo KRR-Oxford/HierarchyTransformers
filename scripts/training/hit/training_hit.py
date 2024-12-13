@@ -16,10 +16,11 @@ from __future__ import annotations
 
 import logging
 import os
+import shutil
 import sys
 
 import click
-from deeponto.utils import create_path, load_file, save_file, set_seed
+from deeponto.utils import create_path, load_file, set_seed
 from sentence_transformers.trainer import SentenceTransformerTrainer
 from sentence_transformers.training_args import SentenceTransformerTrainingArguments
 from yacs.config import CfgNode
@@ -43,7 +44,10 @@ def main(config_file: str):
     dataset_path_suffix = config.dataset_path.split(os.path.sep)[-1]
     output_dir = f"experiments/HiT-{model_path_suffix}-{dataset_path_suffix}-{config.dataset_name}"
     create_path(output_dir)
-    save_file(load_file(config_file), os.path.join(output_dir, "config.yaml"))  # save config to output dir
+    try:
+        shutil.copy2(config_file, os.path.join(output_dir, "config.yaml"))
+    except Exception:
+        pass
 
     # 1. Load dataset and pre-trained model
     # NOTE: according to docs, it is very important to have column names ["child", "parent", "negative"] *in order* to match ["anchor", "positive", "negative"]
