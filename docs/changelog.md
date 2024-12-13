@@ -9,6 +9,10 @@ Security in case of vulnerabilities. -->
 
 ## Unreleased
 
+### Added
+
+- [X] [`feature`] Add `HierarchyTransformerTrainer` that extends `SentenceTransformerTrainer` with step-wise (per batch) loss logging.
+
 ### Changed
 
 - [X] [`chore`] Refactor all the code with ruff linter.
