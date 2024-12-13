@@ -18,7 +18,7 @@ from typing import Any
 import torch
 from sentence_transformers.trainer import SentenceTransformerTrainer
 
-from hierarchy_transformers.models import HierarchyTransformer
+from .hit import HierarchyTransformer
 
 
 class HierarchyTransformerTrainer(SentenceTransformerTrainer):
