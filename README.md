@@ -68,7 +68,7 @@ This repository follows a similar layout as the [`sentence-transformers`](https:
 ### Install from PyPI
 
 ```bash
-# requiring Python>=3.8
+# requiring Python>=3.9
 pip install hierarchy_transformers
 ```
 
