@@ -1,6 +1,6 @@
 [project]
 name = "hierarchy_transformers"
-version = "0.1.1.dev0"
+version = "0.1.1"
 description = "Language models as hierarchy encoders."
 readme = "README.md"
 authors = [

@@ -7,7 +7,7 @@ Removed for now removed features.
 Fixed for any bug fixes.
 Security in case of vulnerabilities. -->
 
-## Unreleased
+## v0.1.1 (2024-12-13)
 
 ### Added
 
