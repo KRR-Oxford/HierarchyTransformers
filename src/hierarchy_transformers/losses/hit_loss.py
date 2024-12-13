@@ -71,14 +71,18 @@ class HierarchyTransformerLoss(torch.nn.Module):
         combined_loss = self.cluster_weight * cluster_loss + self.centri_weight * centri_loss
 
         # batch reporting
-        report = {
-            "cluster_loss": round(cluster_loss.item(), 6),
-            "centri_loss": round(centri_loss.item(), 6),
-            "combined_loss": round(combined_loss.item(), 6),
-        }
-        logger.info(report)
+        # report = {
+        #     "cluster_loss": round(cluster_loss.item(), 6),
+        #     "centri_loss": round(centri_loss.item(), 6),
+        #     "combined_loss": round(combined_loss.item(), 6),
+        # }
+        # logger.info(report)
 
-        return combined_loss
+        return {
+            "loss": combined_loss,
+            "cluster_loss": cluster_loss,
+            "centri_loss": centri_loss,
+        }
 
     @property
     def citation(self) -> str:
