@@ -32,7 +32,7 @@ dependencies = [
     "sentence_transformers[train]>=3.4.0",
     "deeponto>=0.9.2",
     "geoopt>=0.5.0",
-    "scipy==1.13.1",
+    "scipy==1.15.1",
     "seaborn"
 ]
 
