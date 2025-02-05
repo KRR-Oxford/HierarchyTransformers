@@ -142,13 +142,18 @@ Use the example scripts in our [repository](https://github.com/KRR-Oxford/Hierar
 
 If you find this repository or the released models useful, please cite our publication:
 
-*Yuan He, Zhangdie Yuan, Jiaoyan Chen, Ian Horrocks.* **Language Models as Hierarchy Encoders.** To appear at NeurIPS 2024. /[arxiv](https://arxiv.org/abs/2401.11374)/ /[neurips](https://neurips.cc/virtual/2024/poster/95913)/
+*Yuan He, Zhangdie Yuan, Jiaoyan Chen, Ian Horrocks.* **Language Models as Hierarchy Encoders.** Advances in Neural Information Processing Systems 37 (NeurIPS 2024). /[arxiv](https://arxiv.org/abs/2401.11374)/ /[neurips](https://neurips.cc/virtual/2024/poster/95913)/
 
 ```
-@article{he2024language,
-  title={Language Models as Hierarchy Encoders},
-  author={He, Yuan and Yuan, Zhangdie and Chen, Jiaoyan and Horrocks, Ian},
-  journal={arXiv preprint arXiv:2401.11374},
-  year={2024}
+@inproceedings{NEURIPS2024_1a970a3e,
+ author = {He, Yuan and Yuan, Moy and Chen, Jiaoyan and Horrocks, Ian},
+ booktitle = {Advances in Neural Information Processing Systems},
+ editor = {A. Globerson and L. Mackey and D. Belgrave and A. Fan and U. Paquet and J. Tomczak and C. Zhang},
+ pages = {14690--14711},
+ publisher = {Curran Associates, Inc.},
+ title = {Language Models as Hierarchy Encoders},
+ url = {https://proceedings.neurips.cc/paper_files/paper/2024/file/1a970a3e62ac31c76ec3cea3a9f68fdf-Paper-Conference.pdf},
+ volume = {37},
+ year = {2024}
 }
 ```
